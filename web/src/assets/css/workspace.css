@@ -50,6 +50,18 @@
 }
 .vms-asset-item span { font-family: var(--vms-font-roboto) !important; }
 .vms-asset-item:hover { border-color: rgba(255, 94, 58, 0.4); transform: translateX(2px); }
+.vms-asset-item.active {
+  background: rgba(255, 94, 58, 0.14) !important;
+  border-color: rgba(255, 94, 58, 0.55) !important;
+  border-left: 3px solid var(--vms-neu-accent-orange) !important;
+}
+.vms-asset-item.active span {
+  color: var(--vms-neu-accent-orange) !important;
+  font-weight: 700 !important;
+}
+.vms-asset-item.active svg {
+  stroke: var(--vms-neu-accent-orange) !important;
+}
 
 /* Status LEDs (Green Online, Yellow Alert & Red Offline) */
 .vms-status-led {
