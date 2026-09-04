@@ -17,11 +17,6 @@ const configItems: { id: AdminPageId; label: string }[] = [
   { id: "carousels", label: "RONDAS" },
   { id: "maps", label: "MAPAS" }
 ]
-
-const mainItems: { id: AdminPageId; label: string }[] = [
-  { id: "workflows", label: "WORKFLOWS & ALARMES" },
-  { id: "storage", label: "STORAGE & DISCOS" }
-]
 </script>
 
 <template>
@@ -31,7 +26,7 @@ const mainItems: { id: AdminPageId; label: string }[] = [
     </div>
 
     <div v-show="!isCollapsed" style="display: flex; flex-direction: column; height: 100%; width: 250px; overflow-y: auto;">
-      <!-- Section Header: CONFIG -->
+      <!-- Section Header: CONFIG (No topo do sidebar) -->
       <div class="vms-accordion-header" :class="{ active: isConfigOpen }" title="Clique para expandir/recuar" @click="isConfigOpen = !isConfigOpen">
         <div class="vms-flex-row" style="gap: 0.35rem; align-items: center;">
           <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[CONFIG]</span>
@@ -39,7 +34,7 @@ const mainItems: { id: AdminPageId; label: string }[] = [
       </div>
 
       <!-- Config Items List -->
-      <div v-if="isConfigOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem;">
+      <div v-if="isConfigOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
         <div
           v-for="item in configItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }"
           :style="{ borderColor: activePage === item.id ? 'rgba(255,94,58,0.45)' : 'var(--vms-border)', backgroundColor: activePage === item.id ? 'rgba(255,94,58,0.12)' : 'var(--vms-neu-bg)' }"
@@ -51,16 +46,23 @@ const mainItems: { id: AdminPageId; label: string }[] = [
         </div>
       </div>
 
-      <!-- Standalone Modules -->
-      <div style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 0.2rem;">
-        <div
-          v-for="item in mainItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }"
-          :style="{ borderColor: activePage === item.id ? 'rgba(255,94,58,0.45)' : 'var(--vms-border)', backgroundColor: activePage === item.id ? 'rgba(255,94,58,0.12)' : 'var(--vms-neu-bg)' }"
-          @click="emit('selectPage', item.id)"
-        >
-          <span class="vms-text-xs" :style="{ color: activePage === item.id ? 'var(--vms-neu-accent-orange)' : '#ffffff', fontFamily: 'var(--vms-font-roboto)', fontWeight: activePage === item.id ? '700' : '500' }">
-            [{{ item.label }}]
-          </span>
+      <!-- Workflows Section Row -->
+      <div
+        class="vms-accordion-header" :class="{ active: activePage === 'workflows' }"
+        style="border-top: 1px solid var(--vms-border);" @click="emit('selectPage', 'workflows')"
+      >
+        <div class="vms-flex-row" style="gap: 0.35rem; align-items: center;">
+          <span class="vms-text-xs vms-font-semibold" :style="{ color: activePage === 'workflows' ? 'var(--vms-neu-accent-orange)' : '#ffffff' }">[WORKFLOWS & ALARMES]</span>
+        </div>
+      </div>
+
+      <!-- Storage Section Row -->
+      <div
+        class="vms-accordion-header" :class="{ active: activePage === 'storage' }"
+        style="border-top: 1px solid var(--vms-border);" @click="emit('selectPage', 'storage')"
+      >
+        <div class="vms-flex-row" style="gap: 0.35rem; align-items: center;">
+          <span class="vms-text-xs vms-font-semibold" :style="{ color: activePage === 'storage' ? 'var(--vms-neu-accent-orange)' : '#ffffff' }">[STORAGE & DISCOS]</span>
         </div>
       </div>
     </div>
