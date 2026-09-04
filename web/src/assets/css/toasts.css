@@ -1,0 +1,54 @@
+/* Toast Notification System */
+.vms-toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: var(--vms-z-toast);
+  pointer-events: none;
+  max-width: 380px;
+  width: 100%;
+}
+
+.vms-toast {
+  pointer-events: auto;
+  background-color: var(--vms-bg-surface);
+  border: 1px solid var(--vms-border-light);
+  border-radius: var(--vms-radius-lg);
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  box-shadow: var(--vms-shadow-lg);
+  animation: vms-toast-slide 0.25s ease-out;
+}
+
+.vms-toast-success { border-left: 4px solid var(--vms-success); }
+.vms-toast-warning { border-left: 4px solid var(--vms-warning); }
+.vms-toast-danger { border-left: 4px solid var(--vms-danger); }
+.vms-toast-info { border-left: 4px solid var(--vms-primary); }
+
+.vms-toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.vms-toast-title {
+  font-size: var(--vms-font-sm);
+  font-weight: 600;
+  color: var(--vms-text-main);
+}
+
+.vms-toast-message {
+  font-size: var(--vms-font-xs);
+  color: var(--vms-text-muted);
+}
+
+@keyframes vms-toast-slide {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}

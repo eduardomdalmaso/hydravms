@@ -1,0 +1,91 @@
+/* Responsive Breakpoints & Small Screen Auto-Adjust */
+
+/* 1. Large Tablets & Small Laptops (<= 1024px) */
+@media screen and (max-width: 1024px) {
+  :root {
+    --vms-sidebar-width: 200px;
+  }
+  .vms-content-area {
+    padding: 1rem;
+  }
+  .vms-header-center {
+    display: none;
+  }
+}
+
+/* 2. Tablets & Portrait Screens (<= 768px) */
+@media screen and (max-width: 768px) {
+  :root {
+    --vms-sidebar-width: 260px;
+  }
+  
+  .vms-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--vms-shadow-modal);
+  }
+
+  .vms-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .vms-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(9, 13, 22, 0.7);
+    z-index: var(--vms-z-drawer-backdrop);
+    backdrop-filter: blur(2px);
+  }
+
+  .vms-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .vms-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .vms-modal-dialog {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+
+  .vms-toast-container {
+    left: 1rem;
+    right: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* 3. Mobile Phones (<= 480px) */
+@media screen and (max-width: 480px) {
+  :root {
+    --vms-header-height: 50px;
+  }
+
+  .vms-content-area {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .vms-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--vms-font-xs);
+  }
+
+  .vms-card-header,
+  .vms-card-body,
+  .vms-card-footer {
+    padding: 0.75rem;
+  }
+
+  .vms-breadcrumb {
+    font-size: var(--vms-font-xs);
+  }
+}

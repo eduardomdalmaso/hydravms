@@ -1,0 +1,87 @@
+/* Vezha-Style Professional VMS Timeline & Canvas Engine */
+.vms-vezha-timeline {
+  position: relative; width: 100%; flex-shrink: 0;
+  background: var(--vms-neu-surface); border-top: 2px solid var(--vms-neu-accent-orange);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8); z-index: var(--vms-z-header);
+  display: flex; flex-direction: column; font-family: var(--vms-font-roboto);
+  animation: vms-drawer-slide-up 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.vms-vezha-canvas-area {
+  position: relative; height: 70px; background: #14171c; display: flex; border-bottom: 1px solid var(--vms-border);
+}
+.vms-vezha-scale-col {
+  width: 36px; background: #181b21; border-right: 1px solid var(--vms-border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem;
+}
+.vms-vezha-scale-btn {
+  width: 24px; height: 24px; background: var(--vms-neu-bg); box-shadow: var(--vms-shadow-convex-sm);
+  border: 1px solid var(--vms-border); border-radius: 4px; color: #ffffff; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: var(--vms-font-roboto);
+}
+.vms-vezha-scale-btn:hover { border-color: var(--vms-neu-accent-orange); }
+.vms-vezha-canvas-wrapper { flex: 1; position: relative; cursor: crosshair; overflow: hidden; }
+.vms-vezha-canvas { width: 100%; height: 100%; display: block; }
+
+/* 3-Column Perfectly Balanced Footer */
+.vms-vezha-footer {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 0.35rem 1rem; background: var(--vms-neu-surface); gap: 0.75rem;
+}
+.vms-vezha-controls-left { display: flex; align-items: center; justify-content: flex-start; gap: 0.35rem; }
+.vms-vezha-controls-center { display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
+.vms-vezha-controls-right { display: flex; align-items: center; justify-content: flex-end; gap: 0.35rem; }
+
+.vms-jump-btn {
+  padding: 0.25rem 0.45rem; font-size: 10px; font-weight: 700; font-family: var(--vms-font-roboto) !important;
+  background: var(--vms-neu-bg); box-shadow: var(--vms-shadow-convex-sm);
+  border: 1px solid var(--vms-border); border-radius: 4px; color: #ffffff; cursor: pointer;
+}
+.vms-jump-btn:hover { border-color: var(--vms-neu-accent-orange); }
+
+/* Top Days Strip Styles with Larger Numbers */
+.vms-days-strip-container {
+  flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  user-select: none; cursor: pointer;
+}
+.vms-days-strip { display: flex; align-items: center; gap: 0.45rem; }
+.vms-day-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 3px 10px; border-radius: 4px; background: rgba(20, 24, 32, 0.7);
+  border: 1px solid rgba(255,255,255,0.06); transition: all 0.15s ease; position: relative; min-width: 38px;
+}
+.vms-day-item:hover:not(.disabled) {
+  border-color: rgba(255, 94, 58, 0.45); background: rgba(255, 94, 58, 0.12);
+}
+.vms-day-item.active {
+  background: rgba(255, 94, 58, 0.2); border-color: var(--vms-neu-accent-orange);
+  box-shadow: 0 0 10px rgba(255, 94, 58, 0.35);
+}
+.vms-day-item.disabled { opacity: 0.3; cursor: not-allowed; }
+.vms-day-item-number {
+  font-size: 13.5px; font-weight: 700; color: #ffffff; font-family: var(--vms-font-roboto) !important; line-height: 1;
+}
+.vms-day-item.active .vms-day-item-number { color: #ffffff; }
+.vms-day-active-bar {
+  position: absolute; bottom: 0; left: 15%; right: 15%; height: 2px;
+  background: var(--vms-neu-accent-orange); border-radius: 1px; box-shadow: 0 0 6px #ff5e3a;
+}
+
+/* Speed Popover Styles */
+.vms-speed-popover {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: rgba(18, 22, 30, 0.96); border: 1px solid var(--vms-neu-accent-orange);
+  border-radius: 5px; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.7);
+  display: flex; flex-direction: column; gap: 2px; padding: 4px; z-index: 50; min-width: 52px;
+}
+.vms-speed-option {
+  background: transparent; border: none; border-radius: 3px;
+  color: #ffffff; font-family: var(--vms-font-roboto) !important; font-size: 10px; font-weight: 600;
+  padding: 3px 6px; cursor: pointer; text-align: center; transition: all 0.12s ease;
+}
+.vms-speed-option:hover { background: rgba(255, 94, 58, 0.2); color: var(--vms-neu-accent-orange); }
+.vms-speed-option.active { background: var(--vms-neu-accent-orange); color: #000000; font-weight: 700; }
+
+@keyframes vms-drawer-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

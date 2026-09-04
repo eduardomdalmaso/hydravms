@@ -1,0 +1,62 @@
+:root {
+  /* Unified Dark Neumorphism Color Palette */
+  --vms-bg-base: #1e2126;
+  --vms-bg-surface: #22262c;
+  --vms-bg-elevated: #282d35;
+  --vms-bg-elevated-hover: #2f353e;
+  
+  --vms-border: rgba(255, 255, 255, 0.04);
+  --vms-border-light: rgba(255, 255, 255, 0.06);
+  --vms-border-focus: #ff5e3a;
+
+  /* Text Colors */
+  --vms-text-main: #f8fafc;
+  --vms-text-regular: #cbd5e1;
+  --vms-text-muted: #8b94a0;
+  --vms-text-dim: #5a626f;
+
+  /* Brand & Neumorphic Orange Accent */
+  --vms-primary: #ff5e3a;
+  --vms-primary-hover: #ff7250;
+  --vms-primary-active: #e04826;
+  --vms-primary-gradient: linear-gradient(135deg, #ff6a3d 0%, #e04826 100%);
+  --vms-primary-subtle: rgba(255, 94, 58, 0.12);
+  --vms-primary-glow: 0 4px 16px rgba(240, 80, 40, 0.45);
+
+  --vms-success: #10b981;
+  --vms-success-subtle: rgba(16, 185, 129, 0.12);
+  --vms-warning: #f59e0b;
+  --vms-warning-subtle: rgba(245, 158, 11, 0.12);
+  --vms-danger: #ef4444;
+  --vms-danger-subtle: rgba(239, 68, 68, 0.12);
+  --vms-info: #3b82f6;
+  --vms-info-subtle: rgba(59, 130, 246, 0.12);
+
+  /* Neumorphic Double Shadows */
+  --vms-shadow-convex: 6px 6px 14px rgba(0, 0, 0, 0.65), -6px -6px 14px rgba(255, 255, 255, 0.04);
+  --vms-shadow-convex-sm: 3px 3px 8px rgba(0, 0, 0, 0.5), -3px -3px 8px rgba(255, 255, 255, 0.03);
+  --vms-shadow-concave: inset 3px 3px 6px rgba(0, 0, 0, 0.7), inset -3px -3px 6px rgba(255, 255, 255, 0.04);
+  --vms-shadow-modal: 16px 16px 36px rgba(0, 0, 0, 0.8), -16px -16px 36px rgba(255, 255, 255, 0.03);
+
+  /* Dimensions */
+  --vms-header-height: 52px;
+  --vms-sidebar-width: 240px;
+  --vms-sidebar-collapsed-width: 64px;
+  
+  --vms-radius-sm: 6px;
+  --vms-radius-md: 10px;
+  --vms-radius-lg: 16px;
+  --vms-radius-xl: 24px;
+  --vms-radius-full: 9999px;
+
+  --vms-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --vms-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --vms-z-base: 1;
+  --vms-z-header: 40;
+  --vms-z-sidebar: 50;
+  --vms-z-drawer-backdrop: 60;
+  --vms-z-modal-backdrop: 70;
+  --vms-z-modal: 80;
+  --vms-z-toast: 90;
+}

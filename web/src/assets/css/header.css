@@ -1,0 +1,69 @@
+/* Top Header / Navigation Bar Styling */
+.vms-header {
+  height: var(--vms-header-height);
+  background-color: var(--vms-bg-surface);
+  border-bottom: 1px solid var(--vms-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: var(--vms-z-header);
+  flex-shrink: 0;
+}
+
+.vms-header-left, .vms-header-center, .vms-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.vms-user-dropdown-container {
+  position: relative;
+}
+
+.vms-user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  background: var(--vms-neu-surface);
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), var(--vms-neu-shadow-dark);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 1050;
+}
+
+.vms-user-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--vms-radius-sm);
+  background: transparent;
+  color: var(--vms-text-regular);
+  font-size: var(--vms-font-xs);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.vms-user-dropdown-item:hover {
+  background: var(--vms-neu-bg);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.vms-user-dropdown-item.active {
+  background: var(--vms-neu-bg);
+  color: var(--vms-neu-accent-orange);
+  border-color: rgba(255, 94, 58, 0.3);
+  box-shadow: var(--vms-neu-inset-dark), var(--vms-neu-inset-light);
+}

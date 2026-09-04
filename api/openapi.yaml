@@ -1,0 +1,681 @@
+openapi: 3.0.3
+info:
+  title: HydraVMS Core API
+  version: 1.0.0
+  description: Professional Multi-Tenant Video Management System & AI Event Orchestrator REST API (100% Token-Enforced).
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+  - url: https://vms.hydrastream.io/api/v1
+    description: Production Cluster Gateway
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: User Login (Only Public Endpoint)
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /auth/tokens:
+    post:
+      summary: Generate Machine-to-Machine Service Token / API Key
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, scopes]
+              properties:
+                name:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                expires_in_days:
+                  type: integer
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key:
+                    type: string
+
+  /cameras:
+    get:
+      summary: List Cameras
+      tags: [Cameras]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Camera'
+    post:
+      summary: Register Camera (RTSP, ONVIF or RTMP)
+      tags: [Cameras]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+
+  /cameras/onvif/discovery:
+    get:
+      summary: Auto-Discover ONVIF Cameras on Local Network
+      tags: [Cameras]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ip:
+                      type: string
+                    device_service_url:
+                      type: string
+                    manufacturer:
+                      type: string
+                    model:
+                      type: string
+
+  /cameras/onvif/probe:
+    post:
+      summary: Probe ONVIF Device and Extract Stream Profiles
+      tags: [Cameras]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ip, user, password]
+              properties:
+                ip:
+                  type: string
+                port:
+                  type: integer
+                  default: 80
+                user:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  main_rtsp_url:
+                    type: string
+                  sub_rtsp_url:
+                    type: string
+                  resolution:
+                    type: string
+                  fps:
+                    type: number
+
+  /events:
+    get:
+      summary: Query AI Events (Gold Layer)
+      tags: [Events]
+      parameters:
+        - name: camera_id
+          in: query
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, acknowledged, resolved, false_positive]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+  /reports:
+    post:
+      summary: Request Asynchronous Report Generation (PDF, Excel, CSV)
+      tags: [Reports & Analytics]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report_type, format]
+              properties:
+                report_type:
+                  type: string
+                  enum: [events_executive_pdf, events_csv, events_xlsx, camera_uptime]
+                format:
+                  type: string
+                  enum: [pdf, csv, xlsx]
+                date_from:
+                  type: string
+                  format: date-time
+                date_to:
+                  type: string
+                  format: date-time
+                camera_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '202':
+          description: Report job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportJob'
+
+    get:
+      summary: List Generated Report Jobs
+      tags: [Reports & Analytics]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportJob'
+
+  /reports/{id}/download-url:
+    get:
+      summary: Get Presigned Report Download URL
+      tags: [Reports & Analytics]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                  expires_in_seconds:
+                    type: integer
+
+  /analytics/dashboard:
+    get:
+      summary: Get High-Performance Aggregated Analytics
+      tags: [Reports & Analytics]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, 7d, 30d]
+            default: today
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_alarms:
+                    type: integer
+                  unresolved_alarms:
+                    type: integer
+                  avg_mtta_seconds:
+                    type: number
+                  hourly_trend:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hour:
+                          type: integer
+                        count:
+                          type: integer
+                  top_cameras:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        camera_id:
+                          type: string
+                        name:
+                          type: string
+                        count:
+                          type: integer
+
+  /plugins:
+    get:
+      summary: List all active plugins in tenant
+      responses:
+        '200':
+          description: List of installed plugins
+    post:
+      summary: Install a plugin into tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plugin_id]
+              properties:
+                plugin_id:
+                  type: string
+                config_values:
+                  type: object
+      responses:
+        '201':
+          description: Plugin installed successfully
+
+  /plugins/{plugin_id}/action:
+    post:
+      summary: Execute lifecycle action on plugin
+      parameters:
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [start, stop, restart, reload_config, update, rollback]
+      responses:
+        '200':
+          description: Action executed
+
+  /marketplace/plugins:
+    get:
+      summary: Search and browse global marketplace plugins
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Available plugins catalog
+
+  /notification-channels:
+    get:
+      summary: List all configured notification channels (Telegram, Webhooks, etc.)
+      responses:
+        '200':
+          description: List of channels
+    post:
+      summary: Create a notification channel (e.g. Telegram Bot, Webhook)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, channel_type, config_json]
+              properties:
+                name:
+                  type: string
+                channel_type:
+                  type: string
+                  enum: [telegram, webhook, email, mqtt, websocket]
+                config_json:
+                  type: object
+      responses:
+        '201':
+          description: Channel created
+
+  /notification-channels/{id}/test:
+    post:
+      summary: Send a test notification to verify channel setup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Test notification dispatched successfully
+
+  /workflows:
+    get:
+      summary: List all automated notification workflows
+      responses:
+        '200':
+          description: List of workflows
+    post:
+      summary: Create a new notification workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, trigger_type, actions_pipeline]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                trigger_type:
+                  type: string
+                filter_conditions:
+                  type: object
+                cooldown_seconds:
+                  type: integer
+                actions_pipeline:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '201':
+          description: Workflow created
+
+  /workflows/{id}/toggle:
+    patch:
+      summary: Enable or disable a workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_enabled]
+              properties:
+                is_enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Workflow state updated
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, viewer]
+
+    Camera:
+      type: object
+      properties:
+        id:
+          type: string
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        protocol:
+          type: string
+          enum: [rtsp, onvif, rtmp]
+        rtsp_url:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, error]
+        fps:
+          type: number
+        resolution:
+          type: string
+
+    CameraCreate:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        protocol:
+          type: string
+          enum: [rtsp, onvif, rtmp]
+          default: rtsp
+        rtsp_url:
+          type: string
+        onvif_ip:
+          type: string
+        onvif_user:
+          type: string
+        onvif_pass:
+          type: string
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        camera_id:
+          type: string
+        event_type:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        object_class:
+          type: string
+        confidence:
+          type: number
+        triggered_at:
+          type: string
+          format: date-time
+        is_pinned:
+          type: boolean
+
+    ReportJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        report_type:
+          type: string
+        format:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    Plugin:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        category:
+          type: string
+        runtime:
+          type: string
+        is_official:
+          type: boolean
+        config_schema:
+          type: object
+
+    TenantPlugin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        plugin_id:
+          type: string
+        installed_version:
+          type: string
+        is_enabled:
+          type: boolean
+        status:
+          type: string
+          enum: [running, stopped, starting, crash_loop, error]
+        assigned_gpu_device:
+          type: string
+        config_values:
+          type: object
+
+    NotificationChannel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        channel_type:
+          type: string
+          enum: [telegram, webhook, email, mqtt, websocket]
+        is_active:
+          type: boolean
+        config_json:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationWorkflow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        is_enabled:
+          type: boolean
+        trigger_type:
+          type: string
+        filter_conditions:
+          type: object
+        cooldown_seconds:
+          type: integer
+        actions_pipeline:
+          type: array
+          items:
+            type: object
+        last_triggered_at:
+          type: string
+          format: date-time

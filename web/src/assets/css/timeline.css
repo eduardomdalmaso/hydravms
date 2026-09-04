@@ -1,0 +1,91 @@
+/* Neumorphic Playback Drawer & Vezha-Style Timeline Zoom */
+.vms-playback-drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--vms-neu-surface);
+  border-top: 2px solid var(--vms-neu-accent-orange);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7);
+  z-index: var(--vms-z-header);
+  display: flex;
+  flex-direction: column;
+  animation: vms-drawer-up 0.2s ease-out;
+}
+.vms-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--vms-border);
+}
+.vms-timeline-wrapper {
+  position: relative;
+  height: 60px;
+  background: var(--vms-neu-bg);
+  box-shadow: var(--vms-neu-inset-dark), var(--vms-neu-inset-light);
+  cursor: crosshair;
+  user-select: none;
+  overflow: hidden;
+  border-bottom: 1px solid var(--vms-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.4rem 1rem 0.2rem 1rem;
+}
+.vms-timeline-track {
+  width: 100%;
+  height: 10px;
+  background: #15181d;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.8);
+  border-radius: var(--vms-radius-full);
+  position: relative;
+}
+.vms-timeline-recorded-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--vms-neu-accent-gradient);
+  box-shadow: 0 0 10px rgba(255, 94, 58, 0.5);
+  border-radius: var(--vms-radius-full);
+}
+.vms-timeline-ruler { display: flex; justify-content: space-between; width: 100%; }
+.vms-timeline-tick { font-family: var(--vms-font-mono); font-size: 10px; color: var(--vms-text-dim); }
+.vms-timeline-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 16px rgba(255, 94, 58, 0.8);
+  pointer-events: none;
+  z-index: 10;
+}
+.vms-timeline-tooltip {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--vms-neu-accent-orange);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--vms-font-mono);
+  font-size: 10px;
+  color: #ffffff;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 20;
+}
+.vms-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  background: var(--vms-neu-surface);
+  gap: 1rem;
+}
+@keyframes vms-drawer-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

@@ -1,0 +1,75 @@
+/* Standardized Form Inputs & Controls */
+.vms-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.vms-label {
+  font-size: var(--vms-font-xs);
+  font-weight: 500;
+  color: var(--vms-text-regular);
+}
+
+.vms-input,
+.vms-select,
+.vms-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: var(--vms-font-sm);
+  background-color: var(--vms-bg-elevated);
+  border: 1px solid var(--vms-border-light);
+  border-radius: var(--vms-radius-md);
+  color: var(--vms-text-main);
+  transition: border-color var(--vms-transition-fast), box-shadow var(--vms-transition-fast);
+  outline: none;
+}
+
+.vms-input:focus,
+.vms-select:focus,
+.vms-textarea:focus {
+  border-color: var(--vms-border-focus);
+  box-shadow: 0 0 0 2px var(--vms-primary-subtle);
+}
+
+.vms-input::placeholder,
+.vms-textarea::placeholder {
+  color: var(--vms-text-dim);
+}
+
+.vms-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+.vms-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--vms-font-sm);
+  color: var(--vms-text-regular);
+  cursor: pointer;
+}
+
+.vms-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--vms-radius-sm);
+  accent-color: var(--vms-primary);
+  cursor: pointer;
+}
+
+.vms-form-help {
+  font-size: var(--vms-font-2xs);
+  color: var(--vms-text-muted);
+}
+
+.vms-form-error {
+  font-size: var(--vms-font-2xs);
+  color: var(--vms-danger);
+}

@@ -1,0 +1,43 @@
+/* Vezha-Style Workspace Top Layout Tabs com Suavização */
+.vms-workspace-top-tabs {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #0d1016; border-bottom: 1px solid var(--vms-border);
+  padding: 0.25rem 0.6rem 0 0.6rem; min-height: 32px; gap: 0.5rem; z-index: 8;
+  animation: vms-fade-in 0.2s ease-out;
+}
+
+.vms-tabs-scroll-area {
+  display: flex; align-items: center; gap: 0.35rem; overflow-x: auto;
+  scrollbar-width: none; flex: 1;
+}
+.vms-tabs-scroll-area::-webkit-scrollbar { display: none; }
+
+.vms-workspace-tab {
+  display: flex; align-items: center; gap: 0.45rem; padding: 0.3rem 0.65rem;
+  border-radius: 4px 4px 0 0; background: #14171e; border: 1px solid var(--vms-border);
+  border-bottom: none; color: #cbd5e1; font-size: 11px; cursor: pointer;
+  user-select: none; transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+  animation: vms-tab-enter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.vms-workspace-tab:hover { background: #191c24; color: #ffffff; transform: translateY(-1px); }
+.vms-workspace-tab.active {
+  background: var(--vms-neu-bg); color: #ffffff; border-color: rgba(255, 94, 58, 0.45);
+  border-top: 2px solid var(--vms-neu-accent-orange); box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.vms-tab-title {
+  font-family: var(--vms-font-roboto) !important; font-weight: 600; max-width: 140px;
+  color: #ffffff; overflow: hidden; text-overflow: ellipsis;
+}
+
+.vms-tab-icon-action-btn {
+  background: transparent; border: none; padding: 2px 3px; border-radius: 3px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease;
+}
+.vms-tab-icon-action-btn:hover { background: rgba(255, 94, 58, 0.2); transform: scale(1.15); }
+
+@keyframes vms-tab-enter {
+  from { opacity: 0; transform: translateY(4px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

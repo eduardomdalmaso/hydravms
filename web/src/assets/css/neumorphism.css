@@ -1,0 +1,89 @@
+/* Dark Neumorphism (Soft UI) Tokens & Classes */
+:root {
+  --vms-neu-bg: #1e2126;
+  --vms-neu-surface: #22262c;
+  --vms-neu-dark-shadow: 6px 6px 14px rgba(0, 0, 0, 0.65);
+  --vms-neu-light-shadow: -6px -6px 14px rgba(255, 255, 255, 0.04);
+  --vms-neu-inset-dark: inset 3px 3px 6px rgba(0, 0, 0, 0.7);
+  --vms-neu-inset-light: inset -3px -3px 6px rgba(255, 255, 255, 0.04);
+  
+  --vms-neu-accent-orange: #ff5e3a;
+  --vms-neu-accent-gradient: linear-gradient(135deg, #ff6a3d 0%, #e04826 100%);
+  --vms-neu-accent-glow: 0 4px 16px rgba(240, 80, 40, 0.45);
+}
+
+/* Elevated Convex Buttons & Controls */
+.vms-neu-btn {
+  background: var(--vms-neu-surface);
+  box-shadow: var(--vms-neu-dark-shadow), var(--vms-neu-light-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: var(--vms-radius-md);
+  color: #cbd5e1;
+  transition: all var(--vms-transition-fast);
+  cursor: pointer;
+}
+
+.vms-neu-btn:hover {
+  color: #ffffff;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.7), -4px -4px 10px rgba(255, 255, 255, 0.06);
+}
+
+.vms-neu-btn:active,
+.vms-neu-btn.pressed {
+  box-shadow: var(--vms-neu-inset-dark), var(--vms-neu-inset-light);
+  color: var(--vms-neu-accent-orange);
+}
+
+/* Circular Icon Buttons (Play, Next, Prev, Preset) */
+.vms-neu-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vms-neu-surface);
+  box-shadow: var(--vms-neu-dark-shadow), var(--vms-neu-light-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  color: #cbd5e1;
+}
+
+/* Hero Vibrant Orange Play Button */
+.vms-neu-accent-hero {
+  background: var(--vms-neu-accent-gradient);
+  box-shadow: var(--vms-neu-accent-glow), 4px 4px 12px rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #ffffff;
+}
+
+.vms-neu-accent-hero:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 20px rgba(240, 80, 40, 0.6);
+}
+
+/* Cavity / Inset Timeline Scrubber Track */
+.vms-neu-track {
+  background: var(--vms-neu-bg);
+  box-shadow: var(--vms-neu-inset-dark), var(--vms-neu-inset-light);
+  border-radius: var(--vms-radius-full);
+  height: 6px;
+  position: relative;
+}
+
+.vms-neu-track-fill {
+  background: var(--vms-neu-accent-gradient);
+  box-shadow: 0 0 8px rgba(255, 94, 58, 0.6);
+  border-radius: var(--vms-radius-full);
+  height: 100%;
+}
+
+.vms-neu-track-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff5e3a;
+  box-shadow: 0 0 10px rgba(255, 94, 58, 0.8), 0 2px 4px rgba(0,0,0,0.5);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

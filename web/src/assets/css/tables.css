@@ -1,0 +1,58 @@
+/* Standardized Data Tables */
+.vms-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-lg);
+  background-color: var(--vms-bg-surface);
+}
+
+.vms-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--vms-font-sm);
+}
+
+.vms-table th {
+  padding: 0.75rem 1rem;
+  background-color: var(--vms-bg-elevated);
+  color: var(--vms-text-muted);
+  font-size: var(--vms-font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--vms-border-light);
+  white-space: nowrap;
+}
+
+.vms-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--vms-border);
+  color: var(--vms-text-main);
+  vertical-align: middle;
+}
+
+.vms-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vms-table tr:hover td {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+.vms-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vms-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--vms-border);
+  font-size: var(--vms-font-xs);
+  color: var(--vms-text-muted);
+}

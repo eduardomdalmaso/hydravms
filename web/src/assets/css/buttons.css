@@ -1,0 +1,73 @@
+/* Neumorphism Standardized Button System */
+.vms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--vms-font-sans);
+  font-size: var(--vms-font-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.625rem 1rem;
+  border-radius: var(--vms-radius-md);
+  border: 1px solid var(--vms-border);
+  cursor: pointer;
+  transition: all var(--vms-transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.vms-btn:focus-visible {
+  outline: 2px solid var(--vms-border-focus);
+  outline-offset: 2px;
+}
+
+.vms-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.vms-btn-primary {
+  background: var(--vms-primary-gradient);
+  color: #ffffff;
+  border: none;
+  box-shadow: var(--vms-primary-glow), 3px 3px 8px rgba(0, 0, 0, 0.4);
+}
+.vms-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(240, 80, 40, 0.5);
+}
+
+.vms-btn-secondary {
+  background: var(--vms-bg-elevated);
+  color: var(--vms-text-main);
+  box-shadow: var(--vms-shadow-convex-sm);
+}
+.vms-btn-secondary:hover:not(:disabled) {
+  background: var(--vms-bg-elevated-hover);
+  color: #ffffff;
+}
+
+.vms-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.vms-btn-ghost {
+  background: transparent;
+  color: var(--vms-text-regular);
+  border: 1px solid transparent;
+}
+.vms-btn-ghost:hover:not(:disabled) {
+  background: var(--vms-bg-elevated);
+  box-shadow: var(--vms-shadow-convex-sm);
+  color: #ffffff;
+}
+
+.vms-btn-sm {
+  font-size: 11px;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--vms-radius-sm);
+}

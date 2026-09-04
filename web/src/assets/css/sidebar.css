@@ -1,0 +1,83 @@
+/* Sidebar Navigation Styling */
+.vms-sidebar {
+  width: var(--vms-sidebar-width);
+  height: 100vh;
+  background-color: var(--vms-bg-surface);
+  border-right: 1px solid var(--vms-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width var(--vms-transition-normal);
+  z-index: var(--vms-z-sidebar);
+}
+
+.vms-sidebar-collapsed {
+  width: var(--vms-sidebar-collapsed-width);
+}
+
+.vms-sidebar-brand {
+  height: var(--vms-header-height);
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--vms-border);
+}
+
+.vms-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: var(--vms-font-lg);
+  color: var(--vms-text-main);
+}
+
+.vms-sidebar-nav {
+  flex: 1;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.vms-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--vms-radius-md);
+  color: var(--vms-text-regular);
+  font-size: var(--vms-font-sm);
+  font-weight: 500;
+  transition: background-color var(--vms-transition-fast), color var(--vms-transition-fast);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.vms-nav-item:hover {
+  background-color: var(--vms-bg-elevated);
+  color: var(--vms-text-main);
+}
+
+.vms-nav-item.active {
+  background-color: var(--vms-primary-subtle);
+  color: var(--vms-primary);
+  border-left-color: var(--vms-primary);
+  font-weight: 600;
+}
+
+.vms-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.vms-sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid var(--vms-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

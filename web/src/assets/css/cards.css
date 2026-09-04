@@ -1,0 +1,65 @@
+/* Neumorphism Standardized Card & Surface Containers */
+.vms-card {
+  background: var(--vms-bg-surface);
+  box-shadow: var(--vms-shadow-convex);
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform var(--vms-transition-fast), box-shadow var(--vms-transition-fast);
+}
+
+.vms-card-elevated {
+  background: var(--vms-bg-elevated);
+  box-shadow: var(--vms-shadow-convex-sm);
+  border: 1px solid var(--vms-border-light);
+}
+
+.vms-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--vms-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vms-card-body {
+  padding: 1.25rem;
+  flex: 1;
+}
+
+.vms-card-footer {
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--vms-border);
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Camera Video Grid Slot Card */
+.vms-camera-slot {
+  background-color: #0b0d11;
+  box-shadow: var(--vms-shadow-concave);
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-md);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  transition: border-color var(--vms-transition-fast);
+}
+
+.vms-camera-slot:hover {
+  border-color: var(--vms-border-light);
+}
+
+.vms-camera-slot.selected {
+  border: 2px solid var(--vms-primary);
+  box-shadow: 0 0 12px rgba(255, 94, 58, 0.4);
+}

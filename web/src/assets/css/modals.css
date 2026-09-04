@@ -1,0 +1,60 @@
+/* Standardized Modal Dialogs & Backdrops */
+.vms-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(9, 13, 22, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--vms-z-modal-backdrop);
+  padding: 1rem;
+}
+
+.vms-modal-dialog {
+  background-color: var(--vms-bg-surface);
+  border: 1px solid var(--vms-border-light);
+  border-radius: var(--vms-radius-xl);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--vms-shadow-modal);
+  z-index: var(--vms-z-modal);
+  overflow: hidden;
+  animation: vms-modal-in 0.2s ease-out;
+}
+
+.vms-modal-lg {
+  max-width: 800px;
+}
+
+.vms-modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--vms-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vms-modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.vms-modal-footer {
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--vms-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: rgba(15, 23, 42, 0.5);
+}
+
+@keyframes vms-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

@@ -1,0 +1,61 @@
+/* Admin Center Management Views */
+.vms-admin-container {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  background: var(--vms-neu-bg);
+  overflow: hidden;
+}
+
+.vms-admin-sidebar {
+  width: 260px;
+  background: var(--vms-neu-surface);
+  border-right: 1px solid var(--vms-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.vms-admin-content {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vms-admin-card {
+  background: var(--vms-neu-surface);
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--vms-neu-shadow-dark), var(--vms-neu-shadow-light);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.vms-admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--vms-radius-md);
+  border: 1px solid var(--vms-border);
+  background: var(--vms-neu-bg);
+}
+
+.vms-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.vms-stat-box {
+  background: var(--vms-neu-surface);
+  border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-md);
+  padding: 1rem;
+  box-shadow: var(--vms-neu-inset-dark), var(--vms-neu-inset-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}

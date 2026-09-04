@@ -1,0 +1,86 @@
+/* Neumorphic HUD Context Menu & Mini Grid Preview */
+.vms-context-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vms-z-modal);
+  background: transparent;
+}
+
+.vms-context-menu {
+  position: fixed;
+  min-width: 190px;
+  background: #14171d;
+  border: 1px solid var(--vms-neu-accent-orange);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: calc(var(--vms-z-modal) + 1);
+}
+
+.vms-context-menu-header {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--vms-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.vms-context-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-family: var(--vms-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.vms-context-item:hover {
+  background: rgba(255, 94, 58, 0.15);
+  color: var(--vms-neu-accent-orange);
+}
+.vms-context-item.danger:hover {
+  background: rgba(255, 0, 60, 0.2);
+  color: #ff003c;
+}
+
+.vms-context-divider { height: 1px; background: var(--vms-border); margin: 0.2rem 0; }
+.vms-context-menu-section-title { padding: 0.25rem 0.5rem; font-family: var(--vms-font-mono); font-size: 9px; color: var(--vms-text-dim); }
+
+.vms-context-grid-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.25rem 0.4rem;
+}
+
+/* Miniature Grid Hover Icon */
+.vms-grid-mini-icon {
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  background: #080a0e; border: 1px solid var(--vms-border); border-radius: 3px; padding: 2px; flex-shrink: 0;
+}
+.vms-mini-grid { display: grid; gap: 1.5px; width: 100%; height: 100%; }
+.vms-mini-1x1 { grid-template-columns: 1fr; }
+.vms-mini-1x2 { grid-template-columns: 1fr 1fr; }
+.vms-mini-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.vms-mini-3x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+.vms-mini-4x4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+.vms-mini-1-5 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+.vms-mini-1-5 .vms-mini-hero { grid-column: 1 / span 2; grid-row: 1 / span 2; background: var(--vms-neu-accent-orange) !important; }
+.vms-mini-1-7 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+.vms-mini-1-7 .vms-mini-hero-lg { grid-column: 1 / span 3; grid-row: 1 / span 3; background: var(--vms-neu-accent-orange) !important; }
+.vms-mini-1-12 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+.vms-mini-1-12 .vms-mini-hero-xl { grid-column: 1 / span 2; grid-row: 1 / span 2; background: var(--vms-neu-accent-orange) !important; }
+
+.vms-mini-cell { background: rgba(255, 255, 255, 0.45); border-radius: 1px; }
+.vms-asset-item:hover .vms-mini-cell { background: var(--vms-neu-accent-orange); }
