@@ -1,35 +1,32 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from "vue"
+import UserMenuDropdown from "./UserMenuDropdown.vue"
 
 const props = withDefaults(
-  defineProps<{ username?: string; isAdmin?: boolean; currentMode?: 'vms' | 'admin'; unreadAlertsCount?: number }>(),
-  { username: 'admin', isAdmin: true, currentMode: 'vms', unreadAlertsCount: 0 }
+  defineProps<{ username?: string; isAdmin?: boolean; currentMode?: "vms" | "admin"; unreadAlertsCount?: number }>(),
+  { username: "admin", isAdmin: true, currentMode: "vms", unreadAlertsCount: 0 }
 )
 
-const emit = defineEmits<{ (e: 'toggleAlerts'): void; (e: 'switchMode', mode: 'vms' | 'admin'): void; (e: 'logout'): void }>()
+const emit = defineEmits<{ (e: "toggleAlerts"): void; (e: "switchMode", mode: "vms" | "admin"): void; (e: "logout"): void }>()
 
 const isUserMenuOpen = ref(false)
 const isCalendarOpen = ref(false)
-const currentTimeStr = ref('')
+const currentTimeStr = ref("")
 
 const updateTime = () => {
   const now = new Date()
-  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-  const dayName = days[now.getDay()]
-  const dayNum = String(now.getDate()).padStart(2, '0')
-  const monthName = months[now.getMonth()]
-  const time = now.toTimeString().slice(0, 5)
-  currentTimeStr.value = `${dayName}, ${dayNum} ${monthName} • ${time}`
+  const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+  currentTimeStr.value = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, "0")} ${months[now.getMonth()]} • ${now.toTimeString().slice(0, 5)}`
 }
 
 let timer: any = null
 onMounted(() => { updateTime(); timer = setInterval(updateTime, 1000) })
 onUnmounted(() => { if (timer) clearInterval(timer) })
 
-const handleSelectMode = (mode: 'vms' | 'admin') => {
-  if (mode === 'admin' && !props.isAdmin) return
-  emit('switchMode', mode)
+const handleSelectMode = (mode: "vms" | "admin") => {
+  if (mode === "admin" && !props.isAdmin) return
+  emit("switchMode", mode)
   isUserMenuOpen.value = false
 }
 </script>
@@ -44,7 +41,7 @@ const handleSelectMode = (mode: 'vms' | 'admin') => {
     <!-- Center: GNOME Style Calendar / Clock Trigger in Roboto -->
     <div style="position: relative;">
       <button class="vms-btn vms-btn-ghost vms-btn-sm" style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 11px; padding: 0.25rem 0.75rem;" @click="isCalendarOpen = !isCalendarOpen">
-        {{ currentTimeStr || 'Qua, 03 Set • 20:55' }}
+        {{ currentTimeStr || "Qua, 03 Set • 20:55" }}
       </button>
 
       <!-- GNOME Style Calendar Popup -->
@@ -74,24 +71,19 @@ const handleSelectMode = (mode: 'vms' | 'admin') => {
       <!-- User Dropdown Menu with RBAC protection -->
       <div class="vms-user-dropdown-container">
         <button class="vms-btn vms-btn-secondary vms-btn-sm" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.65rem;" @click="isUserMenuOpen = !isUserMenuOpen">
-          <span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto);">{{ username }}</span>
+          <span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ username }}</span>
           <span style="font-size: 9px; color: var(--vms-neu-accent-orange);">▼</span>
         </button>
 
-        <div v-if="isUserMenuOpen" class="vms-user-dropdown-menu">
-          <button class="vms-user-dropdown-item" :class="{ active: currentMode === 'vms' }" @click="handleSelectMode('vms')">
-            <span>[PAINEL VMS]</span>
-            <span v-if="currentMode === 'vms'" class="vms-badge vms-badge-online" style="font-size: 9px;">[ATIVO]</span>
-          </button>
-          <button v-if="isAdmin" class="vms-user-dropdown-item" :class="{ active: currentMode === 'admin' }" @click="handleSelectMode('admin')">
-            <span>[ADMIN CENTER]</span>
-            <span v-if="currentMode === 'admin'" class="vms-badge vms-badge-info" style="font-size: 9px;">[ATIVO]</span>
-          </button>
-          <div class="vms-divider" style="margin: 0.25rem 0;"></div>
-          <button class="vms-user-dropdown-item" style="color: var(--vms-accent-danger);" @click="emit('logout')">
-            <span>[DESCONECTAR]</span>
-          </button>
-        </div>
+        <UserMenuDropdown
+          :username="username"
+          :isAdmin="isAdmin"
+          :currentMode="currentMode"
+          :isOpen="isUserMenuOpen"
+          @switchMode="handleSelectMode"
+          @logout="emit('logout')"
+          @close="isUserMenuOpen = false"
+        />
       </div>
     </div>
   </header>

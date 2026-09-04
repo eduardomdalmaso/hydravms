@@ -1,9 +1,9 @@
-/* Standardized Data Tables */
+/* Standardized Cyberpunk Data Tables */
 .vms-table-container {
   width: 100%;
   overflow-x: auto;
   border: 1px solid var(--vms-border);
-  border-radius: var(--vms-radius-lg);
+  border-radius: var(--vms-radius-md);
   background-color: var(--vms-bg-surface);
 }
 
@@ -16,43 +16,43 @@
 
 .vms-table th {
   padding: 0.75rem 1rem;
-  background-color: var(--vms-bg-elevated);
+  background-color: #161920;
   color: var(--vms-text-muted);
   font-size: var(--vms-font-xs);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--vms-border-light);
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid rgba(255, 94, 58, 0.3);
   white-space: nowrap;
 }
 
 .vms-table td {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--vms-border);
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--vms-text-main);
   vertical-align: middle;
+  font-family: var(--vms-font-roboto);
 }
 
 .vms-table tr:last-child td {
   border-bottom: none;
 }
 
+.vms-table tr {
+  transition: background 0.15s ease, border-left 0.15s ease;
+  border-left: 3px solid transparent;
+}
+
 .vms-table tr:hover td {
-  background-color: rgba(30, 41, 59, 0.5);
+  background-color: rgba(255, 94, 58, 0.05);
+}
+
+.vms-table tr:hover {
+  border-left: 3px solid var(--vms-neu-accent-orange);
 }
 
 .vms-table-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.vms-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--vms-border);
-  font-size: var(--vms-font-xs);
-  color: var(--vms-text-muted);
 }
