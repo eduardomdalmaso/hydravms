@@ -34,8 +34,10 @@ const handleSelectMode = (mode: "vms" | "admin") => {
 <template>
   <header class="vms-header" style="background: #15181d; border-bottom: 1px solid var(--vms-border); height: 44px; padding: 0 1rem;">
     <!-- Left: Brand Title -->
-    <div class="vms-flex-row">
-      <span style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 15px; font-weight: 800; letter-spacing: 0.8px;">HYDRA VMS</span>
+    <div class="vms-flex-row" style="align-items: center;">
+      <span style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 15px; font-weight: 800; letter-spacing: 0.8px;">
+        HYDRA VMS<template v-if="currentMode === 'admin'"> - ADMIN CENTER</template>
+      </span>
     </div>
 
     <!-- Center: GNOME Style Calendar / Clock Trigger in Roboto -->
