@@ -3,7 +3,7 @@ import { useDesktopAlarms } from '../../composables/useDesktopAlarms'
 import AlarmBreadcrumb from '../../components/admin/alarms/AlarmBreadcrumb.vue'
 import AlarmFolderCard from '../../components/admin/alarms/AlarmFolderCard.vue'
 import AlarmAppCard from '../../components/admin/alarms/AlarmAppCard.vue'
-import AlarmDetailInspector from '../../components/admin/alarms/AlarmDetailInspector.vue'
+import AlarmInspectorSplitView from '../../components/admin/alarms/AlarmInspectorSplitView.vue'
 import TreeContextMenu, { type ContextMenuTarget } from '../../components/admin/TreeContextMenu.vue'
 import CreateAlarmFolderModal from '../../components/admin/alarms/CreateAlarmFolderModal.vue'
 import AlarmWizardModal from '../../components/admin/alarms/AlarmWizardModal.vue'
@@ -57,7 +57,7 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
 
     <!-- Main Workspace Container -->
     <div class="vms-desktop-container">
-      <AlarmDetailInspector v-if="selectedAlarm" :alarm="selectedAlarm" @close="selectedAlarm = null" @test="(id) => showNotification(`[TRIGGER TEST] Sensor ${id} // DISPARO OK`)" @delete="deleteAlarmById" />
+      <AlarmInspectorSplitView v-if="selectedAlarm" :alarm="selectedAlarm" @saved="(msg) => showNotification(msg)" />
 
       <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
         <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">

@@ -1,89 +1,88 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { AdminUser } from '../../types/admin'
+import { useDesktopUsers } from '../../composables/useDesktopUsers'
+import UserBreadcrumb from '../../components/admin/users/UserBreadcrumb.vue'
+import UserFolderCard from '../../components/admin/users/UserFolderCard.vue'
+import UserAppCard from '../../components/admin/users/UserAppCard.vue'
+import UserInspectorSplitView from '../../components/admin/users/UserInspectorSplitView.vue'
+import TreeContextMenu, { type ContextMenuTarget } from '../../components/admin/TreeContextMenu.vue'
+import CreateUserFolderModal from '../../components/admin/users/CreateUserFolderModal.vue'
+import UserWizardModal from '../../components/admin/users/UserWizardModal.vue'
+import ConfirmDeleteFolderModal from '../../components/admin/ConfirmDeleteFolderModal.vue'
 
-const users = ref<AdminUser[]>([
-  { id: 'usr_01', username: 'admin', role: 'admin', email: 'admin@hydravms.internal', allowed_cameras: ['ALL'], is_active: true, created_at: '2026-01-10' },
-  { id: 'usr_02', username: 'operador_portaria', role: 'operator', email: 'portaria@hydravms.internal', allowed_cameras: ['cam_01', 'cam_02'], is_active: true, created_at: '2026-02-15' },
-  { id: 'usr_03', username: 'supervisor_seguranca', role: 'supervisor', email: 'supervisor@hydravms.internal', allowed_cameras: ['ALL'], is_active: true, created_at: '2026-03-01' }
-])
+const {
+  searchQuery, folders, currentFolderId, currentFolder, selectedUser, notification, contextMenu,
+  isFolderModalOpen, isWizardOpen, folderToDelete, isConfirmDeleteOpen, totalUsers, displayedFolders,
+  displayedUsers, openContextMenu, handleDragStart, handleDropOnFolder, moveUserToFolder,
+  requestDeleteFolder, confirmDeleteFolder, deleteUserById, handleSaveFolder, handleSaveUser, showNotification
+} = useDesktopUsers()
 
-const isModalOpen = ref(false)
-const newUsername = ref('')
-const newRole = ref<'operator' | 'supervisor'>('operator')
-
-const handleAddUser = () => {
-  if (!newUsername.value) return
-  users.value.push({
-    id: `usr_0${users.value.length + 1}`,
-    username: newUsername.value,
-    role: newRole.value,
-    email: `${newUsername.value}@hydravms.internal`,
-    allowed_cameras: ['cam_01'],
-    is_active: true,
-    created_at: '2026-09-03'
-  })
-  isModalOpen.value = false
-  newUsername.value = ''
+const handleContextAction = (action: string, target: ContextMenuTarget, extra?: any) => {
+  if (action === 'open-folder' && target.id) currentFolderId.value = target.id
+  else if (action === 'create-folder') isFolderModalOpen.value = true
+  else if (action === 'create-stream') { if (target.type === 'folder' && target.id) currentFolderId.value = target.id; isWizardOpen.value = true }
+  else if (action === 'inspect-stream' && target.id) {
+    let u = displayedUsers.value.find(item => item.id === target.id)
+    if (!u) { for (const f of folders.value) { u = f.users.find(item => item.id === target.id); if (u) break } }
+    if (u) selectedUser.value = u
+  }
+  else if (action === 'delete-folder' && target.id) requestDeleteFolder(target.id)
+  else if (action === 'delete-stream' && target.id) deleteUserById(target.id)
+  else if (action === 'move-stream' && target.id) moveUserToFolder(target.id, extra)
+  else if (action === 'test-stream' && target.id) showNotification(`[AUTH TEST] Token do usuário ${target.name || ''} // VALIDO`)
 }
 </script>
 
 <template>
-  <div class="vms-flex-col" style="gap: 1.25rem;">
+  <div class="vms-flex-col" style="gap: 1rem;">
+    <!-- Top Bar -->
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">GESTAO DE USUARIOS & PERMISSOES (RBAC)</h3>
-        <span class="vms-text-mono vms-text-2xs vms-text-dim">PAGINA DE CONTROLE DE ACESSO AO VMS OPERACIONAL</span>
+        <span v-if="selectedUser" class="vms-text-mono vms-text-2xs vms-text-dim">INSPECAO // {{ selectedUser.username }}</span>
       </div>
-      <button class="vms-btn vms-btn-primary" @click="isModalOpen = true">[+ NOVO USUARIO]</button>
+      <div v-if="!selectedUser" class="vms-flex-row" style="gap: 0.75rem;">
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar usuários..." />
+        <button class="vms-btn vms-btn-secondary" title="Novo Grupo / Departamento" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
+        <button class="vms-btn vms-btn-primary" title="Novo Usuário" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
+      </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="vms-admin-table-wrapper">
-      <table class="vms-table">
-        <thead>
-          <tr><th>USUARIO</th><th>PERFIL</th><th>EMAIL</th><th>CAMERAS LIBERADAS</th><th>STATUS</th><th>ACOES</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in users" :key="u.id">
-            <td class="vms-font-semibold" style="color: #fff;">{{ u.username }}</td>
-            <td><span class="vms-badge" :class="u.role === 'admin' ? 'vms-badge-recording' : 'vms-badge-info'">[{{ u.role.toUpperCase() }}]</span></td>
-            <td class="vms-text-mono vms-text-2xs vms-text-dim">{{ u.email }}</td>
-            <td class="vms-text-mono vms-text-xs">{{ u.allowed_cameras.join(', ') }}</td>
-            <td style="text-align: center;"><span class="vms-status-led" :class="u.is_active ? 'online' : 'offline'" :title="u.is_active ? 'Ativo' : 'Inativo'"></span></td>
-            <td><button class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 11px;">[EDITAR]</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Toast Notification -->
+    <Transition name="vms-toast">
+      <div v-if="notification" class="vms-toast-notification" title="Clique para fechar" @click="notification = null"><span>{{ notification }}</span></div>
+    </Transition>
 
-    <!-- Modal Novo Usuario -->
-    <div v-if="isModalOpen" class="vms-modal-backdrop" @click.self="isModalOpen = false">
-      <div class="vms-modal-dialog">
-        <div class="vms-modal-header">
-          <h3 class="vms-h3">CADASTRAR NOVO USUARIO DO SISTEMA</h3>
-          <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="isModalOpen = false">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <div class="vms-modal-body">
-          <div class="vms-form-group">
-            <label class="vms-label">Nome de Usuario</label>
-            <input v-model="newUsername" class="vms-auth-input" placeholder="Ex: operador_galpao" />
+    <!-- Breadcrumb with 3 GRUPOS // X USUARIOS -->
+    <UserBreadcrumb :current-folder="currentFolder" :selected-user="selectedUser" :total-folders="folders.length" :total-users="totalUsers" :current-folder-users-count="currentFolder?.users.length" @back="selectedUser ? (selectedUser = null) : (currentFolderId = null)" @navigate-root="currentFolderId = null; selectedUser = null" @navigate-folder="selectedUser = null" />
+
+    <!-- Main Workspace Container -->
+    <div class="vms-desktop-container">
+      <UserInspectorSplitView v-if="selectedUser" :user="selectedUser" @saved="(msg) => showNotification(msg)" />
+
+      <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+          <div class="vms-desktop-grid">
+            <UserFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-user="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
           </div>
-          <div class="vms-form-group">
-            <label class="vms-label">Nivel de Acesso</label>
-            <div class="vms-flex-row" style="gap: 1rem;">
-              <button class="vms-btn vms-btn-sm" :class="newRole === 'operator' ? 'vms-btn-primary' : 'vms-btn-secondary'" @click="newRole = 'operator'">OPERADOR</button>
-              <button class="vms-btn vms-btn-sm" :class="newRole === 'supervisor' ? 'vms-btn-primary' : 'vms-btn-secondary'" @click="newRole = 'supervisor'">SUPERVISOR</button>
+
+          <div v-if="displayedUsers.length > 0" class="vms-flex-col" style="gap: 0.5rem; border-top: 1px solid var(--vms-border); padding-top: 1rem;">
+            <div class="vms-desktop-section-title">// USUARIOS NA RAIZ (ARRASTE PARA UM GRUPO)</div>
+            <div class="vms-desktop-grid">
+              <UserAppCard v-for="u in displayedUsers" :key="u.id" :user="u" :is-selected="false" @dragstart="handleDragStart" @select="(usr) => selectedUser = usr" @context="(ev, usr) => openContextMenu(ev, { type: 'stream', id: usr.id, name: usr.username, currentFolderId: currentFolderId })" />
             </div>
           </div>
         </div>
-        <div class="vms-modal-footer">
-          <button class="vms-btn vms-btn-secondary" @click="isModalOpen = false">CANCELAR</button>
-          <button class="vms-btn vms-btn-primary" @click="handleAddUser">SALVAR</button>
+
+        <div v-else class="vms-desktop-grid">
+          <div v-if="displayedUsers.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// GRUPO VAZIO (CLIQUE EM [+] OU BOTAO DIREITO PARA CADASTRAR USUARIO)</div>
+          <UserAppCard v-for="u in displayedUsers" :key="u.id" :user="u" :is-selected="false" @dragstart="handleDragStart" @select="(usr) => selectedUser = usr" @context="(ev, usr) => openContextMenu(ev, { type: 'stream', id: usr.id, name: usr.username, currentFolderId: currentFolderId })" />
         </div>
       </div>
     </div>
+
+    <TreeContextMenu :is-open="contextMenu.isOpen" :x="contextMenu.x" :y="contextMenu.y" :target="contextMenu.target" :folders="folders" @close="contextMenu.isOpen = false" @action="handleContextAction" />
+    <CreateUserFolderModal :is-open="isFolderModalOpen" @close="isFolderModalOpen = false" @save="handleSaveFolder" />
+    <UserWizardModal :is-open="isWizardOpen" :target-folder-id="currentFolderId || undefined" :folders="folders" @close="isWizardOpen = false" @save="handleSaveUser" />
+    <ConfirmDeleteFolderModal :is-open="isConfirmDeleteOpen" :folder-name="folderToDelete?.name || ''" :item-count="folderToDelete?.itemCount || 0" item-type="usuario(s)" @close="isConfirmDeleteOpen = false" @confirm="confirmDeleteFolder" />
   </div>
 </template>
