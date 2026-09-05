@@ -1,60 +1,64 @@
-/* Standardized Modal Dialogs & Backdrops */
+/* Standardized Solid Modal Dialogs & Backdrops */
 .vms-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(9, 13, 22, 0.75);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--vms-z-modal-backdrop);
-  padding: 1rem;
+  position: fixed; inset: 0; background-color: rgba(5, 7, 11, 0.72);
+  backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+  z-index: var(--vms-z-modal-backdrop); padding: 1rem;
+  animation: vmsModalBackdropFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes vmsModalBackdropFade {
+  from { opacity: 0; } to { opacity: 1; }
 }
 
-.vms-modal-dialog {
-  background-color: var(--vms-bg-surface);
-  border: 1px solid var(--vms-border-light);
-  border-radius: var(--vms-radius-xl);
-  width: 100%;
-  max-width: 560px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--vms-shadow-modal);
-  z-index: var(--vms-z-modal);
-  overflow: hidden;
-  animation: vms-modal-in 0.2s ease-out;
+.vms-modal-dialog, .vms-modal-card {
+  background-color: #14171d !important;
+  border: 1px solid rgba(255, 94, 58, 0.4) !important;
+  border-radius: 8px; width: 100%; max-width: 560px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.95), 0 0 20px rgba(255, 94, 58, 0.12);
+  z-index: var(--vms-z-modal); overflow: hidden;
+  animation: vmsModalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
-.vms-modal-lg {
-  max-width: 800px;
-}
-
-.vms-modal-header {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--vms-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.vms-modal-body {
-  padding: 1.25rem;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.vms-modal-footer {
-  padding: 0.875rem 1.25rem;
-  border-top: 1px solid var(--vms-border);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  background-color: rgba(15, 23, 42, 0.5);
-}
-
-@keyframes vms-modal-in {
-  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+@keyframes vmsModalIn {
+  from { opacity: 0; transform: scale(0.94) translateY(-10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.vms-modal-card { padding: 1.25rem; gap: 1rem; }
+.vms-modal-lg { max-width: 800px; }
+.vms-modal-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--vms-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.vms-modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+.vms-modal-footer {
+  padding: 0.875rem 1.25rem; border-top: 1px solid var(--vms-border);
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 0.75rem; background-color: #0e1117;
+}
+
+/* Toast Notifications with Smooth Vue Transition (https://vuejs.org/guide/built-ins/transition.html) */
+.vms-toast-notification {
+  position: fixed; bottom: 24px; right: 24px; z-index: var(--vms-z-toast);
+  background: #14171d; color: #ffffff; border: 1px solid var(--vms-neu-accent-orange);
+  border-radius: 6px; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 94, 58, 0.2);
+  padding: 0.65rem 1.25rem; font-family: var(--vms-font-roboto); font-size: 12px;
+  font-weight: 500; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.5rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.vms-toast-notification:hover { border-color: #ff7250; background: #1c212a; }
+
+/* Vue 3 Built-in <Transition name="vms-toast"> classes */
+.vms-toast-enter-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vms-toast-leave-active {
+  transition: all 0.2s cubic-bezier(0.7, 0, 0.84, 0);
+}
+.vms-toast-enter-from {
+  opacity: 0;
+  transform: translateY(18px) scale(0.94);
+}
+.vms-toast-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.94);
 }

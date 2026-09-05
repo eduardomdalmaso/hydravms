@@ -35,9 +35,9 @@ const sampleCameras: CameraStreamInfo[] = [
 ]
 
 const sampleAlarms: AlarmItemInfo[] = [
-  { id: "alm_01", name: "Sensor Perimetro Norte", zone: "Zona 01", status: "online", type: "IVS" },
+  { id: "alm_01", name: "Sensor Perimetro Norte", zone: "Zona 01", status: "alert", type: "IVS" },
   { id: "alm_02", name: "Barreira Infravermelha Docas", zone: "Zona 02", status: "alert", type: "PIR" },
-  { id: "alm_03", name: "Porta Sala Servidores", zone: "Zona 03", status: "online", type: "MAG" },
+  { id: "alm_03", name: "Porta Sala Servidores", zone: "Zona 03", status: "alert", type: "MAG" },
   { id: "alm_04", name: "Detector Fumaca Bloco B", zone: "Zona 04", status: "offline", type: "SMK" }
 ]
 

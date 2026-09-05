@@ -1,10 +1,14 @@
-/* Typography & Font Sizing Standards */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
+/* Standardized Dual-Font Typography System */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
 
 :root {
-  --vms-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --vms-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-  --vms-font-roboto: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* 1. Technical Monospace Font */
+  --vms-font-jetbrains: 'JetBrains Mono', monospace;
+  --vms-font-mono: 'JetBrains Mono', monospace;
+
+  /* 2. UI Sans-Serif Font */
+  --vms-font-roboto: 'Roboto', sans-serif;
+  --vms-font-sans: 'Roboto', sans-serif;
 
   /* Font Size Scale */
   --vms-font-2xs: 0.6875rem; /* 11px */
@@ -17,14 +21,13 @@
   --vms-font-2xl: 1.25rem;   /* 20px */
   --vms-font-3xl: 1.5rem;    /* 24px */
 
-  /* Line Heights */
   --vms-lh-tight: 1.25;
   --vms-lh-normal: 1.5;
   --vms-lh-relaxed: 1.625;
 }
 
 body {
-  font-family: var(--vms-font-sans);
+  font-family: var(--vms-font-roboto);
   font-size: var(--vms-font-base);
   line-height: var(--vms-lh-normal);
   color: var(--vms-text-main);
@@ -32,48 +35,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, .vms-h1 {
-  font-size: var(--vms-font-2xl);
+h1, .vms-h1, h2, .vms-h2, h3, .vms-h3 {
+  font-family: var(--vms-font-jetbrains);
   font-weight: 600;
   line-height: var(--vms-lh-tight);
   color: var(--vms-text-main);
-  letter-spacing: -0.02em;
 }
-
-h2, .vms-h2 {
-  font-size: var(--vms-font-xl);
-  font-weight: 600;
-  line-height: var(--vms-lh-tight);
-  color: var(--vms-text-main);
-  letter-spacing: -0.01em;
-}
-
-h3, .vms-h3 {
-  font-size: var(--vms-font-md);
-  font-weight: 600;
-  line-height: var(--vms-lh-normal);
-  color: var(--vms-text-regular);
-}
-
-h4, .vms-h4 {
-  font-size: var(--vms-font-base);
-  font-weight: 500;
-  color: var(--vms-text-regular);
-}
+h1, .vms-h1 { font-size: var(--vms-font-2xl); }
+h2, .vms-h2 { font-size: var(--vms-font-xl); }
+h3, .vms-h3 { font-size: var(--vms-font-md); }
+h4, .vms-h4 { font-family: var(--vms-font-roboto); font-size: var(--vms-font-base); font-weight: 500; }
 
 .vms-text-muted { color: var(--vms-text-muted); }
 .vms-text-dim { color: var(--vms-text-dim); }
 .vms-text-xs { font-size: var(--vms-font-xs); }
 .vms-text-sm { font-size: var(--vms-font-sm); }
-.vms-text-mono { font-family: var(--vms-font-mono); }
+.vms-text-mono { font-family: var(--vms-font-jetbrains); }
 .vms-font-semibold { font-weight: 600; }
 .vms-font-bold { font-weight: 700; }
 
-/* Regra Global: Todas as palavras / textos de cor branca adotam Roboto */
+/* Textos brancos e de leitura utilizam Roboto */
 .vms-text-white,
 [style*="color: #ffffff"],
 [style*="color: #fff"],
-[style*="color: rgb(255, 255, 255)"],
-[style*="color: var(--vms-text-main)"] {
+[style*="color: rgb(255, 255, 255)"] {
   font-family: var(--vms-font-roboto) !important;
 }

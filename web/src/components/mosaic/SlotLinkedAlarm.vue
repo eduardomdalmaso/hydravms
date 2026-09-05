@@ -5,14 +5,14 @@ const props = defineProps<{ cameraId: string }>()
 const isAlarmOpen = ref(false)
 
 const alarms: Record<string, { name: string; zone: string; triggers: number; status: "online" | "alert" | "offline" }> = {
-  cam_01: { name: "Sensor Perimetro Norte", zone: "Zona 01", triggers: 5, status: "online" },
+  cam_01: { name: "Sensor Perimetro Norte", zone: "Zona 01", triggers: 5, status: "alert" },
   cam_02: { name: "Barreira Infravermelha Docas", zone: "Zona 02", triggers: 12, status: "alert" },
-  cam_03: { name: "Porta Sala Servidores", zone: "Zona 03", triggers: 2, status: "online" },
+  cam_03: { name: "Porta Sala Servidores", zone: "Zona 03", triggers: 2, status: "alert" },
   cam_04: { name: "Detector Fumaca Bloco B", zone: "Zona 04", triggers: 0, status: "offline" },
-  cam_05: { name: "Sensor Acesso Docas B", zone: "Zona 05", triggers: 8, status: "online" }
+  cam_05: { name: "Sensor Acesso Docas B", zone: "Zona 05", triggers: 8, status: "alert" }
 }
 
-const getAlarm = () => alarms[props.cameraId] || { name: "Sensor de Area", zone: "Geral", triggers: 1, status: "online" }
+const getAlarm = () => alarms[props.cameraId] || { name: "Sensor de Area", zone: "Geral", triggers: 1, status: "alert" }
 </script>
 
 <template>

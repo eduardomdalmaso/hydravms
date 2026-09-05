@@ -22,9 +22,20 @@
   justify-content: center; position: relative; overflow: hidden;
 }
 
-.vms-alert-badge-critical { background: rgba(255, 0, 60, 0.2); color: #ff003c; border: 1px solid rgba(255, 0, 60, 0.4); }
+.vms-alert-badge-critical { background: rgba(255, 94, 58, 0.2); color: var(--vms-neu-accent-orange); border: 1px solid rgba(255, 94, 58, 0.4); }
 .vms-alert-badge-warning { background: rgba(252, 238, 10, 0.2); color: #fcee0a; border: 1px solid rgba(252, 238, 10, 0.4); }
 .vms-alert-badge-info { background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.4); }
+
+/* Vue 3 Transition Classes (https://vuejs.org/guide/built-ins/transition.html) */
+.vms-drawer-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.vms-drawer-leave-active { transition: all 0.22s cubic-bezier(0.7, 0, 0.84, 0); }
+.vms-drawer-enter-from, .vms-drawer-leave-to { transform: translateX(100%); opacity: 0; }
+
+.vms-alert-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.vms-alert-leave-active { transition: all 0.2s ease; }
+.vms-alert-enter-from { opacity: 0; transform: translateY(14px) scale(0.96); }
+.vms-alert-leave-to { opacity: 0; transform: translateX(24px) scale(0.96); }
+.vms-alert-move { transition: transform 0.25s ease; }
 
 /* GNOME Style Calendar Popup */
 .vms-gnome-calendar-popup {

@@ -78,6 +78,7 @@ As diretrizes detalhadas encontram-se em [`.agents/rules/ui-standards.md`](file:
 - **Header:** 56px com Breadcrumb, Telemetria compacta e Perfil.
 - **Sidebar:** 240px (expandida) / 64px (recolhida) com indicador de rota ativa com borda azul.
 - **Modularidade:** **Máximo de 100 linhas por arquivo** (`.vue`, `.ts`, `.css`).
+- **Nomenclatura Concisa & Botões:** Rótulos atômicos (`GRAVANDO`, `ANALITICOS`, `CODEC`, `COMPRESSAO`, `RESOLUCAO`, `FPS`) e texto de botão de confirmação sempre **`SALVAR`** (detalhes em [`.agents/rules/ui-telemetry-naming.md`](.agents/rules/ui-telemetry-naming.md)).
 
 ---
 

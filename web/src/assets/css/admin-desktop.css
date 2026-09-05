@@ -1,0 +1,63 @@
+/* Desktop OS Explorer & Split Screen Inspector */
+.vms-desktop-container {
+  display: flex; flex: 1; gap: 1.25rem; height: calc(100vh - 160px); overflow: hidden;
+}
+.vms-desktop-canvas {
+  flex: 1; background: var(--vms-neu-surface); border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-lg); padding: 1.25rem; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1rem; box-shadow: var(--vms-shadow-convex-sm);
+}
+.vms-desktop-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; padding: 0.5rem;
+}
+.vms-desktop-section-title {
+  font-family: var(--vms-font-jetbrains); font-size: 11px; color: var(--vms-text-dim);
+  padding: 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.vms-desktop-folder-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 1rem 0.5rem; background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--vms-border); border-radius: var(--vms-radius-md);
+  cursor: pointer; user-select: none; transition: all 0.2s ease; text-align: center;
+}
+.vms-desktop-folder-card:hover {
+  background: rgba(255, 94, 58, 0.08); border-color: rgba(255, 94, 58, 0.4); transform: translateY(-2px);
+}
+.vms-desktop-folder-card.drag-over {
+  background: rgba(255, 94, 58, 0.2); border: 2px dashed var(--vms-neu-accent-orange);
+  box-shadow: 0 0 15px rgba(255, 94, 58, 0.4); transform: scale(1.04);
+}
+.vms-desktop-app-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.4rem; padding: 0.85rem 0.5rem; background: #11141a; border: 1px solid var(--vms-border);
+  border-radius: var(--vms-radius-md); cursor: grab; user-select: none; transition: all 0.2s ease;
+  text-align: center; position: relative;
+}
+.vms-desktop-app-card:hover {
+  background: rgba(255, 94, 58, 0.08); border-color: rgba(255, 94, 58, 0.4); transform: translateY(-2px);
+}
+.vms-desktop-app-card.active {
+  border-color: var(--vms-neu-accent-orange); background: rgba(255, 94, 58, 0.12);
+  box-shadow: 0 0 12px rgba(255, 94, 58, 0.25);
+}
+
+/* Full Split View: Left (Telemetry & Preview) + Right (Recording Config) */
+.vms-desktop-split-layout {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; width: 100%; height: 100%; overflow: hidden;
+}
+.vms-split-pane {
+  background: #11141a; border: 1px solid var(--vms-border); border-radius: var(--vms-radius-lg);
+  padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;
+  box-shadow: var(--vms-shadow-convex-sm);
+}
+.vms-split-header {
+  display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--vms-border);
+  padding-bottom: 0.75rem;
+}
+.vms-telemetry-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;
+}
+.vms-telemetry-card {
+  background: rgba(255, 255, 255, 0.02); border: 1px solid var(--vms-border); border-radius: 6px;
+  padding: 0.65rem 0.85rem; display: flex; flex-direction: column; gap: 0.25rem;
+}

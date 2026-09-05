@@ -42,7 +42,7 @@ const handleSelectMode = (mode: "vms" | "admin") => {
 
     <!-- Center: GNOME Style Calendar / Clock Trigger in Roboto -->
     <div style="position: relative;">
-      <button class="vms-btn vms-btn-ghost vms-btn-sm" style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 11px; padding: 0.25rem 0.75rem;" @click="isCalendarOpen = !isCalendarOpen">
+      <button class="vms-btn vms-btn-ghost vms-btn-sm" style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 13.5px; font-weight: 600; letter-spacing: 0.3px; padding: 0.25rem 0.85rem;" @click="isCalendarOpen = !isCalendarOpen">
         {{ currentTimeStr || "Qua, 03 Set • 20:55" }}
       </button>
 
@@ -67,7 +67,7 @@ const handleSelectMode = (mode: "vms" | "admin") => {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--vms-neu-accent-orange);">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
-        <span v-if="unreadAlertsCount > 0" class="vms-badge vms-badge-recording" style="font-size: 10px; padding: 1px 4px; margin-left: 4px;">{{ unreadAlertsCount }}</span>
+        <span v-if="unreadAlertsCount > 0" class="vms-status-led alert" style="position: absolute; top: 4px; right: 4px;"></span>
       </button>
 
       <!-- User Dropdown Menu with RBAC protection -->

@@ -28,7 +28,7 @@ const handleAddDisk = () => {
           <span class="vms-badge" :class="p.tier === 'HOT' ? 'vms-channel-pill-telegram' : 'vms-badge-info'">
             [{{ p.tier }}]
           </span>
-          <span class="vms-badge vms-badge-online">[{{ p.status }}]</span>
+          <span class="vms-status-led" :class="p.status === 'ONLINE' ? 'online' : 'offline'" :title="p.status"></span>
         </div>
         <h3 class="vms-h3" style="color: #fff;">{{ p.name }}</h3>
         <span class="vms-text-mono vms-text-2xs vms-text-dim">{{ p.path }}</span>

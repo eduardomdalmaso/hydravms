@@ -1,73 +1,53 @@
-/* Neumorphism Standardized Button System */
+/* Standardized 3-Color Button System */
 .vms-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-family: var(--vms-font-sans);
-  font-size: var(--vms-font-xs);
-  font-weight: 600;
-  line-height: 1;
-  padding: 0.625rem 1rem;
-  border-radius: var(--vms-radius-md);
-  border: 1px solid var(--vms-border);
-  cursor: pointer;
-  transition: all var(--vms-transition-fast);
-  white-space: nowrap;
-  user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--vms-font-roboto); font-size: var(--vms-font-xs); font-weight: 600;
+  line-height: 1; padding: 0.5rem 0.85rem; border-radius: 4px;
+  border: 1px solid var(--vms-border); cursor: pointer;
+  transition: all var(--vms-transition-fast); white-space: nowrap; user-select: none;
 }
-
-.vms-btn:focus-visible {
-  outline: 2px solid var(--vms-border-focus);
-  outline-offset: 2px;
-}
-
-.vms-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.vms-btn:focus-visible { outline: 2px solid var(--vms-neu-accent-orange); outline-offset: 2px; }
+.vms-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .vms-btn-primary {
-  background: var(--vms-primary-gradient);
-  color: #ffffff;
-  border: none;
-  box-shadow: var(--vms-primary-glow), 3px 3px 8px rgba(0, 0, 0, 0.4);
+  background: #ff5e3a; color: #ffffff !important;
+  border: 1px solid #ff7250; box-shadow: 0 4px 14px rgba(255, 94, 58, 0.35);
 }
 .vms-btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(240, 80, 40, 0.5);
+  background: #ff7250; transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 94, 58, 0.5);
 }
 
 .vms-btn-secondary {
-  background: var(--vms-bg-elevated);
-  color: var(--vms-text-main);
-  box-shadow: var(--vms-shadow-convex-sm);
+  background: #14171d; color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 .vms-btn-secondary:hover:not(:disabled) {
-  background: var(--vms-bg-elevated-hover);
-  color: #ffffff;
+  background: #1c212a; border-color: #ff5e3a; transform: translateY(-1px);
 }
 
 .vms-btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  background: #ff003c; color: #ffffff !important;
+  border: 1px solid #ff3366; box-shadow: 0 4px 12px rgba(255, 0, 60, 0.35);
 }
 
 .vms-btn-ghost {
-  background: transparent;
-  color: var(--vms-text-regular);
-  border: 1px solid transparent;
+  background: transparent; color: #cbd5e1; border: 1px solid transparent;
 }
 .vms-btn-ghost:hover:not(:disabled) {
-  background: var(--vms-bg-elevated);
-  box-shadow: var(--vms-shadow-convex-sm);
-  color: #ffffff;
+  background: #14171d; border-color: rgba(255, 255, 255, 0.1); color: #ffffff !important;
 }
 
-.vms-btn-sm {
-  font-size: 11px;
-  padding: 0.45rem 0.75rem;
-  border-radius: var(--vms-radius-sm);
+.vms-btn-sm { font-size: 11px; padding: 0.35rem 0.65rem; }
+
+/* Dedicated Action Column Button (Orange 28x28 HUD) */
+.vms-table-action-btn {
+  width: 28px; height: 28px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  color: #ff5e3a; cursor: pointer; transition: all 0.15s ease;
+}
+.vms-table-action-btn:hover {
+  background: rgba(255, 94, 58, 0.15); border-color: rgba(255, 94, 58, 0.4);
+  transform: translateY(-1px);
 }

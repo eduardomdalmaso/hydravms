@@ -1,88 +1,88 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import type { AlarmItemInfo } from "../../types/mosaic"
+import { useDesktopAlarms } from '../../composables/useDesktopAlarms'
+import AlarmBreadcrumb from '../../components/admin/alarms/AlarmBreadcrumb.vue'
+import AlarmFolderCard from '../../components/admin/alarms/AlarmFolderCard.vue'
+import AlarmAppCard from '../../components/admin/alarms/AlarmAppCard.vue'
+import AlarmDetailInspector from '../../components/admin/alarms/AlarmDetailInspector.vue'
+import TreeContextMenu, { type ContextMenuTarget } from '../../components/admin/TreeContextMenu.vue'
+import CreateAlarmFolderModal from '../../components/admin/alarms/CreateAlarmFolderModal.vue'
+import AlarmWizardModal from '../../components/admin/alarms/AlarmWizardModal.vue'
+import ConfirmDeleteFolderModal from '../../components/admin/ConfirmDeleteFolderModal.vue'
 
-const alarms = ref<AlarmItemInfo[]>([
-  { id: "alm_01", name: "Sensor Perimetro Norte", zone: "Zona 01 // Muro Norte", status: "online", type: "IVS" },
-  { id: "alm_02", name: "Barreira Infravermelha Docas", zone: "Zona 02 // Patio Cargas", status: "alert", type: "PIR" },
-  { id: "alm_03", name: "Porta Sala Servidores", zone: "Zona 03 // CPD Central", status: "online", type: "MAG" },
-  { id: "alm_04", name: "Detector Fumaca Bloco B", zone: "Zona 04 // Galpao 02", status: "offline", type: "SMK" }
-])
+const {
+  searchQuery, folders, currentFolderId, currentFolder, selectedAlarm, notification, contextMenu,
+  isFolderModalOpen, isWizardOpen, folderToDelete, isConfirmDeleteOpen, totalAlarms, displayedFolders,
+  displayedAlarms, openContextMenu, handleDragStart, handleDropOnFolder, moveAlarmToFolder,
+  requestDeleteFolder, confirmDeleteFolder, deleteAlarmById, handleSaveFolder, handleSaveAlarm, showNotification
+} = useDesktopAlarms()
 
-const isModalOpen = ref(false)
-const newAlarmName = ref("")
-const newAlarmZone = ref("")
-const newAlarmType = ref("IVS")
-
-const handleAddAlarm = () => {
-  if (!newAlarmName.value) return
-  alarms.value.push({
-    id: `alm_0${alarms.value.length + 1}`,
-    name: newAlarmName.value,
-    zone: newAlarmZone.value || "Zona Geral",
-    status: "online",
-    type: newAlarmType.value
-  })
-  isModalOpen.value = false; newAlarmName.value = ""; newAlarmZone.value = ""
+const handleContextAction = (action: string, target: ContextMenuTarget, extra?: any) => {
+  if (action === 'open-folder' && target.id) currentFolderId.value = target.id
+  else if (action === 'create-folder') isFolderModalOpen.value = true
+  else if (action === 'create-stream') { if (target.type === 'folder' && target.id) currentFolderId.value = target.id; isWizardOpen.value = true }
+  else if (action === 'inspect-stream' && target.id) {
+    let a = displayedAlarms.value.find(item => item.id === target.id)
+    if (!a) { for (const f of folders.value) { a = f.alarms.find(item => item.id === target.id); if (a) break } }
+    if (a) selectedAlarm.value = a
+  }
+  else if (action === 'delete-folder' && target.id) requestDeleteFolder(target.id)
+  else if (action === 'delete-stream' && target.id) deleteAlarmById(target.id)
+  else if (action === 'move-stream' && target.id) moveAlarmToFolder(target.id, extra)
+  else if (action === 'test-stream' && target.id) showNotification(`[TRIGGER TEST] Sensor ${target.name || ''} // DISPARO OK`)
 }
 </script>
 
 <template>
-  <div class="vms-flex-col" style="gap: 1.25rem;">
+  <div class="vms-flex-col" style="gap: 1rem;">
+    <!-- Top Bar -->
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CONFIGURACAO DE ALARMES & SENSORES</h3>
-        <span class="vms-text-mono vms-text-2xs vms-text-dim">GESTAO DE ZONAS, DISPARADORES E SENSORES IVS/PIR/MAG</span>
+        <span v-if="selectedAlarm" class="vms-text-mono vms-text-2xs vms-text-dim">INSPECAO // {{ selectedAlarm.name }}</span>
       </div>
-      <button class="vms-btn vms-btn-primary" @click="isModalOpen = true">[+ NOVO ALARME]</button>
+      <div v-if="!selectedAlarm" class="vms-flex-row" style="gap: 0.75rem;">
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar sensores..." />
+        <button class="vms-btn vms-btn-secondary" title="Nova Zona / Pasta" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
+        <button class="vms-btn vms-btn-primary" title="Novo Sensor de Alarme" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg></button>
+      </div>
     </div>
 
-    <!-- Alarms Table -->
-    <div class="vms-admin-table-wrapper">
-      <table class="vms-table">
-        <thead><tr><th>ID</th><th>NOME DO ALARME</th><th>ZONA / LOCAL</th><th>TIPO</th><th>STATUS</th><th>ACOES</th></tr></thead>
-        <tbody>
-          <tr v-for="a in alarms" :key="a.id">
-            <td class="vms-text-mono">{{ a.id }}</td>
-            <td class="vms-font-semibold" style="color: #fff;">{{ a.name }}</td>
-            <td class="vms-text-mono vms-text-xs vms-text-dim">{{ a.zone }}</td>
-            <td><span class="vms-badge" style="background: rgba(255,255,255,0.06); color: #fff;">{{ a.type }}</span></td>
-            <td>
-              <div class="vms-flex-row" style="gap: 0.35rem; align-items: center;">
-                <span class="vms-status-led" :class="a.status"></span>
-                <span class="vms-text-mono vms-text-2xs" :style="{ color: a.status === 'online' ? '#00ff9d' : a.status === 'alert' ? '#fcee0a' : '#ff003c' }">
-                  [{{ a.status.toUpperCase() }}]
-                </span>
-              </div>
-            </td>
-            <td><button class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 11px;">[EDITAR]</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Floating Toast Notification -->
+    <Transition name="vms-toast">
+      <div v-if="notification" class="vms-toast-notification" title="Clique para fechar" @click="notification = null"><span>{{ notification }}</span></div>
+    </Transition>
 
-    <!-- Modal Novo Alarme -->
-    <div v-if="isModalOpen" class="vms-modal-backdrop" @click.self="isModalOpen = false">
-      <div class="vms-modal-dialog">
-        <div class="vms-modal-header">
-          <h3 class="vms-h3">CADASTRAR NOVO ALARME</h3>
-          <button class="vms-btn vms-btn-ghost vms-btn-sm" @click="isModalOpen = false">[X]</button>
-        </div>
-        <div class="vms-modal-body">
-          <div class="vms-form-group"><label class="vms-label">Nome do Alarme</label><input v-model="newAlarmName" class="vms-auth-input" placeholder="Ex: Sensor Perimetro Sul" /></div>
-          <div class="vms-form-group"><label class="vms-label">Zona / Localizacao</label><input v-model="newAlarmZone" class="vms-auth-input" placeholder="Ex: Zona 05 // Bloco C" /></div>
-          <div class="vms-form-group">
-            <label class="vms-label">Tipo de Sensor</label>
-            <div class="vms-flex-row" style="gap: 0.5rem;">
-              <button v-for="t in ['IVS', 'PIR', 'MAG', 'SMK']" :key="t" class="vms-btn vms-btn-sm" :class="newAlarmType === t ? 'vms-btn-primary' : 'vms-btn-secondary'" @click="newAlarmType = t">{{ t }}</button>
+    <!-- Breadcrumb with 3 ZONAS // X SENSORES -->
+    <AlarmBreadcrumb :current-folder="currentFolder" :selected-alarm="selectedAlarm" :total-folders="folders.length" :total-alarms="totalAlarms" :current-folder-alarms-count="currentFolder?.alarms.length" @back="selectedAlarm ? (selectedAlarm = null) : (currentFolderId = null)" @navigate-root="currentFolderId = null; selectedAlarm = null" @navigate-folder="selectedAlarm = null" />
+
+    <!-- Main Workspace Container -->
+    <div class="vms-desktop-container">
+      <AlarmDetailInspector v-if="selectedAlarm" :alarm="selectedAlarm" @close="selectedAlarm = null" @test="(id) => showNotification(`[TRIGGER TEST] Sensor ${id} // DISPARO OK`)" @delete="deleteAlarmById" />
+
+      <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+          <div class="vms-desktop-grid">
+            <AlarmFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-alarm="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
+          </div>
+
+          <div v-if="displayedAlarms.length > 0" class="vms-flex-col" style="gap: 0.5rem; border-top: 1px solid var(--vms-border); padding-top: 1rem;">
+            <div class="vms-desktop-section-title">// SENSORES NA RAIZ (ARRASTE PARA UMA ZONA)</div>
+            <div class="vms-desktop-grid">
+              <AlarmAppCard v-for="a in displayedAlarms" :key="a.id" :alarm="a" :is-selected="false" @dragstart="handleDragStart" @select="(alarm) => selectedAlarm = alarm" @context="(ev, alarm) => openContextMenu(ev, { type: 'stream', id: alarm.id, name: alarm.name, currentFolderId: currentFolderId })" />
             </div>
           </div>
         </div>
-        <div class="vms-modal-footer">
-          <button class="vms-btn vms-btn-secondary" @click="isModalOpen = false">CANCELAR</button>
-          <button class="vms-btn vms-btn-primary" @click="handleAddAlarm">SALVAR ALARME</button>
+
+        <div v-else class="vms-desktop-grid">
+          <div v-if="displayedAlarms.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// ZONA VAZIA (CLIQUE EM [+] OU BOTAO DIREITO PARA CADASTRAR SENSOR)</div>
+          <AlarmAppCard v-for="a in displayedAlarms" :key="a.id" :alarm="a" :is-selected="false" @dragstart="handleDragStart" @select="(alarm) => selectedAlarm = alarm" @context="(ev, alarm) => openContextMenu(ev, { type: 'stream', id: alarm.id, name: alarm.name, currentFolderId: currentFolderId })" />
         </div>
       </div>
     </div>
+
+    <TreeContextMenu :is-open="contextMenu.isOpen" :x="contextMenu.x" :y="contextMenu.y" :target="contextMenu.target" :folders="folders" @close="contextMenu.isOpen = false" @action="handleContextAction" />
+    <CreateAlarmFolderModal :is-open="isFolderModalOpen" @close="isFolderModalOpen = false" @save="handleSaveFolder" />
+    <AlarmWizardModal :is-open="isWizardOpen" :target-folder-id="currentFolderId || undefined" :folders="folders" @close="isWizardOpen = false" @save="handleSaveAlarm" />
+    <ConfirmDeleteFolderModal :is-open="isConfirmDeleteOpen" :folder-name="folderToDelete?.name || ''" :item-count="folderToDelete?.itemCount || 0" item-type="sensor(es)" @close="isConfirmDeleteOpen = false" @confirm="confirmDeleteFolder" />
   </div>
 </template>

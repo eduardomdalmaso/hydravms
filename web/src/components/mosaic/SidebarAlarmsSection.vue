@@ -22,8 +22,8 @@ const filteredAlarms = computed(() => {
 })
 
 const getStatusTitle = (status: AlarmStatus) => {
-  if (status === "online") return "Normal / Online"
-  if (status === "alert") return "Alerta Ativo / Disparado"
+  if (status === "online") return "Armado / Online"
+  if (status === "alert") return "Desarmado"
   return "Offline / Falha"
 }
 </script>
@@ -52,7 +52,7 @@ const getStatusTitle = (status: AlarmStatus) => {
       <input v-model="searchQuery" class="vms-auth-input" style="padding: 0.25rem 0.5rem; font-size: 11px; height: 26px;" placeholder="Buscar alarme..." autofocus />
       <div class="vms-flex-row" style="gap: 0.25rem;">
         <button v-for="s in (['ALL', 'online', 'alert', 'offline'] as const)" :key="s" class="vms-btn vms-btn-sm" :class="selectedStatus === s ? 'vms-btn-primary' : 'vms-btn-ghost'" style="font-size: 9px; padding: 1px 4px;" @click="selectedStatus = s">
-          {{ s === 'ALL' ? 'TODOS' : s.toUpperCase() }}
+          {{ s === 'ALL' ? 'TODOS' : (s === 'online' ? 'ARMADO' : (s === 'alert' ? 'DESARMADO' : 'OFFLINE')) }}
         </button>
       </div>
     </div>

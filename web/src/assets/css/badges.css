@@ -1,4 +1,4 @@
-/* Status Badges, Severity Indicators & Pills */
+/* Status Badges, Severity Indicators & Neon Pills */
 .vms-badge {
   display: inline-flex;
   align-items: center;
@@ -13,49 +13,87 @@
   white-space: nowrap;
 }
 
-.vms-badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--vms-radius-full);
+.vms-badge-dot, .vms-status-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.vms-badge-online {
-  background-color: var(--vms-success-subtle);
-  color: var(--vms-success);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+/* Neon Online - Green */
+.vms-badge-online, .vms-status-online {
+  background-color: rgba(0, 255, 157, 0.12);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.3);
 }
-.vms-badge-online .vms-badge-dot { background-color: var(--vms-success); }
+.vms-badge-online .vms-badge-dot, .vms-status-led.online {
+  background: #00ff9d;
+  box-shadow: 0 0 8px rgba(0, 255, 157, 0.95), 0 0 2px #00ff9d;
+}
 
-.vms-badge-offline {
-  background-color: rgba(100, 116, 139, 0.15);
-  color: var(--vms-text-dim);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+/* Neon Offline - Red */
+.vms-badge-offline, .vms-status-offline {
+  background-color: rgba(255, 0, 60, 0.12);
+  color: #ff003c;
+  border: 1px solid rgba(255, 0, 60, 0.3);
 }
-.vms-badge-offline .vms-badge-dot { background-color: var(--vms-text-dim); }
+.vms-badge-offline .vms-badge-dot, .vms-status-led.offline {
+  background: #ff003c;
+  box-shadow: 0 0 8px rgba(255, 0, 60, 0.95), 0 0 2px #ff003c;
+}
 
-.vms-badge-recording {
-  background-color: var(--vms-danger-subtle);
-  color: var(--vms-danger);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+/* Neon Alert / Alarme - Orange */
+.vms-badge-alert, .vms-status-alert {
+  background-color: rgba(255, 94, 58, 0.12);
+  color: #ff5e3a;
+  border: 1px solid rgba(255, 94, 58, 0.3);
 }
-.vms-badge-recording .vms-badge-dot { 
-  background-color: var(--vms-danger);
+.vms-badge-alert .vms-badge-dot,
+.vms-status-led.alert,
+.vms-status-led.alerta,
+.vms-status-led.alarm,
+.vms-status-led.alarme {
+  background: #ff5e3a;
+  box-shadow: 0 0 8px rgba(255, 94, 58, 0.95), 0 0 2px #ff5e3a;
+}
+
+/* Neon Desarmado / Disarmed / Warning - Yellow */
+.vms-badge-warning, .vms-badge-desarmado, .vms-badge-disarmed, .vms-status-desarmado {
+  background-color: rgba(252, 238, 10, 0.12);
+  color: #fcee0a;
+  border: 1px solid rgba(252, 238, 10, 0.3);
+}
+.vms-badge-warning .vms-badge-dot,
+.vms-status-led.desarmado,
+.vms-status-led.disarmed,
+.vms-status-led.warning {
+  background: #fcee0a;
+  box-shadow: 0 0 8px rgba(252, 238, 10, 0.95), 0 0 2px #fcee0a;
+}
+
+/* Neon Recording / Gravacao Ativa - Blue */
+.vms-badge-recording, .vms-badge-gravando, .vms-status-recording {
+  background-color: rgba(0, 240, 255, 0.12);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+.vms-badge-recording .vms-badge-dot,
+.vms-status-led.recording,
+.vms-status-led.gravando {
+  background: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.95), 0 0 2px #00f0ff;
   animation: vms-pulse 1.5s infinite;
-}
-
-.vms-badge-warning {
-  background-color: var(--vms-warning-subtle);
-  color: var(--vms-warning);
-  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .vms-badge-info {
   background-color: var(--vms-info-subtle);
   color: var(--vms-info);
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 @keyframes vms-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }

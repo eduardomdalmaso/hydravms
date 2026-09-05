@@ -60,8 +60,8 @@ const filteredCameras = computed(() => {
           <span class="vms-badge" style="background: rgba(255, 255, 255, 0.08); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.15); font-family: var(--vms-font-roboto); font-weight: 500; font-size: 8px; padding: 1px 4px;">
             {{ cam.protocol || 'RTSP' }}
           </span>
-          <!-- LED Indicator (Green for Online, Red for Offline) -->
-          <span class="vms-status-led" :class="cam.status === 'offline' ? 'offline' : 'online'" :title="cam.status === 'offline' ? 'Offline' : 'Online'"></span>
+          <!-- LED Indicator (Green: Online, Red: Offline, Blue: Gravando) -->
+          <span class="vms-status-led" :class="cam.status" :title="cam.status === 'recording' ? 'Gravacao Ativa' : (cam.status === 'offline' ? 'Offline' : 'Online')"></span>
         </div>
       </div>
     </div>

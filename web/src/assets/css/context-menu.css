@@ -1,68 +1,43 @@
-/* Neumorphic HUD Context Menu & Mini Grid Preview */
+/* Neumorphic HUD Context Menu & Smooth Animation */
 .vms-context-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--vms-z-modal);
-  background: transparent;
+  position: fixed; inset: 0; z-index: var(--vms-z-modal);
+  background: rgba(0, 0, 0, 0.15); backdrop-filter: blur(1.5px);
+  animation: vmsBackdropFade 0.15s ease forwards;
 }
+@keyframes vmsBackdropFade { from { opacity: 0; } to { opacity: 1; } }
 
 .vms-context-menu {
-  position: fixed;
-  min-width: 190px;
-  background: #14171d;
-  border: 1px solid var(--vms-neu-accent-orange);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
-  padding: 0.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: calc(var(--vms-z-modal) + 1);
+  position: fixed; min-width: 190px; background: #14171d;
+  border: 1px solid var(--vms-neu-accent-orange); border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 94, 58, 0.15);
+  padding: 0.4rem; display: flex; flex-direction: column; gap: 0.25rem;
+  z-index: calc(var(--vms-z-modal) + 1); transform-origin: top left;
+  animation: vmsContextMenuFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes vmsContextMenuFadeIn {
+  from { opacity: 0; transform: scale(0.93) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .vms-context-menu-header {
-  padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid var(--vms-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--vms-border);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
 }
-
 .vms-context-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
-  background: transparent;
-  border: none;
-  color: #cbd5e1;
-  font-family: var(--vms-font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.4rem 0.6rem; border-radius: 4px; background: transparent; border: none;
+  color: #cbd5e1; font-family: var(--vms-font-sans); font-size: 11px; font-weight: 500;
+  cursor: pointer; text-align: left; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .vms-context-item:hover {
-  background: rgba(255, 94, 58, 0.15);
-  color: var(--vms-neu-accent-orange);
+  background: rgba(255, 94, 58, 0.15); color: var(--vms-neu-accent-orange);
+  transform: translateX(3px);
 }
-.vms-context-item.danger:hover {
-  background: rgba(255, 0, 60, 0.2);
-  color: #ff003c;
-}
+.vms-context-item.danger:hover { background: rgba(255, 94, 58, 0.2); color: var(--vms-neu-accent-orange); }
 
 .vms-context-divider { height: 1px; background: var(--vms-border); margin: 0.2rem 0; }
 .vms-context-menu-section-title { padding: 0.25rem 0.5rem; font-family: var(--vms-font-mono); font-size: 9px; color: var(--vms-text-dim); }
-
-.vms-context-grid-picker {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.25rem;
-  padding: 0.25rem 0.4rem;
-}
+.vms-context-grid-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; padding: 0.25rem 0.4rem; }
 
 /* Miniature Grid Hover Icon */
 .vms-grid-mini-icon {

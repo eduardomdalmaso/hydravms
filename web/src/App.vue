@@ -49,13 +49,15 @@ const handleSwitchMode = (mode: 'vms' | 'admin') => {
         <AdminCenterView v-else-if="currentMode === 'admin' && isAdmin" />
       </div>
 
-      <AnalyticsAlertsDrawer
-        v-if="isDrawerOpen"
-        :alerts="alerts"
-        @close="isDrawerOpen = false"
-        @acknowledge="acknowledgeAlert"
-        @clearAll="clearAllAlerts"
-      />
+      <Transition name="vms-drawer">
+        <AnalyticsAlertsDrawer
+          v-if="isDrawerOpen"
+          :alerts="alerts"
+          @close="isDrawerOpen = false"
+          @acknowledge="acknowledgeAlert"
+          @clearAll="clearAllAlerts"
+        />
+      </Transition>
     </template>
   </div>
 </template>

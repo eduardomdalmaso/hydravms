@@ -60,7 +60,9 @@ const handleAddLayout = () => {
       <div class="vms-modal-dialog">
         <div class="vms-modal-header">
           <h3 class="vms-h3">CRIAR NOVO LAYOUT DE GRADE</h3>
-          <button class="vms-btn vms-btn-ghost vms-btn-sm" @click="isModalOpen = false">[X]</button>
+          <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="isModalOpen = false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="vms-modal-body">
           <div class="vms-form-group">
@@ -78,7 +80,7 @@ const handleAddLayout = () => {
         </div>
         <div class="vms-modal-footer">
           <button class="vms-btn vms-btn-secondary" @click="isModalOpen = false">CANCELAR</button>
-          <button class="vms-btn vms-btn-primary" @click="handleAddLayout">SALVAR LAYOUT</button>
+          <button class="vms-btn vms-btn-primary" @click="handleAddLayout">SALVAR</button>
         </div>
       </div>
     </div>

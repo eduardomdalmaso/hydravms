@@ -1,56 +1,56 @@
 :root {
-  /* Unified Dark Neumorphism Color Palette */
-  --vms-bg-base: #1e2126;
-  --vms-bg-surface: #22262c;
-  --vms-bg-elevated: #282d35;
-  --vms-bg-elevated-hover: #2f353e;
+  /* Core 3-Color Visual Identity */
+  --vms-color-white: #ffffff;
+  --vms-color-orange: #ff5e3a;
+  --vms-color-black: #07080c;
+
+  /* Black & Dark Background Surfaces */
+  --vms-bg-base: #07080c;
+  --vms-bg-surface: #0e1117;
+  --vms-bg-elevated: #14171d;
+  --vms-bg-elevated-hover: #1c212a;
   
-  --vms-border: rgba(255, 255, 255, 0.04);
-  --vms-border-light: rgba(255, 255, 255, 0.06);
+  --vms-border: rgba(255, 255, 255, 0.06);
+  --vms-border-light: rgba(255, 255, 255, 0.08);
   --vms-border-focus: #ff5e3a;
 
-  /* Text Colors */
-  --vms-text-main: #f8fafc;
+  /* White Information Text Colors */
+  --vms-text-main: #ffffff;
   --vms-text-regular: #cbd5e1;
   --vms-text-muted: #8b94a0;
   --vms-text-dim: #5a626f;
 
-  /* Brand & Neumorphic Orange Accent */
+  /* Orange Accent & Primary Actions */
   --vms-primary: #ff5e3a;
   --vms-primary-hover: #ff7250;
   --vms-primary-active: #e04826;
-  --vms-primary-gradient: linear-gradient(135deg, #ff6a3d 0%, #e04826 100%);
+  --vms-neu-accent-orange: #ff5e3a;
   --vms-primary-subtle: rgba(255, 94, 58, 0.12);
   --vms-primary-glow: 0 4px 16px rgba(240, 80, 40, 0.45);
 
-  --vms-success: #10b981;
-  --vms-success-subtle: rgba(16, 185, 129, 0.12);
-  --vms-warning: #f59e0b;
-  --vms-warning-subtle: rgba(245, 158, 11, 0.12);
-  --vms-danger: #ef4444;
-  --vms-danger-subtle: rgba(239, 68, 68, 0.12);
-  --vms-info: #3b82f6;
-  --vms-info-subtle: rgba(59, 130, 246, 0.12);
+  /* Status Indicators */
+  --vms-success: #00ff9d;
+  --vms-warning: #fcee0a;
+  --vms-danger: #ff003c;
+  --vms-info: #00f0ff;
 
-  /* Neumorphic Double Shadows */
-  --vms-shadow-convex: 6px 6px 14px rgba(0, 0, 0, 0.65), -6px -6px 14px rgba(255, 255, 255, 0.04);
-  --vms-shadow-convex-sm: 3px 3px 8px rgba(0, 0, 0, 0.5), -3px -3px 8px rgba(255, 255, 255, 0.03);
-  --vms-shadow-concave: inset 3px 3px 6px rgba(0, 0, 0, 0.7), inset -3px -3px 6px rgba(255, 255, 255, 0.04);
-  --vms-shadow-modal: 16px 16px 36px rgba(0, 0, 0, 0.8), -16px -16px 36px rgba(255, 255, 255, 0.03);
+  /* Shadow Depth */
+  --vms-shadow-convex: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --vms-shadow-convex-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --vms-shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.95);
 
   /* Dimensions */
   --vms-header-height: 52px;
   --vms-sidebar-width: 240px;
   --vms-sidebar-collapsed-width: 64px;
   
-  --vms-radius-sm: 6px;
-  --vms-radius-md: 10px;
-  --vms-radius-lg: 16px;
-  --vms-radius-xl: 24px;
-  --vms-radius-full: 9999px;
+  --vms-radius-sm: 4px;
+  --vms-radius-md: 6px;
+  --vms-radius-lg: 8px;
+  --vms-radius-xl: 12px;
 
-  --vms-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --vms-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --vms-transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-transition-normal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
 
   --vms-z-base: 1;
   --vms-z-header: 40;

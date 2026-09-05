@@ -39,7 +39,7 @@ const handleSaveLayout = () => {
         <h1 class="vms-h1">DESIGNER & CRIADOR DE LAYOUTS</h1>
         <span class="vms-text-sm vms-text-muted">Monte grades personalizadas de mosaico para operacoes de monitoramento.</span>
       </div>
-      <button class="vms-btn vms-btn-primary" @click="handleSaveLayout">[SALVAR LAYOUT]</button>
+      <button class="vms-btn vms-btn-primary" @click="handleSaveLayout">SALVAR</button>
     </div>
 
     <div class="vms-grid-container" style="grid-template-columns: 1fr 1fr; gap: 1.25rem;">

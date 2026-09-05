@@ -42,7 +42,9 @@ const handleSave = () => {
     <div class="vms-modal-dialog vms-modal-lg">
       <div class="vms-modal-header">
         <h3 class="vms-h3">NOVO FLUXO DE NOTIFICACAO DE EVENTOS</h3>
-        <button class="vms-btn vms-btn-ghost vms-btn-sm" @click="emit('close')">[FECHAR]</button>
+        <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <div class="vms-modal-body">
         <div class="vms-stepper">
@@ -57,7 +59,7 @@ const handleSave = () => {
       <div class="vms-modal-footer">
         <button v-if="step > 1" class="vms-btn vms-btn-secondary" @click="step--">VOLTAR</button>
         <button v-if="step < 3" class="vms-btn vms-btn-primary" @click="step++">AVANCAR</button>
-        <button v-else class="vms-btn vms-btn-primary" @click="handleSave">SALVAR E ATIVAR WORKFLOW</button>
+        <button v-else class="vms-btn vms-btn-primary" @click="handleSave">SALVAR</button>
       </div>
     </div>
   </div>

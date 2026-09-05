@@ -9,10 +9,7 @@ const emit = defineEmits<{ (e: 'toggle', wf: NotificationWorkflow): void; (e: 't
   <div class="vms-card" :style="{ opacity: workflow.is_enabled ? 1 : 0.6 }">
     <div class="vms-card-header">
       <div class="vms-flex-row" style="gap: 0.5rem;">
-        <span class="vms-badge" :class="workflow.is_enabled ? 'vms-badge-online' : 'vms-badge-offline'">
-          <span class="vms-badge-dot"></span>
-          {{ workflow.is_enabled ? '[ATIVO]' : '[PAUSADO]' }}
-        </span>
+        <span class="vms-status-led" :class="workflow.is_enabled ? 'online' : 'offline'" :title="workflow.is_enabled ? 'Ativo' : 'Pausado'"></span>
         <h3 class="vms-h3">{{ workflow.name }}</h3>
       </div>
       <label class="vms-checkbox-label" title="Ativar/Desativar">

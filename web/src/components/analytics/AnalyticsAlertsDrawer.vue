@@ -30,8 +30,8 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <!-- Alerts List -->
-    <div style="flex: 1; padding: 0.85rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+    <!-- Alerts List (Vue TransitionGroup) -->
+    <TransitionGroup name="vms-alert" tag="div" style="flex: 1; padding: 0.85rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
       <div
         v-for="alt in alerts"
         :key="alt.id"
@@ -76,6 +76,6 @@ const emit = defineEmits<{
           <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">[RECONHECIDO]</span>
         </div>
       </div>
-    </div>
+    </TransitionGroup>
   </aside>
 </template>
