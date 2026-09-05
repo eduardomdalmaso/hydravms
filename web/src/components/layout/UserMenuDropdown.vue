@@ -57,7 +57,7 @@ const { currentLanguage, setLanguage, t } = useI18n()
           :style="{
             padding: '2px 5px', fontSize: '9px',
             fontWeight: currentLanguage === l ? '700' : '500',
-            color: currentLanguage === l ? 'var(--vms-neu-accent-orange)' : '#94a3b8',
+            color: currentLanguage === l ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-muted)',
             background: currentLanguage === l ? 'rgba(255,94,58,0.15)' : 'transparent',
             border: currentLanguage === l ? '1px solid rgba(255,94,58,0.35)' : '1px solid transparent',
             borderRadius: '4px'

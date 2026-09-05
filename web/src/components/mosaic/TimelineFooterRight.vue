@@ -30,7 +30,6 @@ const emit = defineEmits<{
       class="vms-btn vms-btn-sm"
       :class="isExportMode ? 'vms-btn-primary' : 'vms-btn-secondary'"
       style="display: flex; align-items: center; justify-content: center; padding: 0.25rem 0.55rem;"
-      :style="isExportMode ? 'box-shadow: 0 0 10px rgba(0, 240, 255, 0.45); border-color: #00f0ff; color: #00f0ff; background: rgba(0, 240, 255, 0.2);' : ''"
       title="Recortar e Exportar Trecho de Vídeo (Selecionar Período)"
       @click="emit('toggleExport')"
     >

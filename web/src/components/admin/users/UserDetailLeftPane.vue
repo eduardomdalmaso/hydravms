@@ -33,24 +33,24 @@ defineProps<{ user: UserItem }>()
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">ACESSO AO ADMIN CENTER</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" :style="{ color: user.role === 'admin_master' ? '#00ff9d' : (user.role === 'company_admin' ? '#fcee0a' : '#ff003c') }">
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" :style="{ color: user.role === 'admin_master' ? 'var(--vms-success)' : (user.role === 'company_admin' ? 'var(--vms-warning)' : 'var(--vms-danger)') }">
           {{ user.role === 'admin_master' ? 'LIBERADO (TOTAL)' : (user.role === 'company_admin' ? 'PARCIAL (TENANT)' : 'BLOQUEADO') }}
         </span>
       </div>
 
       <div class="vms-telemetry-card" style="grid-column: 1 / -1;">
         <span class="vms-text-dim vms-text-2xs">ESCOPO DE EMPRESA & CLIENTES VINCULADOS</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #38bdf8;">{{ user.companyScope }}</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-regular);">{{ user.companyScope }}</span>
       </div>
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">NOME COMPLETO</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ user.fullName }}</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-main);">{{ user.fullName }}</span>
       </div>
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">EMAIL CORPORATIVO</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #38bdf8;">{{ user.email }}</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-regular);">{{ user.email }}</span>
       </div>
 
       <div class="vms-telemetry-card">

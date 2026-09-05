@@ -3,6 +3,8 @@ import type { CustomLayout, GridLayout, WorkspaceSlot } from "../types/mosaic"
 
 const defaultSystemLayouts: CustomLayout[] = [
   { id: "lay_sys_01", name: "Grade Padrao (2x2)", grid: "2x2", is_system: true, created_by: "admin" },
+  { id: "lay_alpha_01", name: "[ALPHA] Mural Operacional 2x2", grid: "2x2", is_system: true, created_by: "admin" },
+  { id: "lay_vv_01", name: "[VISTA VERDE] Portaria 2x2", grid: "2x2", is_system: true, created_by: "admin" },
   { id: "lay_sys_02", name: "Destaque Hero (1+5)", grid: "1+5", is_system: true, created_by: "admin" },
   { id: "lay_sys_03", name: "Mural (3x3)", grid: "3x3", is_system: true, created_by: "admin" },
   { id: "lay_sys_04", name: "Central (4x4)", grid: "4x4", is_system: true, created_by: "admin" },
@@ -20,10 +22,8 @@ export function useLayoutManager(username: string = "operador") {
     if (raw) savedOperatorLayouts = JSON.parse(raw)
   } catch {}
 
-  // Layouts do operador sobem ao topo para facil visualizacao
   const layouts = ref<CustomLayout[]>([...savedOperatorLayouts, ...defaultSystemLayouts])
   const activeLayoutId = ref<string>(layouts.value[0]?.id || "lay_sys_01")
-
   const activeLayout = computed(() => layouts.value.find(l => l.id === activeLayoutId.value) || layouts.value[0])
 
   const saveOperatorLayouts = () => {
@@ -43,7 +43,6 @@ export function useLayoutManager(username: string = "operador") {
       created_by: username,
       slots: [...initialSlots]
     }
-    // Sobe imediatamente ao topo da lista
     layouts.value.unshift(newLayout)
     activeLayoutId.value = newLayout.id
     saveOperatorLayouts()
@@ -52,10 +51,7 @@ export function useLayoutManager(username: string = "operador") {
 
   const renameLayout = (id: string, newName: string) => {
     const target = layouts.value.find(l => l.id === id)
-    if (target && !target.is_system) {
-      target.name = newName
-      saveOperatorLayouts()
-    }
+    if (target && !target.is_system) { target.name = newName; saveOperatorLayouts() }
   }
 
   const deleteLayout = (id: string) => {
@@ -67,18 +63,9 @@ export function useLayoutManager(username: string = "operador") {
     }
   }
 
-  const duplicateLayout = (layout: CustomLayout) => {
-    createOperatorLayout(layout.grid, layout.slots || [])
-  }
+  const duplicateLayout = (layout: CustomLayout) => { createOperatorLayout(layout.grid, layout.slots || []) }
 
   return {
-    layouts,
-    activeLayoutId,
-    activeLayout,
-    createOperatorLayout,
-    renameLayout,
-    deleteLayout,
-    duplicateLayout,
-    saveOperatorLayouts
+    layouts, activeLayoutId, activeLayout, createOperatorLayout, renameLayout, deleteLayout, duplicateLayout, saveOperatorLayouts
   }
 }

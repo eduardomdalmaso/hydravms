@@ -50,11 +50,13 @@
   color: #ff5e3a;
   border: 1px solid rgba(255, 94, 58, 0.3);
 }
-.vms-badge-alert .vms-badge-dot,
-.vms-status-led.alert,
-.vms-status-led.alerta,
-.vms-status-led.alarm,
-.vms-status-led.alarme {
+.vms-badge-orange, .vms-badge-primary {
+  background-color: rgba(255, 94, 58, 0.15);
+  color: var(--vms-neu-accent-orange);
+  border: 1px solid rgba(255, 94, 58, 0.35);
+}
+
+.vms-badge-alert .vms-badge-dot, .vms-status-led.alert, .vms-status-led.alerta, .vms-status-led.alarm, .vms-status-led.alarme {
   background: #ff5e3a;
   box-shadow: 0 0 8px rgba(255, 94, 58, 0.95), 0 0 2px #ff5e3a;
 }
@@ -65,10 +67,7 @@
   color: #fcee0a;
   border: 1px solid rgba(252, 238, 10, 0.3);
 }
-.vms-badge-warning .vms-badge-dot,
-.vms-status-led.desarmado,
-.vms-status-led.disarmed,
-.vms-status-led.warning {
+.vms-badge-warning .vms-badge-dot, .vms-status-led.desarmado, .vms-status-led.disarmed, .vms-status-led.warning {
   background: #fcee0a;
   box-shadow: 0 0 8px rgba(252, 238, 10, 0.95), 0 0 2px #fcee0a;
 }
@@ -79,18 +78,16 @@
   color: #00f0ff;
   border: 1px solid rgba(0, 240, 255, 0.3);
 }
-.vms-badge-recording .vms-badge-dot,
-.vms-status-led.recording,
-.vms-status-led.gravando {
+.vms-badge-recording .vms-badge-dot, .vms-status-led.recording, .vms-status-led.gravando {
   background: #00f0ff;
   box-shadow: 0 0 8px rgba(0, 240, 255, 0.95), 0 0 2px #00f0ff;
   animation: vms-pulse 1.5s infinite;
 }
 
 .vms-badge-info {
-  background-color: var(--vms-info-subtle);
+  background-color: rgba(0, 240, 255, 0.1);
   color: var(--vms-info);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.25);
 }
 
 @keyframes vms-pulse {

@@ -49,7 +49,7 @@ const handleSlotClick = () => {
               <span class="vms-text-mono vms-text-2xs" style="color: #cbd5e1;">RESOLUCAO: {{ (slot.data as CameraStreamInfo).resolution }}</span>
               <span class="vms-text-mono vms-text-2xs" style="color: #00ff9d;">MEDIA FPS: {{ (slot.data as CameraStreamInfo).fps }} FPS</span>
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">DECODER: {{ decoderMode }}</span>
-              <span class="vms-text-mono vms-text-2xs" style="color: #94a3b8;">PROTOCOLO: {{ (slot.data as CameraStreamInfo).protocol || 'RTSP' }}</span>
+              <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-muted);">PROTOCOLO: {{ (slot.data as CameraStreamInfo).protocol || 'RTSP' }}</span>
             </div>
           </div>
 
@@ -74,7 +74,7 @@ const handleSlotClick = () => {
     <!-- CAROUSEL TYPE -->
     <template v-else-if="slot.type === 'carousel' && slot.data">
       <div class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.4rem; width: 100%; height: 100%; background: #0c0f14;">
-        <span class="vms-badge vms-badge-warning">[RONDA ATIVA // {{ (slot.data as any).interval_seconds }}S]</span>
+        <span class="vms-badge" style="background: rgba(255, 94, 58, 0.15); color: #ff5e3a !important; border: 1px solid rgba(255, 94, 58, 0.35);">[RONDA ATIVA // {{ (slot.data as any).interval_seconds }}S]</span>
         <span class="vms-text-sm vms-font-semibold" style="color: #fff;">{{ (slot.data as any).name }}</span>
       </div>
     </template>

@@ -27,16 +27,16 @@ const emit = defineEmits<{
       <!-- Mini Preview Placeholder -->
       <div style="height: 140px; background: #080a0e; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-        <span class="vms-text-mono vms-text-2xs" style="color: #38bdf8;">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
-        <span class="vms-badge vms-badge-info" style="position: absolute; top: 6px; left: 6px; font-size: 8px;">{{ stream.codec }}</span>
+        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
+        <span class="vms-badge vms-badge-orange" style="position: absolute; top: 6px; left: 6px; font-size: 8px;">{{ stream.codec }}</span>
       </div>
 
       <!-- Specs Card -->
       <div class="vms-flex-col" style="gap: 0.5rem; background: rgba(255, 255, 255, 0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--vms-border);">
-        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">PROTOCOLO</span><span class="vms-text-mono vms-text-xs" style="color: #fff;">{{ stream.protocol }}</span></div>
-        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ENDERECO IP</span><span class="vms-text-mono vms-text-xs" style="color: #fff;">{{ stream.ip }}:{{ stream.port }}</span></div>
-        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">BITRATE ESTIMADO</span><span class="vms-text-mono vms-text-xs" style="color: #38bdf8;">{{ stream.bitrate }}</span></div>
-        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">MODO GRAVACAO</span><span class="vms-badge vms-badge-warning" style="font-size: 9px;">{{ stream.recordMode.toUpperCase() }}</span></div>
+        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">PROTOCOLO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-main);">{{ stream.protocol }}</span></div>
+        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ENDERECO IP</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-main);">{{ stream.ip }}:{{ stream.port }}</span></div>
+        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">BITRATE ESTIMADO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">{{ stream.bitrate }}</span></div>
+        <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">MODO GRAVACAO</span><span class="vms-badge vms-badge-orange" style="font-size: 9px;">{{ stream.recordMode.toUpperCase() }}</span></div>
         <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CONTROLE PTZ</span><span class="vms-text-mono vms-text-xs" :style="{ color: stream.has_ptz ? 'var(--vms-status-online)' : 'var(--vms-text-dim)' }">{{ stream.has_ptz ? 'HABILITADO' : 'DESATIVADO' }}</span></div>
       </div>
 

@@ -46,7 +46,7 @@ const handleAddCarousel = () => {
           <tr v-for="c in carousels" :key="c.id">
             <td class="vms-text-mono">{{ c.id }}</td>
             <td class="vms-font-semibold" style="color: #fff;">{{ c.name }}</td>
-            <td><span class="vms-badge vms-badge-warning">{{ c.interval }}s</span></td>
+            <td><span class="vms-badge" style="background: rgba(255, 94, 58, 0.15); color: #ff5e3a !important; border: 1px solid rgba(255, 94, 58, 0.35);">{{ c.interval }}s</span></td>
             <td class="vms-text-mono vms-text-xs">{{ c.cameras }} CAMERAS</td>
             <td class="vms-text-mono vms-text-2xs vms-text-dim">{{ c.transition }}</td>
             <td style="text-align: center;"><span class="vms-status-led" :class="c.status === 'ATIVO' ? 'online' : 'warning'" :title="c.status"></span></td>

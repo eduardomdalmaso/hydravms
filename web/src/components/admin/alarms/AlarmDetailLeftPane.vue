@@ -47,17 +47,17 @@ defineProps<{ alarm: AlarmItem }>()
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">CAMERA VINCULADA</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #38bdf8;">{{ alarm.linkedCameraName || 'NENHUMA' }}</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-regular);">{{ alarm.linkedCameraName || 'NENHUMA' }}</span>
       </div>
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">ULTIMO DISPARO</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ alarm.lastTrigger || 'SEM DISPAROS RECENTES' }}</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-main);">{{ alarm.lastTrigger || 'SEM DISPAROS RECENTES' }}</span>
       </div>
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">MODO RETARDO</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">IMEDIATO (0s)</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-text-main);">IMEDIATO (0s)</span>
       </div>
 
       <div class="vms-telemetry-card">

@@ -49,8 +49,8 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">SENSIBILIDADE</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-neu-accent-orange);">{{ alarm.sensitivity }}%</span></div>
-      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CAMERA VINCULADA</span><span class="vms-text-mono vms-text-xs" style="color: #38bdf8;">{{ alarm.linkedCameraName || 'NENHUMA' }}</span></div>
-      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ULTIMO DISPARO</span><span class="vms-text-mono vms-text-xs" style="color: #fff;">{{ alarm.lastTrigger || 'N/A' }}</span></div>
+      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CAMERA VINCULADA</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">{{ alarm.linkedCameraName || 'NENHUMA' }}</span></div>
+      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ULTIMO DISPARO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-main);">{{ alarm.lastTrigger || 'N/A' }}</span></div>
     </div>
 
     <!-- Actions -->

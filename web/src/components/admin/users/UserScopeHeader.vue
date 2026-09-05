@@ -21,12 +21,7 @@ const handleRoleSelect = (role: UserRole) => {
           {{ user.role === 'admin_master' ? 'ADMIN MASTER // PLATAFORMA TOTAL' : (user.role === 'company_admin' ? 'GESTOR DE EMPRESA // TENANT' : (user.role === 'operator' ? 'OPERADOR DE MONITORAMENTO' : 'CLIENTE FINAL // APENAS VISUALIZACAO')) }}
         </span>
       </div>
-      <span class="vms-badge" :style="{
-        background: user.role === 'admin_master' ? 'rgba(0, 255, 157, 0.15)' : (user.role === 'company_admin' ? 'rgba(252, 238, 10, 0.15)' : 'rgba(255, 255, 255, 0.05)'),
-        color: user.role === 'admin_master' ? '#00ff9d' : (user.role === 'company_admin' ? '#fcee0a' : 'var(--vms-text-dim)'),
-        borderColor: user.role === 'admin_master' ? 'rgba(0, 255, 157, 0.4)' : (user.role === 'company_admin' ? 'rgba(252, 238, 10, 0.4)' : 'var(--vms-border)'),
-        fontSize: '9px'
-      }">
+      <span class="vms-badge" :class="user.role === 'admin_master' ? 'vms-badge-online' : (user.role === 'company_admin' ? 'vms-badge-warning' : 'vms-badge-neutral')" style="font-size: 9px;">
         {{ user.role === 'admin_master' ? '[ADMIN CENTER: TOTAL]' : (user.role === 'company_admin' ? '[ADMIN CENTER: EMPRESA]' : '[ADMIN CENTER: BLOQUEADO]') }}
       </span>
     </div>
@@ -53,7 +48,7 @@ const handleRoleSelect = (role: UserRole) => {
     <!-- Company / Tenant Scope Bar -->
     <div class="vms-flex-between" style="border-top: 1px dashed var(--vms-border); padding-top: 0.5rem;">
       <span class="vms-text-dim vms-text-2xs">ESCOPO DE EMPRESA / CLIENTE VINCULADO:</span>
-      <span class="vms-text-mono vms-text-2xs vms-font-semibold" style="color: #38bdf8;">
+      <span class="vms-text-mono vms-text-2xs vms-font-semibold" style="color: var(--vms-text-regular);">
         {{ user.companyScope }}
       </span>
     </div>
