@@ -7,8 +7,10 @@ import AdminUsersView from "./AdminUsersView.vue"
 import AdminLayoutsView from "./AdminLayoutsView.vue"
 import AdminCarouselsView from "./AdminCarouselsView.vue"
 import AdminMapsView from "./AdminMapsView.vue"
-import WorkflowListView from "../workflows/WorkflowListView.vue"
+import AdminWorkflowsView from "./AdminWorkflowsView.vue"
 import StorageDisksView from "../storage/StorageDisksView.vue"
+import AdminPerformanceView from "./AdminPerformanceView.vue"
+import AdminLogsView from "./AdminLogsView.vue"
 
 const activePage = ref<AdminPageId>("video_streams")
 </script>
@@ -26,8 +28,10 @@ const activePage = ref<AdminPageId>("video_streams")
       <AdminLayoutsView v-else-if="activePage === 'layouts'" />
       <AdminCarouselsView v-else-if="activePage === 'carousels'" />
       <AdminMapsView v-else-if="activePage === 'maps'" />
-      <WorkflowListView v-else-if="activePage === 'workflows'" />
+      <AdminWorkflowsView v-else-if="activePage === 'workflows'" />
       <StorageDisksView v-else-if="activePage === 'storage'" />
+      <AdminPerformanceView v-else-if="activePage === 'performance'" />
+      <AdminLogsView v-else-if="activePage === 'logs'" />
     </main>
   </div>
 </template>

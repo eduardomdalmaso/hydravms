@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { EnterpriseLayoutItem } from '../../../types/layoutTree'
 import type { GridLayout } from '../../../types/mosaic'
 import LayoutCompanyUsersPicker from './LayoutCompanyUsersPicker.vue'
@@ -12,6 +12,8 @@ const localGrid = ref<GridLayout>(props.layout.grid)
 const localScope = ref(props.layout.companyScope)
 const localLocked = ref(props.layout.is_locked)
 const localUsers = ref<string[]>([...props.layout.allowedUserIds])
+watch(() => props.layout.is_locked, (v) => localLocked.value = v)
+watch(localLocked, (v) => props.layout.is_locked = v)
 
 const isCompany = computed(() => localScope.value.toUpperCase().startsWith('EMPRESA'))
 
@@ -35,7 +37,11 @@ const handleSave = () => {
   props.layout.companyScope = localScope.value
   props.layout.is_locked = localLocked.value
   props.layout.allowedUserIds = [...localUsers.value]
-  emit('saved', `[LAYOUT] "${props.layout.name}" atualizado com sucesso`)
+  emit('saved', `[LAYOUT] "${props.layout.name}" atualizado`)
+}
+const toggleLock = () => {
+  localLocked.value = !localLocked.value; props.layout.is_locked = localLocked.value
+  emit('saved', localLocked.value ? `[TRAVADO COM CADEADO] Grade "${props.layout.name}" bloqueada` : `[DESTRAVADO] Grade "${props.layout.name}" liberada`)
 }
 </script>
 
@@ -76,9 +82,11 @@ const handleSave = () => {
     <LayoutCompanyUsersPicker v-if="isCompany" :company-name="localScope" :allowed-user-ids="localUsers" @toggle-user="toggleUser" />
 
     <!-- Trava com Cadeado -->
-    <div class="vms-flex-between" style="background: #07080c !important; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--vms-border); cursor: pointer;" @click="localLocked = !localLocked">
+    <div class="vms-flex-between" style="background: #07080c !important; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--vms-border); cursor: pointer;" @click="toggleLock">
       <div class="vms-flex-row" style="gap: 0.4rem; align-items: center;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" :stroke="localLocked ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)'" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path :d="localLocked ? 'M7 11V7a5 5 0 0 1 10 0v4' : 'M7 11V7a5 5 0 0 1 9.9-1'"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" :fill="localLocked ? '#ff5e3a' : 'none'" stroke="#ff5e3a" stroke-width="1.5">
+          <path d="M12 2C9.24 2 7 4.24 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 7a1.5 1.5 0 0 1 1 1.37V17a1 1 0 1 1-2 0v-1.63A1.5 1.5 0 0 1 12 14z"/>
+        </svg>
         <span class="vms-text-xs vms-font-bold" :style="{ color: localLocked ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">{{ localLocked ? '[TRAVADO COM CADEADO]' : '[DESTRAVADO]' }}</span>
       </div>
       <span class="vms-badge" :class="localLocked ? 'vms-badge-danger' : 'vms-badge-neutral'" style="font-size: 8px;">{{ localLocked ? '[LOCK]' : '[LIVRE]' }}</span>

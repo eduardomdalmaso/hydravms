@@ -1,0 +1,39 @@
+/* HydraVMS Cyberpunk Vue Flow Theme */
+@import '@vue-flow/core/dist/style.css';
+@import '@vue-flow/core/dist/theme-default.css';
+@import '@vue-flow/controls/dist/style.css';
+
+.vue-flow__pane {
+  background: #07080c !important;
+}
+
+.vue-flow__controls {
+  background: #0e1117 !important;
+  border: 1px solid var(--vms-border) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.vue-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid var(--vms-border) !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.vue-flow__controls-button:hover {
+  background: #191e27 !important;
+  fill: #ff5e3a !important;
+  color: #ff5e3a !important;
+}
+
+.vue-flow__edge-path {
+  stroke: #ff5e3a !important;
+  stroke-width: 2 !important;
+}
+
+.vue-flow__connection-path {
+  stroke: #ff5e3a !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 5 !important;
+}

@@ -14,6 +14,7 @@ const emit = defineEmits<{
   (e: 'navigate-root'): void
   (e: 'navigate-folder'): void
   (e: 'save'): void
+  (e: 'toggleLock'): void
 }>()
 </script>
 
@@ -55,20 +56,38 @@ const emit = defineEmits<{
       </template>
     </div>
 
-    <!-- Right side: Counters + SALVAR button at far right -->
-    <div class="vms-flex-row" style="gap: 0.75rem; align-items: center; flex-shrink: 0;">
+    <!-- Right side: Counters + Padlock & SALVAR button at far right -->
+    <div class="vms-flex-row" style="gap: 0.5rem; align-items: center; flex-shrink: 0;">
       <span class="vms-text-mono vms-text-2xs vms-text-dim">
         {{ selectedLayout ? '[INSPECAO // GRADE ATIVA]' : currentFolder ? `${currentFolderLayoutsCount ?? 0} LAYOUTS` : `${totalFolders} PASTAS // ${totalLayouts} LAYOUTS` }}
       </span>
 
-      <button
-        v-if="selectedLayout"
-        class="vms-btn vms-btn-primary vms-btn-sm"
-        style="padding: 4px 16px; font-weight: 700; box-shadow: 0 0 12px rgba(255, 94, 58, 0.4);"
-        @click="emit('save')"
-      >
-        SALVAR
-      </button>
+      <template v-if="selectedLayout">
+        <button
+          type="button"
+          class="vms-btn vms-btn-sm"
+          :class="selectedLayout.is_locked ? 'vms-btn-primary' : 'vms-btn-secondary'"
+          :style="{
+            padding: '4px 8px',
+            background: selectedLayout.is_locked ? 'rgba(255, 94, 58, 0.2)' : '#07080c',
+            borderColor: selectedLayout.is_locked ? '#ff5e3a' : 'var(--vms-border)'
+          }"
+          :title="selectedLayout.is_locked ? '[TRAVADO COM CADEADO] (Clique para destravar)' : '[DESTRAVADO] (Clique para travar com cadeado)'"
+          @click="emit('toggleLock')"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" :fill="selectedLayout.is_locked ? '#ff5e3a' : 'none'" stroke="#ff5e3a" stroke-width="1.5">
+            <path d="M12 2C9.24 2 7 4.24 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 7a1.5 1.5 0 0 1 1 1.37V17a1 1 0 1 1-2 0v-1.63A1.5 1.5 0 0 1 12 14z"/>
+          </svg>
+        </button>
+
+        <button
+          class="vms-btn vms-btn-primary vms-btn-sm"
+          style="padding: 4px 16px; font-weight: 700; box-shadow: 0 0 12px rgba(255, 94, 58, 0.4);"
+          @click="emit('save')"
+        >
+          SALVAR
+        </button>
+      </template>
     </div>
   </div>
 </template>

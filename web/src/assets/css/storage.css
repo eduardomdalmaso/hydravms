@@ -1,0 +1,71 @@
+/* HydraVMS - Cyberpunk Storage & Disks Styling (< 100 lines) */
+.vms-storage-telemetry-card {
+  background: var(--vms-neu-surface, #0c0e14);
+  border: 1px solid rgba(255, 94, 58, 0.25);
+  border-radius: 6px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.vms-storage-pool-card {
+  background: var(--vms-neu-surface, #0c0e14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vms-storage-pool-card:hover {
+  border-color: rgba(255, 94, 58, 0.4);
+  box-shadow: 0 4px 16px rgba(255, 94, 58, 0.08);
+}
+
+.vms-storage-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.vms-neu-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.vms-neu-track-fill {
+  height: 100%;
+  background: var(--vms-neu-accent-orange, #ff5e3a);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.vms-status-led.online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  display: inline-block;
+}
+
+.vms-status-led.offline {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5e3a;
+  box-shadow: 0 0 6px rgba(255, 94, 58, 0.8);
+  display: inline-block;
+}

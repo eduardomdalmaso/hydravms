@@ -1,0 +1,56 @@
+/* Leaflet Map Hover Tooltips - Camera Snapshot & Alarm Triggers */
+.leaflet-tooltip.vms-map-tooltip {
+  background: rgba(14, 17, 23, 0.98) !important;
+  border: 1px solid var(--vms-border) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px);
+  color: #ffffff !important;
+  pointer-events: none;
+}
+.leaflet-tooltip.vms-map-tooltip::before { display: none !important; }
+
+.vms-map-hover-card {
+  width: 250px; display: flex; flex-direction: column; gap: 8px; font-family: var(--vms-font-roboto);
+}
+.vms-map-hover-card.camera-card { border-left: 3px solid #ff5e3a; padding-left: 8px; }
+.vms-map-hover-card.alarm-card { border-left: 3px solid #ff5e3a; padding-left: 8px; }
+
+/* Snapshot Box for Camera */
+.vms-hover-snapshot-box {
+  width: 100%; aspect-ratio: 16 / 9; background: #07080c; border-radius: 4px;
+  border: 1px solid rgba(255, 94, 58, 0.35); display: flex; align-items: center;
+  justify-content: center; position: relative; overflow: hidden;
+}
+.vms-snap-badge {
+  position: absolute; font-family: var(--vms-font-mono); font-size: 7.5px;
+  font-weight: 700; padding: 1px 5px; border-radius: 3px; z-index: 2;
+}
+.vms-snap-badge.snap-live { top: 4px; left: 4px; background: rgba(255, 94, 58, 0.15); color: #ff5e3a; border: 1px solid rgba(255, 94, 58, 0.35); }
+.vms-snap-badge.snap-res { bottom: 4px; right: 4px; background: #07080c; color: #ffffff; border: 1px solid var(--vms-border); }
+
+/* General Info */
+.vms-hover-info { display: flex; flex-direction: column; gap: 3px; }
+.vms-hover-title { font-size: 11px; font-weight: 700; color: #ffffff; line-height: 1.3; word-break: break-word; }
+.vms-hover-mono { font-family: var(--vms-font-mono); font-size: 8.5px; color: var(--vms-text-dim); }
+.vms-hover-status { font-family: var(--vms-font-mono); font-size: 8px; margin-top: 1px; color: var(--vms-text-regular); }
+
+/* Alarm Header & Trigger List - Zero Overlap */
+.vms-hover-alarm-header { display: flex; flex-direction: column; gap: 4px; }
+.vms-hover-alarm-badge {
+  display: inline-block; width: fit-content; font-family: var(--vms-font-mono);
+  font-size: 8px; font-weight: 700; color: #ff5e3a; background: rgba(255, 94, 58, 0.15);
+  border: 1px solid rgba(255, 94, 58, 0.35); border-radius: 3px; padding: 1px 6px; line-height: 1.2;
+}
+.vms-hover-trigger-list {
+  display: flex; flex-direction: column; gap: 3px; background: #07080c;
+  padding: 6px 8px; border-radius: 4px; border: 1px solid var(--vms-border);
+}
+.vms-trigger-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  font-size: 8.5px; padding: 2px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.vms-trigger-item:last-child { border-bottom: none; }
+.vms-trigger-time { font-family: var(--vms-font-mono); color: #ff5e3a; font-weight: 600; white-space: nowrap; }
+.vms-trigger-desc { font-family: var(--vms-font-mono); color: var(--vms-text-dim); text-align: right; }

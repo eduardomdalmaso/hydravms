@@ -1,54 +1,47 @@
-/* Alerts Flyout Floating Panel (Sem escurecer as páginas / No dark backdrop) */
+/* HydraVMS - Square AI Alerts Drawer Styling (< 100 lines) */
 .vms-alerts-panel {
-  position: fixed; top: 44px; right: 0; bottom: 0; width: 380px; max-width: 90vw;
-  background: var(--vms-neu-surface); border-left: 1px solid var(--vms-border);
+  position: fixed; top: 44px; right: 0; bottom: 0; width: 360px; max-width: 90vw;
+  background: var(--vms-neu-surface, #0c0e14); border-left: 1px solid var(--vms-border);
   box-shadow: -6px 0 24px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;
   z-index: 900; transition: transform 0.2s ease;
 }
 
-.vms-alert-item {
-  padding: 0.85rem; background: var(--vms-neu-bg); border: 1px solid var(--vms-border);
-  border-radius: var(--vms-radius-md); box-shadow: var(--vms-neu-shadow-dark), var(--vms-neu-shadow-light);
-  display: flex; flex-direction: column; gap: 0.5rem; transition: all 0.2s ease;
+.vms-alerts-square-grid {
+  flex: 1; padding: 0.75rem; overflow-y: auto; display: grid;
+  grid-template-columns: repeat(2, 1fr); gap: 0.65rem; align-content: start;
 }
 
-.vms-alert-item.critical { border-left: 3px solid #ff003c; }
-.vms-alert-item.warning { border-left: 3px solid #fcee0a; }
-.vms-alert-item.info { border-left: 3px solid #00f0ff; }
-
-.vms-alert-snapshot-placeholder {
-  height: 100px; background: #0d1015; border-radius: 4px;
-  border: 1px dashed rgba(255, 255, 255, 0.15); display: flex; align-items: center;
-  justify-content: center; position: relative; overflow: hidden;
+.vms-alert-square-card {
+  aspect-ratio: 1 / 1; background: #07080c; border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px; padding: 0.65rem; display: flex; flex-direction: column;
+  justify-content: space-between; cursor: pointer; transition: all 0.2s ease;
+  position: relative; overflow: hidden;
 }
 
-.vms-alert-badge-critical { background: rgba(255, 94, 58, 0.2); color: var(--vms-neu-accent-orange); border: 1px solid rgba(255, 94, 58, 0.4); }
-.vms-alert-badge-warning { background: rgba(252, 238, 10, 0.2); color: #fcee0a; border: 1px solid rgba(252, 238, 10, 0.4); }
-.vms-alert-badge-info { background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.4); }
+.vms-alert-square-card:hover {
+  border-color: rgba(255, 94, 58, 0.5); transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 94, 58, 0.15);
+}
 
-/* Vue 3 Transition Classes (https://vuejs.org/guide/built-ins/transition.html) */
+.vms-alert-square-card.critical { border-top: 2px solid #ff5e3a; }
+.vms-alert-square-card.warning { border-top: 2px solid #ffffff; }
+.vms-alert-square-card.info { border-top: 2px solid rgba(255, 255, 255, 0.35); }
+.vms-alert-square-card.acknowledged { opacity: 0.4; }
+
+.vms-alert-square-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 2px;
+}
+.vms-alert-square-badge.critical { color: #ff5e3a; background: rgba(255, 94, 58, 0.15); }
+.vms-alert-square-badge.warning { color: #ffffff; background: rgba(255, 255, 255, 0.12); }
+.vms-alert-square-badge.info { color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.06); }
+
+/* Transitions */
 .vms-drawer-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .vms-drawer-leave-active { transition: all 0.22s cubic-bezier(0.7, 0, 0.84, 0); }
 .vms-drawer-enter-from, .vms-drawer-leave-to { transform: translateX(100%); opacity: 0; }
 
 .vms-alert-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .vms-alert-leave-active { transition: all 0.2s ease; }
-.vms-alert-enter-from { opacity: 0; transform: translateY(14px) scale(0.96); }
-.vms-alert-leave-to { opacity: 0; transform: translateX(24px) scale(0.96); }
+.vms-alert-enter-from { opacity: 0; transform: translateY(10px) scale(0.95); }
+.vms-alert-leave-to { opacity: 0; transform: translateX(20px) scale(0.95); }
 .vms-alert-move { transition: transform 0.25s ease; }
-
-/* GNOME Style Calendar Popup */
-.vms-gnome-calendar-popup {
-  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); width: 280px;
-  background: var(--vms-neu-surface); border: 1px solid var(--vms-border);
-  border-radius: var(--vms-radius-lg); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), var(--vms-neu-shadow-dark);
-  padding: 1rem; z-index: 1050; display: flex; flex-direction: column; gap: 0.75rem;
-}
-
-.vms-gnome-calendar-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 11px;
-}
-
-.vms-gnome-cal-day { padding: 4px 0; border-radius: 4px; cursor: pointer; color: var(--vms-text-regular); }
-.vms-gnome-cal-day:hover { background: var(--vms-neu-bg); color: #fff; }
-.vms-gnome-cal-day.active { background: var(--vms-neu-accent-orange); color: #fff; font-weight: 700; }

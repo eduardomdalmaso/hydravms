@@ -30,6 +30,12 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
   else if (action === 'move-stream' && target.id) moveLayoutToFolder(target.id, extra)
   else if (action === 'test-stream' && target.id) showNotification(`[LAYOUT TEST] Grade "${target.name || ''}" // VALIDA`)
 }
+
+const handleToggleLock = () => {
+  if (!selectedLayout.value) return
+  selectedLayout.value.is_locked = !selectedLayout.value.is_locked
+  showNotification(selectedLayout.value.is_locked ? `[TRAVADO COM CADEADO] Grade "${selectedLayout.value.name}" bloqueada` : `[DESTRAVADO] Grade "${selectedLayout.value.name}" liberada`)
+}
 </script>
 
 <template>
@@ -47,9 +53,16 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
       </div>
     </div>
 
-    <Transition name="vms-toast"><div v-if="notification" class="vms-toast-notification" @click="notification = null"><span>{{ notification }}</span></div></Transition>
+    <Transition name="vms-toast">
+      <div v-if="notification" class="vms-toast-notification" @click="notification = null">
+        <svg v-if="notification.includes('[TRAVADO')" width="14" height="14" viewBox="0 0 24 24" fill="#ff5e3a"><path d="M12 2C9.24 2 7 4.24 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 7a1.5 1.5 0 0 1 1 1.37V17a1 1 0 1 1-2 0v-1.63A1.5 1.5 0 0 1 12 14z"/></svg>
+        <svg v-else-if="notification.includes('[DESTRAVADO')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>{{ notification }}</span>
+      </div>
+    </Transition>
 
-    <LayoutBreadcrumb :current-folder="currentFolder" :selected-layout="selectedLayout" :total-folders="folders.length" :total-layouts="totalLayouts" :current-folder-layouts-count="currentFolder?.layouts.length" @back="selectedLayout ? (selectedLayout = null) : (currentFolderId = null)" @navigate-root="currentFolderId = null; selectedLayout = null" @navigate-folder="selectedLayout = null" @save="selectedLayout ? handleSaveLayout(selectedLayout) : undefined" />
+    <LayoutBreadcrumb :current-folder="currentFolder" :selected-layout="selectedLayout" :total-folders="folders.length" :total-layouts="totalLayouts" :current-folder-layouts-count="currentFolder?.layouts.length" @back="selectedLayout ? (selectedLayout = null) : (currentFolderId = null)" @navigate-root="currentFolderId = null; selectedLayout = null" @navigate-folder="selectedLayout = null" @save="selectedLayout ? handleSaveLayout(selectedLayout) : undefined" @toggle-lock="handleToggleLock" />
 
     <div class="vms-desktop-container">
       <LayoutInspectorSplitView v-if="selectedLayout" :layout="selectedLayout" @saved="(msg) => showNotification(msg)" />
