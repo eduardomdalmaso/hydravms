@@ -1,0 +1,94 @@
+.vms-marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.vms-plugin-card {
+  background: var(--vms-neu-surface);
+  border: 1px solid var(--vms-border);
+  border-radius: 8px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.vms-plugin-card:hover {
+  border-color: rgba(255, 94, 58, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.vms-plugin-card.installed {
+  border-left: 3px solid var(--vms-neu-accent-orange);
+}
+
+.vms-marketplace-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--vms-border);
+  padding-bottom: 0.5rem;
+}
+
+.vms-marketplace-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--vms-text-dim);
+  font-family: var(--vms-font-jetbrains);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.vms-marketplace-tab-btn.active {
+  background: rgba(255, 94, 58, 0.12);
+  border-color: rgba(255, 94, 58, 0.4);
+  color: var(--vms-neu-accent-orange);
+}
+.vms-marketplace-tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.vms-analytic-creator-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1.25rem;
+}
+@media (max-width: 1080px) {
+  .vms-analytic-creator-layout { grid-template-columns: 1fr; }
+}
+
+.vms-explorer-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.vms-event-card {
+  background: var(--vms-neu-surface);
+  border: 1px solid var(--vms-border);
+  border-radius: 6px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.vms-event-card:hover { border-color: var(--vms-neu-accent-orange); }
+
+.vms-event-crop-preview {
+  width: 100%;
+  height: 140px;
+  background: #060910;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
