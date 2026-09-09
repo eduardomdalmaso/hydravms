@@ -53,11 +53,11 @@ const {
       <AnalyticInspectorSplitView v-if="selectedInstance" :instance="selectedInstance" @saved="handleSaveInstance" @delete="handleDeleteInstance" @close="selectedInstance = null" />
 
       <div v-else class="vms-desktop-canvas">
-        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 0.65rem;">
           <div class="vms-desktop-grid">
             <AnalyticFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-instance="handleDropOnFolder" />
           </div>
-          <div v-if="displayedInstances.length > 0" class="vms-flex-col" style="gap: 0.5rem; border-top: 1px solid var(--vms-border); padding-top: 1rem;">
+          <div v-if="displayedInstances.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
             <div class="vms-desktop-section-title">// ANALÍTICOS NA RAIZ (ARRASTE PARA UMA PASTA)</div>
             <div class="vms-desktop-grid">
               <AnalyticAppCard v-for="i in displayedInstances" :key="i.id" :instance="i" @dragstart="handleDragStart" @select="(inst) => selectedInstance = inst" />

@@ -67,11 +67,11 @@ const handleToggleLock = () => {
     <div class="vms-desktop-container">
       <RondaInspectorSplitView v-if="selectedRonda" :ronda="selectedRonda" @saved="(msg) => showNotification(msg)" />
       <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
-        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 0.65rem;">
           <div class="vms-desktop-grid">
             <RondaFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-ronda="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
           </div>
-          <div v-if="displayedRondas.length > 0" class="vms-flex-col" style="gap: 0.5rem; border-top: 1px solid var(--vms-border); padding-top: 1rem;">
+          <div v-if="displayedRondas.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
             <div class="vms-desktop-section-title">// RONDAS GLOBAIS NA RAIZ (ARRASTE PARA UMA EMPRESA/CLIENTE)</div>
             <div class="vms-desktop-grid">
               <RondaAppCard v-for="r in displayedRondas" :key="r.id" :ronda="r" :is-selected="false" @dragstart="handleDragStart" @select="(ron) => selectedRonda = ron" @context="(ev, ron) => openContextMenu(ev, { type: 'stream', id: ron.id, name: ron.name, currentFolderId: currentFolderId })" />

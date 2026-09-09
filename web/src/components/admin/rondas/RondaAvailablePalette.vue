@@ -41,7 +41,7 @@ const handleAdd = (c: CamItem) => emit('addCamera', { id: c.id, name: c.name, re
       <input v-model="searchQuery" class="vms-auth-input" style="width: 140px; font-size: 10px; padding: 2px 6px; height: 22px;" placeholder="Filtrar câmeras..." />
     </div>
 
-    <div class="vms-desktop-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; max-height: 120px; overflow-y: auto; padding: 2px;">
+    <div class="vms-desktop-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.45rem; max-height: 120px; overflow-y: auto; padding: 2px;">
       <div
         v-for="c in availableCameras"
         :key="c.id"

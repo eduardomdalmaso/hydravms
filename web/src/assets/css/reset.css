@@ -10,6 +10,7 @@ html, body {
   width: 100%;
   background-color: var(--vms-bg-base);
   overflow-x: hidden;
+  color-scheme: dark;
 }
 
 #app {

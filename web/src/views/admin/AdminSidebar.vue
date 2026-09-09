@@ -36,53 +36,58 @@ const isPluginOpen = (id: string) => openPlugins.value[id] !== false
 <template>
   <aside class="vms-asset-sidebar" :class="{ collapsed: isCollapsed }">
     <div class="vms-sidebar-toggle-line" @click="isCollapsed = !isCollapsed"><div class="vms-sidebar-toggle-pill">{{ isCollapsed ? "▶" : "◀" }}</div></div>
-    <div v-show="!isCollapsed" style="display: flex; flex-direction: column; height: 100%; width: 250px; overflow-y: auto;">
-      <!-- [CONFIGURAÇÃO] -->
-      <div class="vms-accordion-header" :class="{ active: isConfigOpen }" @click="isConfigOpen = !isConfigOpen">
-        <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[CONFIGURAÇÃO]</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isConfigOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
-      </div>
-      <div v-if="isConfigOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
-        <div v-for="item in configItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', item.id)">
-          <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="item.icon" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ item.label }}</span></div>
-        </div>
-      </div>
-
-      <!-- [MARKETPLACE] -->
-      <div class="vms-accordion-header" :class="{ active: isMarketOpen }" @click="isMarketOpen = !isMarketOpen">
-        <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[MARKETPLACE]</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isMarketOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
-      </div>
-      <div v-if="isMarketOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
-        <div class="vms-asset-item" :class="{ active: activePage === 'marketplace' }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', 'marketplace')">
-          <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconMarket" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Marketplace</span></div>
-        </div>
-      </div>
-
-      <!-- Dynamic Sections for Installed Analytics Plugins -->
-      <template v-for="p in installedPlugins" :key="p.id">
-        <div class="vms-accordion-header" :class="{ active: isPluginOpen(p.id) }" @click="togglePlugin(p.id)">
-          <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange); max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">[{{ p.name.toUpperCase() }}]</span>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isPluginOpen(p.id) ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
-        </div>
-        <div v-if="isPluginOpen(p.id)" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
-          <div class="vms-asset-item" :class="{ active: activePage === `plugin_${p.id}_instances` }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', `plugin_${p.id}_instances`)">
-            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconLayers" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Analíticos</span></div>
+    <div v-show="!isCollapsed" style="display: flex; flex-direction: column; height: 100%; width: 250px; justify-content: space-between;">
+      <!-- Seção Superior com Scroll: Analíticos & Plugins Instalados -->
+      <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+        <template v-for="p in installedPlugins" :key="p.id">
+          <div class="vms-accordion-header" :class="{ active: isPluginOpen(p.id) }" @click="togglePlugin(p.id)">
+            <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange); max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">[{{ p.name.toUpperCase() }}]</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isPluginOpen(p.id) ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
           </div>
-          <div class="vms-asset-item" :class="{ active: activePage === `plugin_${p.id}_events` }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', `plugin_${p.id}_events`)">
-            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconActivity" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Eventos</span></div>
+          <div v-if="isPluginOpen(p.id)" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
+            <div class="vms-asset-item" :class="{ active: activePage === `plugin_${p.id}_instances` }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', `plugin_${p.id}_instances`)">
+              <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconLayers" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Analíticos</span></div>
+            </div>
+            <div class="vms-asset-item" :class="{ active: activePage === `plugin_${p.id}_events` }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', `plugin_${p.id}_events`)">
+              <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconActivity" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Eventos</span></div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Seção Fixa Inferior: Configuração, Sistema e Marketplace -->
+      <div style="flex-shrink: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); background: #07090e; display: flex; flex-direction: column;">
+        <!-- [CONFIGURAÇÃO] -->
+        <div class="vms-accordion-header" :class="{ active: isConfigOpen }" @click="isConfigOpen = !isConfigOpen">
+          <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[CONFIGURAÇÃO]</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isConfigOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
+        </div>
+        <div v-if="isConfigOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
+          <div v-for="item in configItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', item.id)">
+            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="item.icon" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ item.label }}</span></div>
           </div>
         </div>
-      </template>
 
-      <!-- [SISTEMA] -->
-      <div class="vms-accordion-header" :class="{ active: isSysOpen }" @click="isSysOpen = !isSysOpen">
-        <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[SISTEMA]</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isSysOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
-      </div>
-      <div v-if="isSysOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
-        <div v-for="item in storageItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', item.id)">
-          <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="item.icon" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ item.label }}</span></div>
+        <!-- [SISTEMA] -->
+        <div class="vms-accordion-header" :class="{ active: isSysOpen }" @click="isSysOpen = !isSysOpen">
+          <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[SISTEMA]</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isSysOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
+        </div>
+        <div v-if="isSysOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
+          <div v-for="item in storageItems" :key="item.id" class="vms-asset-item" :class="{ active: activePage === item.id }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', item.id)">
+            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="item.icon" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ item.label }}</span></div>
+          </div>
+        </div>
+
+        <!-- [MARKETPLACE] -->
+        <div class="vms-accordion-header" :class="{ active: isMarketOpen }" @click="isMarketOpen = !isMarketOpen">
+          <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[MARKETPLACE]</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" :style="{ transform: isMarketOpen ? 'rotate(180deg)' : 'rotate(0deg)' }"><polyline points="6 9 12 15 18 9" /></svg>
+        </div>
+        <div v-if="isMarketOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
+          <div class="vms-asset-item" :class="{ active: activePage === 'marketplace' }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', 'marketplace')">
+            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconMarket" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">Marketplace</span></div>
+          </div>
         </div>
       </div>
     </div>

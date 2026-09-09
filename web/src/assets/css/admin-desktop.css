@@ -4,19 +4,19 @@
 }
 .vms-desktop-canvas {
   flex: 1; background: var(--vms-neu-surface); border: 1px solid var(--vms-border);
-  border-radius: var(--vms-radius-lg); padding: 1.25rem; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 1rem; box-shadow: var(--vms-shadow-convex-sm);
+  border-radius: var(--vms-radius-lg); padding: 0.85rem; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0.65rem; box-shadow: var(--vms-shadow-convex-sm);
 }
 .vms-desktop-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; padding: 0.5rem;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.45rem; padding: 0.2rem;
 }
 .vms-desktop-section-title {
   font-family: var(--vms-font-jetbrains); font-size: 11px; color: var(--vms-text-dim);
-  padding: 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0 0.35rem; display: flex; align-items: center; gap: 0.4rem;
 }
 .vms-desktop-folder-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.5rem; padding: 1rem 0.5rem; background: rgba(255, 255, 255, 0.02);
+  gap: 0.35rem; padding: 0.65rem 0.35rem; min-height: 94px; background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--vms-border); border-radius: var(--vms-radius-md);
   cursor: pointer; user-select: none; transition: all 0.2s ease; text-align: center;
 }
@@ -29,7 +29,7 @@
 }
 .vms-desktop-app-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.4rem; padding: 0.85rem 0.5rem; background: #11141a; border: 1px solid var(--vms-border);
+  gap: 0.35rem; padding: 0.65rem 0.35rem; min-height: 94px; background: #11141a; border: 1px solid var(--vms-border);
   border-radius: var(--vms-radius-md); cursor: grab; user-select: none; transition: all 0.2s ease;
   text-align: center; position: relative;
 }

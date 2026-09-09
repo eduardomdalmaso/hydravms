@@ -11,6 +11,10 @@ const emit = defineEmits<{
 }>()
 
 const isSpeedOpen = ref(false)
+const selectSpeed = (s: PlaybackSpeed) => {
+  emit('setSpeed', s)
+  isSpeedOpen.value = false
+}
 </script>
 
 <template>
@@ -51,13 +55,13 @@ const isSpeedOpen = ref(false)
       </button>
 
       <!-- Speed Popover Above Trigger -->
-      <div v-if="isSpeedOpen" class="vms-speed-popover">
+      <div v-if="isSpeedOpen" class="vms-speed-popover" @mouseenter="isSpeedOpen = true">
         <button
-          v-for="s in ([0.5, 1, 2, 3] as const)"
+          v-for="s in ([1, 2, 3] as const)"
           :key="s"
           class="vms-speed-option"
           :class="{ active: speed === s }"
-          @click="emit('setSpeed', s); isSpeedOpen = false"
+          @click.stop="selectSpeed(s)"
         >
           {{ s }}X
         </button>

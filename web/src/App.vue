@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import { useAuth } from './composables/useAuth'
 import { useAnalyticsAlerts } from './composables/useAnalyticsAlerts'
 import LoginView from './views/auth/LoginView.vue'
 import AppTopHeader from './components/layout/AppTopHeader.vue'
 import LiveMosaicView from './views/mosaic/LiveMosaicView.vue'
-import AdminCenterView from './views/admin/AdminCenterView.vue'
 import AnalyticsAlertsDrawer from './components/analytics/AnalyticsAlertsDrawer.vue'
+
+const AdminCenterView = defineAsyncComponent(() => import('./views/admin/AdminCenterView.vue'))
 
 const { isAuthenticated, isLoading, errorMessage, username, isAdmin, handleLogin, handleLogout } = useAuth()
 const { isDrawerOpen, alerts, unreadCount, toggleDrawer, acknowledgeAlert, clearAllAlerts } = useAnalyticsAlerts()

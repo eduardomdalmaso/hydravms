@@ -18,7 +18,7 @@ const getAlarm = () => alarms[props.cameraId] || { name: "Sensor de Area", zone:
 <template>
   <div class="vms-gear-wrapper" style="position: relative;" @mouseenter="isAlarmOpen = true" @mouseleave="isAlarmOpen = false">
     <button class="vms-gear-btn" :title="`Alarme: ${getAlarm().name}`" @click.stop="isAlarmOpen = !isAlarmOpen">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" :stroke="getAlarm().status === 'alert' ? '#fcee0a' : '#ff5e3a'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
       </svg>
     </button>

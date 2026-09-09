@@ -9,6 +9,7 @@ export interface CameraStreamInfo {
   location: string
   status: 'online' | 'offline' | 'recording'
   protocol?: StreamProtocol
+  codec?: string
   has_ptz: boolean
   fps: number
   resolution: string

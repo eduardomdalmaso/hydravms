@@ -8,6 +8,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'showLayers'): void
   (e: 'toggleExport'): void
+  (e: 'openExportModal'): void
   (e: 'toggleSync'): void
   (e: 'goLive'): void
 }>()

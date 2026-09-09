@@ -55,15 +55,15 @@ const handleSelectMode = (mode: "vms" | "admin") => {
           </button>
         </div>
         <div class="vms-gnome-calendar-grid">
-          <span v-for="d in ['D','S','T','Q','Q','S','S']" :key="d" class="vms-text-2xs vms-text-dim">{{ d }}</span>
-          <span v-for="n in 30" :key="n" class="vms-gnome-cal-day" :class="{ active: n === 3 }">{{ n }}</span>
+          <span v-for="(d, idx) in ['D','S','T','Q','Q','S','S']" :key="idx" class="vms-text-2xs vms-text-dim" style="font-weight: 600; padding: 2px 0;">{{ d }}</span>
+          <span v-for="n in 30" :key="n" class="vms-gnome-cal-day" :class="{ active: n === 9 }">{{ n }}</span>
         </div>
       </div>
     </div>
 
     <!-- Right: Bell Notification + User Dropdown -->
     <div class="vms-flex-row" style="gap: 0.75rem;">
-      <button class="vms-btn vms-btn-ghost vms-btn-sm" style="position: relative; padding: 0.35rem 0.65rem;" title="Alertas IA" @click="emit('toggleAlerts')">
+      <button class="vms-btn vms-btn-ghost vms-btn-sm" style="position: relative; padding: 0.35rem 0.65rem;" title="Alertas" @click="emit('toggleAlerts')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--vms-neu-accent-orange);">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>

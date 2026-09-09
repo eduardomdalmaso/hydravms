@@ -45,11 +45,11 @@ const {
     <div class="vms-desktop-container">
       <MapEditorView v-if="selectedMap" :map-item="selectedMap" @notify="(msg) => showNotification(msg)" />
       <div v-else class="vms-desktop-canvas">
-        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 0.65rem;">
           <div class="vms-desktop-grid">
             <MapFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-map="handleDropOnFolder" />
           </div>
-          <div v-if="displayedMaps.length > 0" class="vms-desktop-grid" style="border-top: 1px solid var(--vms-border); padding-top: 1.25rem;">
+          <div v-if="displayedMaps.length > 0" class="vms-desktop-grid" style="border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
             <MapItemCard v-for="m in displayedMaps" :key="m.id" :map-item="m" @open="(item) => selectedMap = item" @drag-start="handleDragStart" />
           </div>
         </div>

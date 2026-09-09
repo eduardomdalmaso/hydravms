@@ -1,90 +1,86 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { FolderNode, StreamItem } from '../../types/streamTree'
+import StreamWizardNetworkPane from './desktop/StreamWizardNetworkPane.vue'
+import StreamWizardChannelsPane, { type ChannelItem } from './desktop/StreamWizardChannelsPane.vue'
+import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'
+import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
 
-const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[] }>()
+const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[]; initialData?: Partial<StreamItem> }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', stream: Partial<StreamItem>, folderId: string): void }>()
-
-const step = ref(1), testStatus = ref<string | null>(null)
+const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), detectedCodec = ref('H.265'), detectedRes = ref('1920x1080 Full HD'), detectedFps = ref(30), latency = ref(28)
+const channels = ref<ChannelItem[]>([{ id: 1, name: 'Canal 01 (Principal)', path: '/live', subPath: '/sub', status: 'online' }])
 const form = ref({
-  name: '', protocol: 'RTSP' as 'RTSP' | 'RTMP' | 'ONVIF',
-  url: 'rtsp://192.168.1.100:554/live', ip: '192.168.1.100', port: 554,
-  codec: 'H.265' as 'H.265' | 'H.264', resolution: '1080P', fps: 30, bitrate: '4.0 Mbps',
-  recordMode: 'continuous' as 'continuous' | 'motion' | 'ai_event', folderId: ''
+  name: '', protocol: 'RTSP' as 'RTSP' | 'RTMP' | 'ONVIF', url: 'rtsp://192.168.1.100:554/live', path: '/live', subUrl: '',
+  ip: '192.168.1.100', port: 554, user: 'admin', pass: '', streamKey: 'stream_alpha_01', folderId: '',
+  brand: 'Intelbras', model: 'VIP 3230 B', serialNumber: 'SN-94820194812', firmware: 'V5.5.80', macAddress: '3C:52:A1:8B:4F:10',
+  latitude: -23.550520, longitude: -46.633308, locationName: ''
 })
 
 watch(() => props.isOpen, (open) => {
   if (open) {
-    step.value = 1; testStatus.value = null
+    step.value = 1; isTesting.value = false; hasSnapshot.value = false; const init = props.initialData
+    form.value.name = init?.name || ''; form.value.protocol = init?.protocol || 'RTSP'
+    form.value.url = init?.url || 'rtsp://192.168.1.100:554/live'; form.value.path = '/live'
+    form.value.ip = init?.ip || (form.value.protocol === 'ONVIF' ? '192.168.1.145' : '192.168.1.100')
+    form.value.port = init?.port || (form.value.protocol === 'ONVIF' ? 80 : 554)
     form.value.folderId = props.targetFolderId || (props.folders[0]?.id || '')
+    form.value.locationName = init?.name ? `${init.name} - Setor Monitorado` : ''
+    channels.value = [{ id: 1, name: `${form.value.name || 'Canal 01'} (Principal)`, path: form.value.path || '/live', subPath: '/sub', status: 'online' }]
+    if (init) fetchSnapshot()
   }
 })
 
-const testConnection = () => { testStatus.value = 'Socket RTSP // Handshake OK (31ms) // H.265' }
-const capitalize = (s: string) => s.trim() ? s.trim().charAt(0).toUpperCase() + s.trim().slice(1) : ''
+const fetchSnapshot = (cb?: () => void) => {
+  isTesting.value = true
+  setTimeout(() => {
+    isTesting.value = false; hasSnapshot.value = true; detectedCodec.value = form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264'
+    detectedRes.value = '1920x1080 Full HD'; detectedFps.value = 30; latency.value = Math.floor(Math.random() * 20) + 20
+    if (cb) cb()
+  }, 1000)
+}
+
+const handleNext = () => {
+  if (!form.value.name.trim()) form.value.name = `Camera ${form.value.protocol} ${form.value.ip}`
+  if (step.value === 1 && !hasSnapshot.value) { fetchSnapshot(() => { step.value++ }); return }
+  step.value++
+}
 
 const finish = () => {
-  if (!form.value.name.trim()) return
+  if (!form.value.name.trim()) form.value.name = `Camera ${form.value.protocol} ${form.value.ip}`
+  const finalUrl = form.value.protocol === 'RTMP' ? `rtmp://localhost:1935/live/${form.value.streamKey}` : form.value.url
+  const activeChannels = channels.value.filter(c => c.status !== 'offline')
   emit('save', {
-    name: capitalize(form.value.name), protocol: form.value.protocol, url: form.value.url, ip: form.value.ip,
-    port: form.value.port, codec: form.value.codec, resolution: form.value.resolution,
-    fps: form.value.fps, bitrate: form.value.bitrate, recordMode: form.value.recordMode,
-    status: 'online', has_ptz: false
+    name: form.value.name, protocol: form.value.protocol, url: finalUrl, ip: form.value.ip, port: form.value.port,
+    codec: detectedCodec.value.includes('H.265') ? 'H.265' : 'H.264', resolution: '1080P', fps: detectedFps.value,
+    bitrate: '4.0 Mbps', recordMode: 'continuous', status: 'online', has_ptz: form.value.protocol === 'ONVIF',
+    latitude: form.value.latitude, longitude: form.value.longitude, locationName: form.value.locationName
   }, form.value.folderId)
   emit('close')
 }
 </script>
-
 <template>
   <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
-    <div class="vms-modal-dialog" style="max-width: 540px;">
+    <div class="vms-modal-dialog" style="max-width: 1060px; width: 1060px;">
       <div class="vms-modal-header">
         <h3 class="vms-h3">NOVO FLUXO // ETAPA {{ step }} DE 4</h3>
-        <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" @click="emit('close')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-
       <div class="vms-flex-between" style="padding: 0.5rem 1.25rem; background: #0c0f14; border-bottom: 1px solid var(--vms-border);">
-        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 1 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">1. REDE</span>
-        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 2 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">2. CODEC</span>
-        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 3 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">3. GRAVACAO</span>
-        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 4 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">4. TESTE</span>
+        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 1 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">1. REDE & SNAPSHOT</span>
+        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 2 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">2. CANAIS</span>
+        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 3 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">3. DISPOSITIVO</span>
+        <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 4 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">4. GEOLOCALIZACAO</span>
       </div>
-
-      <div class="vms-modal-body" style="gap: 1rem;">
-        <div v-if="step === 1" class="vms-flex-col" style="gap: 0.75rem;">
-          <div class="vms-form-group"><label class="vms-label">Nome da Camera (Primeira Letra Maiuscula)</label><input v-model="form.name" class="vms-auth-input" placeholder="Ex: Portaria Principal Leste" autofocus /></div>
-          <div class="vms-form-group"><label class="vms-label">URL do Fluxo</label><input v-model="form.url" class="vms-auth-input" /></div>
-          <div class="vms-flex-row" style="gap: 0.5rem;">
-            <div class="vms-form-group" style="flex: 1;"><label class="vms-label">IP do Dispositivo</label><input v-model="form.ip" class="vms-auth-input" /></div>
-            <div class="vms-form-group" style="width: 100px;"><label class="vms-label">Porta</label><input v-model.number="form.port" type="number" class="vms-auth-input" /></div>
-          </div>
-        </div>
-
-        <div v-if="step === 2" class="vms-flex-col" style="gap: 0.75rem;">
-          <div class="vms-form-group"><label class="vms-label">Codec Primario</label><select v-model="form.codec" class="vms-auth-input"><option value="H.265">[H.265] Alta Eficiencia (HEVC)</option><option value="H.264">[H.264] Padrao Legado</option></select></div>
-          <div class="vms-flex-row" style="gap: 0.5rem;">
-            <div class="vms-form-group" style="flex: 1;"><label class="vms-label">Resolucao</label><select v-model="form.resolution" class="vms-auth-input"><option value="4K">[4K] 3840x2160</option><option value="1080P">[1080P] 1920x1080 Full HD</option><option value="720P">[720P] 1280x720 HD</option></select></div>
-            <div class="vms-form-group" style="width: 120px;"><label class="vms-label">FPS Ingestao</label><select v-model.number="form.fps" class="vms-auth-input"><option :value="30">30 FPS</option><option :value="25">25 FPS</option><option :value="15">15 FPS</option></select></div>
-          </div>
-        </div>
-
-        <div v-if="step === 3" class="vms-flex-col" style="gap: 0.75rem;">
-          <div class="vms-form-group"><label class="vms-label">Pasta de Destino na Topologia</label><select v-model="form.folderId" class="vms-auth-input"><option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option></select></div>
-          <div class="vms-form-group"><label class="vms-label">Modo de Gravacao</label><select v-model="form.recordMode" class="vms-auth-input"><option value="continuous">[GRAVACAO 24/7] Continua</option><option value="motion">[MOVIMENTO] Apenas com VMD</option><option value="ai_event">[SMART IA] Apenas Eventos de IA</option></select></div>
-        </div>
-
-        <div v-if="step === 4" class="vms-flex-col" style="gap: 0.75rem;">
-          <button class="vms-btn vms-btn-secondary" @click="testConnection">[TESTAR SOCKET RTSP / PING]</button>
-          <div v-if="testStatus" class="vms-badge vms-badge-success" style="padding: 0.5rem; font-family: var(--vms-font-jetbrains); font-size: 11px;">{{ testStatus }}</div>
-          <span class="vms-text-2xs vms-text-dim">Clique em Salvar para vincular o novo fluxo à pasta selecionada na árvore.</span>
-        </div>
+      <div class="vms-modal-body" style="padding: 1.25rem; min-height: 420px; overflow-x: hidden; box-sizing: border-box;">
+        <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false" />
+        <StreamWizardChannelsPane v-else-if="step === 2" v-model:channels="channels" :base-path="form.path" :is-onvif="form.protocol === 'ONVIF'" />
+        <StreamWizardDevicePane v-else-if="step === 3" v-model:brand="form.brand" v-model:model="form.model" v-model:serial-number="form.serialNumber" v-model:firmware="form.firmware" v-model:mac-address="form.macAddress" />
+        <StreamWizardGeoPane v-else-if="step === 4" v-model:latitude="form.latitude" v-model:longitude="form.longitude" v-model:location-name="form.locationName" />
       </div>
-
       <div class="vms-modal-footer">
         <button v-if="step > 1" class="vms-btn vms-btn-secondary" @click="step--">ANTERIOR</button>
-        <button v-if="step < 4" class="vms-btn vms-btn-primary" @click="step++">PROXIMO</button>
+        <button v-if="step < 4" class="vms-btn vms-btn-primary" :disabled="isTesting" @click="handleNext"><span v-if="isTesting">VALIDANDO...</span><span v-else-if="step === 1">PROXIMO: CANAIS</span><span v-else-if="step === 2">PROXIMO: DISPOSITIVO</span><span v-else>PROXIMO: GEOLOCALIZACAO</span></button>
         <button v-else class="vms-btn vms-btn-primary" @click="finish">SALVAR</button>
       </div>
     </div>

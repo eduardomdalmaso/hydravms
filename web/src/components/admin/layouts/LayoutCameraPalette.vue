@@ -38,7 +38,7 @@ const onDragStart = (c: CameraPaletteItem, ev: DragEvent) => {
     </div>
 
     <!-- App Grid Mode with Grayed-Out Used Cameras -->
-    <div class="vms-desktop-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.6rem; overflow-y: auto; padding: 4px;">
+    <div class="vms-desktop-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.45rem; overflow-y: auto; padding: 2px;">
       <div
         v-for="c in availableCameras"
         :key="c.id"

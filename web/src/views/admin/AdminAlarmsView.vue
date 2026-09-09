@@ -60,12 +60,12 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
       <AlarmInspectorSplitView v-if="selectedAlarm" :alarm="selectedAlarm" @saved="(msg) => showNotification(msg)" />
 
       <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
-        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 1.25rem;">
+        <div v-if="!currentFolder" class="vms-flex-col" style="gap: 0.65rem;">
           <div class="vms-desktop-grid">
             <AlarmFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-alarm="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
           </div>
 
-          <div v-if="displayedAlarms.length > 0" class="vms-flex-col" style="gap: 0.5rem; border-top: 1px solid var(--vms-border); padding-top: 1rem;">
+          <div v-if="displayedAlarms.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
             <div class="vms-desktop-section-title">// SENSORES NA RAIZ (ARRASTE PARA UMA ZONA)</div>
             <div class="vms-desktop-grid">
               <AlarmAppCard v-for="a in displayedAlarms" :key="a.id" :alarm="a" :is-selected="false" @dragstart="handleDragStart" @select="(alarm) => selectedAlarm = alarm" @context="(ev, alarm) => openContextMenu(ev, { type: 'stream', id: alarm.id, name: alarm.name, currentFolderId: currentFolderId })" />

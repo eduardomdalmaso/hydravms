@@ -1,27 +1,13 @@
-/* Top Header / Navigation Bar Styling */
 .vms-header {
-  height: var(--vms-header-height);
-  background-color: var(--vms-bg-surface);
-  border-bottom: 1px solid var(--vms-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  position: sticky;
-  top: 0;
-  z-index: var(--vms-z-header);
-  flex-shrink: 0;
+  height: var(--vms-header-height); background-color: var(--vms-bg-surface);
+  border-bottom: 1px solid var(--vms-border); display: flex; align-items: center;
+  justify-content: space-between; padding: 0 1rem; position: sticky; top: 0;
+  z-index: var(--vms-z-header); flex-shrink: 0;
 }
-
 .vms-header-left, .vms-header-center, .vms-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: flex; align-items: center; gap: 0.75rem;
 }
-
-.vms-user-dropdown-container {
-  position: relative;
-}
+.vms-user-dropdown-container { position: relative; }
 
 .vms-user-dropdown-menu {
   position: absolute;
@@ -77,7 +63,23 @@
 }
 
 .vms-user-dropdown-item.logout-action:hover {
-  background: rgba(255, 0, 60, 0.12);
-  border-color: rgba(255, 0, 60, 0.35);
-  color: #ff3366 !important;
+  background: rgba(255, 0, 60, 0.12); border-color: rgba(255, 0, 60, 0.35); color: #ff3366 !important;
 }
+
+/* GNOME Calendar Popup */
+.vms-gnome-calendar-popup {
+  position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: 220px; background: rgba(18, 22, 28, 0.98); backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 94, 58, 0.4); border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.85); padding: 0.65rem;
+  display: flex; flex-direction: column; gap: 0.45rem; z-index: 1050;
+}
+.vms-gnome-calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center;
+}
+.vms-gnome-cal-day {
+  font-family: var(--vms-font-roboto); font-size: 11px; color: #cbd5e1;
+  padding: 3px 0; border-radius: 4px; cursor: pointer; transition: all 0.12s ease;
+}
+.vms-gnome-cal-day:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.vms-gnome-cal-day.active { background: var(--vms-neu-accent-orange); color: #000; font-weight: 700; }

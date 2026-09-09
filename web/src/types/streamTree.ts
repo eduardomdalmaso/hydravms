@@ -12,6 +12,9 @@ export interface StreamItem {
   recordMode: 'continuous' | 'motion' | 'ai_event' | 'disabled'
   status: 'online' | 'offline' | 'recording'
   has_ptz: boolean
+  latitude?: number
+  longitude?: number
+  locationName?: string
 }
 
 export interface FolderNode {
