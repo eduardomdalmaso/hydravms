@@ -9,9 +9,9 @@ import (
 type CameraProtocol string
 
 const (
-	ProtocolRTSP CameraProtocol = "rtsp"
+	ProtocolRTSP  CameraProtocol = "rtsp"
 	ProtocolONVIF CameraProtocol = "onvif"
-	ProtocolRTMP CameraProtocol = "rtmp"
+	ProtocolRTMP  CameraProtocol = "rtmp"
 )
 
 type CameraStatus string
@@ -28,6 +28,7 @@ type Camera struct {
 	ID             string         `json:"id"`
 	TenantID       uuid.UUID      `json:"tenant_id"`
 	FolderID       *uuid.UUID     `json:"folder_id,omitempty"`
+	AssignedNodeID *uuid.UUID     `json:"assigned_node_id,omitempty"`
 	Name           string         `json:"name"`
 	Protocol       CameraProtocol `json:"protocol"`
 	RTSPURL        string         `json:"rtsp_url,omitempty"`
