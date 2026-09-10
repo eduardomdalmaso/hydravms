@@ -226,6 +226,7 @@ func (d *DeviceDiscoverer) runSubnetScan(ctx context.Context, mu *sync.Mutex, re
 		return
 	}
 
+	hostSelfIPs := getHostSelfIPs()
 	var scanWg sync.WaitGroup
 	sem := make(chan struct{}, 60) // concurrency limit
 
@@ -234,6 +235,11 @@ func (d *DeviceDiscoverer) runSubnetScan(ctx context.Context, mu *sync.Mutex, re
 		case <-ctx.Done():
 			return
 		default:
+		}
+
+		// Skip scanning host machine's own IPs
+		if hostSelfIPs[targetIP] {
+			continue
 		}
 
 		scanWg.Add(1)
@@ -278,37 +284,6 @@ func (d *DeviceDiscoverer) runSubnetScan(ctx context.Context, mu *sync.Mutex, re
 				}
 				mu.Unlock()
 				return
-			}
-
-			// Check RTSP port 8554 (MediaMTX / HydraStream)
-			if ip != "127.0.0.1" {
-				rtsp8554, _ := probeRTSPPort(ip, 8554, 250*time.Millisecond)
-				if rtsp8554 {
-					mu.Lock()
-					if _, exists := results[ip]; !exists {
-						results[ip] = &DiscoveredCamera{
-							ID:           fmt.Sprintf("stream_%s", strings.ReplaceAll(ip, ".", "_")),
-							Name:         fmt.Sprintf("CAM MediaMTX %s", ip),
-							Manufacturer: "HydraStream / MediaMTX",
-							Model:        "RTSP Bridge Engine",
-							IP:           ip,
-							Port:         8554,
-							MACAddress:   "--",
-							HasPTZ:       false,
-							IsImported:   false,
-							Profiles: []DiscoveredProfile{
-								{
-									Name:       "Main Stream (Port 8554)",
-									Token:      "profile_8554_0",
-									Resolution: "1080P",
-									Codec:      "H.264",
-									RTSPUri:    fmt.Sprintf("rtsp://%s:8554/live", ip),
-								},
-							},
-						}
-					}
-					mu.Unlock()
-				}
 			}
 		}(targetIP)
 	}
@@ -387,6 +362,27 @@ func getLocalSubnetIPs() []string {
 		}
 	}
 	return ips
+}
+
+// getHostSelfIPs returns a map of all local IP addresses of the host.
+func getHostSelfIPs() map[string]bool {
+	selfIPs := map[string]bool{"127.0.0.1": true, "::1": true}
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return selfIPs
+	}
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			if ipNet, ok := addr.(*net.IPNet); ok {
+				selfIPs[ipNet.IP.String()] = true
+			}
+		}
+	}
+	return selfIPs
 }
 
 // getARPTable reads /proc/net/arp to map IP -> MAC Address.
