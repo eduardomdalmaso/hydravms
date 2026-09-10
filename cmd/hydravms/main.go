@@ -13,7 +13,9 @@ import (
 	"hydravms/internal/adapters/primary/ws"
 	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
+	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	"hydravms/internal/application"
+	"hydravms/internal/ports"
 )
 
 func main() {
@@ -22,9 +24,27 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 1. Initialize Repositories (Memory with initial seed)
-	folderRepo := memory.NewInMemoryFolderRepository()
-	cameraRepo := memory.NewInMemoryCameraRepository()
+	// 1. Initialize Database Repositories (PostgreSQL with fallback to In-Memory)
+	var folderRepo ports.FolderRepository
+	var cameraRepo ports.CameraRepository
+
+	dbURL := os.Getenv("DATABASE_URL")
+	pgCfg := postgresAdapter.DefaultConfig()
+	if dbURL != "" {
+		pgCfg.URL = dbURL
+	}
+
+	pgPool, err := postgresAdapter.NewPool(ctx, pgCfg)
+	if err != nil {
+		log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to In-Memory persistence)\n", err)
+		folderRepo = memory.NewInMemoryFolderRepository()
+		cameraRepo = memory.NewInMemoryCameraRepository()
+	} else {
+		log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
+		defer pgPool.Close()
+		folderRepo = postgresAdapter.NewFolderRepository(pgPool)
+		cameraRepo = postgresAdapter.NewCameraRepository(pgPool)
+	}
 
 	// 2. Initialize Application Services
 	folderService := application.NewFolderService(folderRepo)

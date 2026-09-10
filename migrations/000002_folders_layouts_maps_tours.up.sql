@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS folders (
     icon VARCHAR(32) DEFAULT 'folder',
     sort_order INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_tenant_module_parent_name UNIQUE (tenant_id, module, COALESCE(parent_id, '00000000-0000-0000-0000-000000000000'::uuid), name)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_folders_tenant_module_parent_name ON folders (tenant_id, module, COALESCE(parent_id, '00000000-0000-0000-0000-000000000000'::uuid), name);
 CREATE INDEX IF NOT EXISTS idx_folders_tenant_module ON folders (tenant_id, module, parent_id);
 CREATE INDEX IF NOT EXISTS idx_folders_parent ON folders (parent_id);
 
