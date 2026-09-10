@@ -1,9 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { RondaFolderNode, EnterpriseRondaItem } from '../types/rondaTree'
 import { initialRondaFolders } from '../data/mockRondaFolders'
 import { initialRootRondas } from '../data/mockRondaRoot'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
+import { fetchFolders } from '../services/api'
 
 export function useDesktopRondas() {
   const searchQuery = ref(''), currentFolderId = ref<string | null>(null)
@@ -12,6 +13,11 @@ export function useDesktopRondas() {
   const isFolderModalOpen = ref(false), isWizardOpen = ref(false), draggedRonda = ref<EnterpriseRondaItem | null>(null)
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
+
+  onMounted(async () => {
+    const dbF = await fetchFolders('tours')
+    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, rondas: [] }))
+  })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalRondas = computed(() => rootRondas.value.length + folders.value.reduce((acc, f) => acc + f.rondas.length, 0))
@@ -55,8 +61,7 @@ export function useDesktopRondas() {
 
   const handleSaveFolder = (name: string, clientType: 'company' | 'final_client') => {
     folders.value.push({ id: `rf_${Date.now()}`, name, clientType, isExpanded: true, rondas: [] })
-    isFolderModalOpen.value = false
-    showNotification(`Pasta "${name}" criada com sucesso.`)
+    isFolderModalOpen.value = false; showNotification(`Pasta "${name}" criada com sucesso.`)
   }
 
   const handleSaveRonda = (ronda: EnterpriseRondaItem) => {
@@ -65,9 +70,7 @@ export function useDesktopRondas() {
     if (rIdx >= 0) { rootRondas.value[rIdx] = { ...ronda }; exists = true }
     else { for (const f of folders.value) { const idx = f.rondas.findIndex(r => r.id === ronda.id); if (idx >= 0) { f.rondas[idx] = { ...ronda }; exists = true; break } } }
     if (!exists) { if (ronda.folderId) { const f = folders.value.find(fold => fold.id === ronda.folderId); if (f) f.rondas.push(ronda); else rootRondas.value.push(ronda) } else rootRondas.value.push(ronda) }
-    selectedRonda.value = null
-    isWizardOpen.value = false
-    showNotification(`[RONDA] "${ronda.name}" salva com sucesso.`)
+    selectedRonda.value = null; isWizardOpen.value = false; showNotification(`[RONDA] "${ronda.name}" salva com sucesso.`)
   }
 
   return {

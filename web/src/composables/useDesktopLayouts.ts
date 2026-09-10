@@ -1,9 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { LayoutFolderNode, EnterpriseLayoutItem } from '../types/layoutTree'
 import { initialLayoutFolders } from '../data/mockLayoutFolders'
 import { initialRootLayouts } from '../data/mockLayoutRoot'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
+import { fetchFolders } from '../services/api'
 
 export function useDesktopLayouts() {
   const searchQuery = ref(''), currentFolderId = ref<string | null>(null)
@@ -12,6 +13,11 @@ export function useDesktopLayouts() {
   const isFolderModalOpen = ref(false), isWizardOpen = ref(false), draggedLayout = ref<EnterpriseLayoutItem | null>(null)
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
+
+  onMounted(async () => {
+    const dbF = await fetchFolders('layouts')
+    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, layouts: [] }))
+  })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalLayouts = computed(() => rootLayouts.value.length + folders.value.reduce((acc, f) => acc + f.layouts.length, 0))
@@ -72,9 +78,7 @@ export function useDesktopLayouts() {
     } else {
       const idx = rootLayouts.value.findIndex(l => l.id === layout.id); if (idx >= 0) rootLayouts.value[idx] = layout; else rootLayouts.value.push(layout)
     }
-    selectedLayout.value = null
-    showNotification(`Layout "${layout.name}" salvo com sucesso.`)
-    isWizardOpen.value = false
+    selectedLayout.value = null; showNotification(`Layout "${layout.name}" salvo com sucesso.`); isWizardOpen.value = false
   }
 
   return {

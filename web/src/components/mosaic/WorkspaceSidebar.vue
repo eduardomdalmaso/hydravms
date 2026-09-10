@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
 import type { MapResource, CarouselConfig, CameraStreamInfo, CustomLayout, AlarmItemInfo } from "../../types/mosaic"
+import { fetchCameras } from "../../services/api"
 import SidebarCamerasSection from "./SidebarCamerasSection.vue"
 import SidebarAlarmsSection from "./SidebarAlarmsSection.vue"
 import SidebarLayoutsSection from "./SidebarLayoutsSection.vue"
@@ -8,7 +9,6 @@ import SidebarMapsSection from "./SidebarMapsSection.vue"
 import SidebarCarouselsSection from "./SidebarCarouselsSection.vue"
 
 defineProps<{ layouts: CustomLayout[]; activeLayoutId: string }>()
-
 const emit = defineEmits<{
   (e: "selectCamera", camera: CameraStreamInfo): void
   (e: "selectAlarm", alarm: AlarmItemInfo): void
@@ -19,36 +19,30 @@ const emit = defineEmits<{
   (e: "layoutContextMenu", payload: { event: MouseEvent; layout?: CustomLayout; isHeader?: boolean }): void
 }>()
 
-const isCollapsed = ref(false)
+const isCollapsed = ref(false), cameras = ref<CameraStreamInfo[]>([])
 const openSections = ref({ cameras: true, alarms: true, layouts: true, maps: false, carousel: false })
+const toggleSection = (s: "cameras" | "alarms" | "layouts" | "maps" | "carousel") => { openSections.value[s] = !openSections.value[s] }
 
-const toggleSection = (sec: "cameras" | "alarms" | "layouts" | "maps" | "carousel") => {
-  openSections.value[sec] = !openSections.value[sec]
-}
+const liveAlarms = ref<AlarmItemInfo[]>([
+  { id: "alm_01", name: "[ALERTA] Intrusao Perimetro Norte", zone: "Zona 01", status: "alert", type: "IVS" },
+  { id: "alm_02", name: "[AVISO] Barreira Infravermelha", zone: "Zona 02", status: "alert", type: "PIR" }
+])
+const liveMaps = ref<MapResource[]>([
+  { id: "70000000-0000-0000-0000-000000000001", name: "Planta Geral - Galpao Principal", image_url: "/map1.png", cameras_count: 3 }
+])
+const liveCarousels = ref<CarouselConfig[]>([
+  { id: "80000000-0000-0000-0000-000000000001", name: "Ronda Perimetral Noturna", camera_ids: ["cam_entrance_01", "cam_perimeter_02"], interval_seconds: 10 }
+])
 
-const sampleCameras: CameraStreamInfo[] = [
-  { id: "cam_01", name: "Portaria Principal", location: "Entrada", status: "online", protocol: "RTSP", has_ptz: true, fps: 30, resolution: "1080P" },
-  { id: "cam_02", name: "Estacionamento", location: "Patio", status: "online", protocol: "ONVIF", has_ptz: false, fps: 25, resolution: "1080P" },
-  { id: "cam_03", name: "Corredor Galpao", location: "Docas", status: "online", protocol: "RTMP", has_ptz: false, fps: 30, resolution: "1080P" },
-  { id: "cam_04", name: "Perimetro Fundos", location: "Muro", status: "online", protocol: "RTSP", has_ptz: true, fps: 30, resolution: "4K" },
-  { id: "cam_05", name: "Acesso Docas B", location: "Docas", status: "offline", protocol: "ONVIF", has_ptz: false, fps: 30, resolution: "1080P" }
-]
-
-const sampleAlarms: AlarmItemInfo[] = [
-  { id: "alm_01", name: "Sensor Perimetro Norte", zone: "Zona 01", status: "alert", type: "IVS" },
-  { id: "alm_02", name: "Barreira Infravermelha Docas", zone: "Zona 02", status: "alert", type: "PIR" },
-  { id: "alm_03", name: "Porta Sala Servidores", zone: "Zona 03", status: "alert", type: "MAG" },
-  { id: "alm_04", name: "Detector Fumaca Bloco B", zone: "Zona 04", status: "offline", type: "SMK" }
-]
-
-const sampleMaps: MapResource[] = [
-  { id: "map_01", name: "Planta Baixa - Galpao 01", image_url: "/map1.png", cameras_count: 8 },
-  { id: "map_02", name: "Perimetro & Acessos", image_url: "/map2.png", cameras_count: 14 }
-]
-
-const sampleCarousels: CarouselConfig[] = [
-  { id: "car_01", name: "Ronda Entradas", camera_ids: ["cam_01", "cam_02"], interval_seconds: 10 }
-]
+onMounted(async () => {
+  const remote = await fetchCameras()
+  if (remote.length > 0) {
+    cameras.value = remote.map(c => ({
+      id: c.id, name: c.name, location: c.location || 'Local', status: (c.status || 'online') as any,
+      protocol: (c.protocol?.toUpperCase() as any) || 'RTSP', has_ptz: c.has_ptz, fps: c.fps || 30, resolution: c.resolution || '1080P'
+    }))
+  }
+})
 </script>
 
 <template>
@@ -56,41 +50,12 @@ const sampleCarousels: CarouselConfig[] = [
     <div class="vms-sidebar-toggle-line" @click="isCollapsed = !isCollapsed">
       <div class="vms-sidebar-toggle-pill">{{ isCollapsed ? "▶" : "◀" }}</div>
     </div>
-
     <div v-show="!isCollapsed" style="display: flex; flex-direction: column; height: 100%; width: 250px; overflow-y: auto;">
-      <SidebarCamerasSection
-        :cameras="sampleCameras"
-        :isOpen="openSections.cameras"
-        @toggle="toggleSection('cameras')"
-        @selectCamera="emit('selectCamera', $event)"
-      />
-      <SidebarAlarmsSection
-        :alarms="sampleAlarms"
-        :isOpen="openSections.alarms"
-        @toggle="toggleSection('alarms')"
-        @selectAlarm="emit('selectAlarm', $event)"
-      />
-      <SidebarLayoutsSection
-        :layouts="layouts"
-        :activeLayoutId="activeLayoutId"
-        :isOpen="openSections.layouts"
-        @toggle="toggleSection('layouts')"
-        @selectLayout="emit('selectLayout', $event)"
-        @contextMenu="emit('layoutContextMenu', $event)"
-      />
-      <SidebarMapsSection
-        :maps="sampleMaps"
-        :isOpen="openSections.maps"
-        @toggle="toggleSection('maps')"
-        @selectMap="emit('selectMap', $event)"
-      />
-      <SidebarCarouselsSection
-        :carousels="sampleCarousels"
-        :isOpen="openSections.carousel"
-        @toggle="toggleSection('carousel')"
-        @selectCarousel="emit('selectCarousel', $event)"
-        @openModal="emit('openCarouselModal')"
-      />
+      <SidebarCamerasSection :cameras="cameras" :isOpen="openSections.cameras" @toggle="toggleSection('cameras')" @selectCamera="emit('selectCamera', $event)" />
+      <SidebarAlarmsSection :alarms="liveAlarms" :isOpen="openSections.alarms" @toggle="toggleSection('alarms')" @selectAlarm="emit('selectAlarm', $event)" />
+      <SidebarLayoutsSection :layouts="layouts" :activeLayoutId="activeLayoutId" :isOpen="openSections.layouts" @toggle="toggleSection('layouts')" @selectLayout="emit('selectLayout', $event)" @contextMenu="emit('layoutContextMenu', $event)" />
+      <SidebarMapsSection :maps="liveMaps" :isOpen="openSections.maps" @toggle="toggleSection('maps')" @selectMap="emit('selectMap', $event)" />
+      <SidebarCarouselsSection :carousels="liveCarousels" :isOpen="openSections.carousel" @toggle="toggleSection('carousel')" @selectCarousel="emit('selectCarousel', $event)" @openModal="emit('openCarouselModal')" />
     </div>
   </aside>
 </template>

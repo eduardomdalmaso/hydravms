@@ -1,8 +1,9 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { AlarmFolderNode, AlarmItem } from '../types/alarmTree'
 import { initialAlarmFolders, initialRootAlarms } from '../data/mockAlarmFolders'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
+import { fetchFolders } from '../services/api'
 
 export function useDesktopAlarms() {
   const searchQuery = ref(''), folders = ref<AlarmFolderNode[]>(initialAlarmFolders), rootAlarms = ref<AlarmItem[]>(initialRootAlarms)
@@ -10,6 +11,11 @@ export function useDesktopAlarms() {
   const notification = ref<string | null>(null), isFolderModalOpen = ref(false), isWizardOpen = ref(false)
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
+
+  onMounted(async () => {
+    const dbF = await fetchFolders('alarms')
+    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, isExpanded: true, alarms: [] }))
+  })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalAlarms = computed(() => rootAlarms.value.length + folders.value.reduce((acc, f) => acc + f.alarms.length, 0))
@@ -34,15 +40,13 @@ export function useDesktopAlarms() {
       const target = folders.value.find(f => f.id === targetFolderId)
       if (target) { target.alarms.push(alarm); showNotification(`Sensor "${alarm.name}" movido para "${target.name}".`) }
     } else {
-      rootAlarms.value.push(alarm)
-      showNotification(`Sensor "${alarm.name}" movido para a Raiz.`)
+      rootAlarms.value.push(alarm); showNotification(`Sensor "${alarm.name}" movido para a Raiz.`)
     }
   }
 
   const requestDeleteFolder = (id: string) => {
     const folder = folders.value.find(f => f.id === id)
-    if (!folder) return
-    if (folder.alarms.length > 0) openDeletePrompt(folder.id, folder.name, folder.alarms.length)
+    if (folder && folder.alarms.length > 0) openDeletePrompt(folder.id, folder.name, folder.alarms.length)
     else deleteFolderById(id)
   }
 

@@ -1,9 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { UserFolderNode, UserItem } from '../types/userTree'
 import { initialUserFolders, initialRootUsers } from '../data/mockUserFolders'
 import { createDefaultUserModules } from '../data/defaultUserModules'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
+import { fetchFolders } from '../services/api'
 
 export function useDesktopUsers() {
   const searchQuery = ref(''), folders = ref<UserFolderNode[]>(initialUserFolders), rootUsers = ref<UserItem[]>(initialRootUsers)
@@ -11,6 +12,11 @@ export function useDesktopUsers() {
   const notification = ref<string | null>(null), isFolderModalOpen = ref(false), isWizardOpen = ref(false)
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
+
+  onMounted(async () => {
+    const dbF = await fetchFolders('users')
+    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, isExpanded: true, users: [] }))
+  })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalUsers = computed(() => rootUsers.value.length + folders.value.reduce((acc, f) => acc + f.users.length, 0))
@@ -41,8 +47,7 @@ export function useDesktopUsers() {
 
   const requestDeleteFolder = (id: string) => {
     const folder = folders.value.find(f => f.id === id)
-    if (!folder) return
-    if (folder.users.length > 0) openDeletePrompt(folder.id, folder.name, folder.users.length)
+    if (folder && folder.users.length > 0) openDeletePrompt(folder.id, folder.name, folder.users.length)
     else deleteFolderById(id)
   }
 
@@ -50,8 +55,7 @@ export function useDesktopUsers() {
     if (!folderToDelete.value) return
     const folder = folders.value.find(f => f.id === folderToDelete.value!.id)
     if (folder) {
-      folder.users.forEach(u => { u.groupName = 'Raiz (Sem Grupo)' })
-      rootUsers.value.push(...folder.users)
+      folder.users.forEach(u => { u.groupName = 'Raiz (Sem Grupo)' }); rootUsers.value.push(...folder.users)
       folders.value = folders.value.filter(f => f.id !== folder.id)
       if (currentFolderId.value === folder.id) currentFolderId.value = null
       showNotification(`Grupo removido. ${folder.users.length} usuários movidos para a raiz.`)

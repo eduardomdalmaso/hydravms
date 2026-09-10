@@ -1,11 +1,17 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { MapFolderNode, EnterpriseMapItem } from '../types/mapTree'
 import { initialMapFolders, initialRootMaps } from '../data/mockMapFolders'
+import { fetchFolders } from '../services/api'
 
 export function useDesktopMaps() {
   const searchQuery = ref(''), folders = ref<MapFolderNode[]>(initialMapFolders), rootMaps = ref<EnterpriseMapItem[]>(initialRootMaps)
   const currentFolderId = ref<string | null>(null), selectedMap = ref<EnterpriseMapItem | null>(null), draggedMap = ref<EnterpriseMapItem | null>(null)
   const notification = ref<string | null>(null), isFolderModalOpen = ref(false), isNewMapModalOpen = ref(false)
+
+  onMounted(async () => {
+    const dbF = await fetchFolders('maps')
+    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, maps: [] }))
+  })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalMaps = computed(() => rootMaps.value.length + folders.value.reduce((a, f) => a + f.maps.length, 0))

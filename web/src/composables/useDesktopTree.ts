@@ -1,8 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { FolderNode, StreamItem } from '../types/streamTree'
 import { initialFolders, initialRootStreams } from '../data/mockStreamFolders'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
+import { fetchFolders, fetchCameras, createRemoteFolder } from '../services/api'
+import { buildStreamTree, createNewStreamItem } from '../utils/streamTreeUtils'
 
 export function useDesktopTree() {
   const searchQuery = ref(''), folders = ref<FolderNode[]>(initialFolders), rootStreams = ref<StreamItem[]>(initialRootStreams)
@@ -10,6 +12,15 @@ export function useDesktopTree() {
   const notification = ref<string | null>(null), isFolderModalOpen = ref(false), isWizardOpen = ref(false)
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
+
+  const loadData = async () => {
+    const [dbF, dbC] = await Promise.all([fetchFolders('cameras'), fetchCameras()])
+    if (dbF.length > 0 || dbC.length > 0) {
+      const tree = buildStreamTree(dbF, dbC)
+      folders.value = tree.folders; rootStreams.value = tree.rootStreams
+    }
+  }
+  onMounted(loadData)
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalStreams = computed(() => rootStreams.value.length + folders.value.reduce((acc, f) => acc + f.streams.length, 0))
@@ -33,16 +44,12 @@ export function useDesktopTree() {
     if (targetFolderId) {
       const target = folders.value.find(f => f.id === targetFolderId)
       if (target) { target.streams.push(stream); showNotification(`Fluxo "${stream.name}" movido para "${target.name}".`) }
-    } else {
-      rootStreams.value.push(stream)
-      showNotification(`Fluxo "${stream.name}" movido para a Raiz.`)
-    }
+    } else { rootStreams.value.push(stream); showNotification(`Fluxo "${stream.name}" movido para a Raiz.`) }
   }
 
   const requestDeleteFolder = (id: string) => {
     const folder = folders.value.find(f => f.id === id)
-    if (!folder) return
-    if (folder.streams.length > 0) openDeletePrompt(folder.id, folder.name, folder.streams.length)
+    if (folder && folder.streams.length > 0) openDeletePrompt(folder.id, folder.name, folder.streams.length)
     else deleteFolderById(id)
   }
 
@@ -65,13 +72,14 @@ export function useDesktopTree() {
     showNotification('Fluxo removido.')
   }
 
-  const handleSaveFolder = (name: string) => { folders.value.push({ id: `f_0${folders.value.length + 1}`, name, isExpanded: true, streams: [] }); showNotification(`Pasta ${name} criada.`) }
+  const handleSaveFolder = async (name: string) => {
+    const res = await createRemoteFolder('cameras', name)
+    folders.value.push({ id: res?.id || `f_${Date.now()}`, name, isExpanded: true, streams: [] })
+    showNotification(`Pasta ${name} criada.`)
+  }
+
   const handleSaveStream = (stream: Partial<StreamItem>, folderId?: string) => {
-    const newStream: StreamItem = {
-      id: `cam_0${totalStreams.value + 1}`, name: stream.name || 'Nova Camera', protocol: stream.protocol || 'RTSP', url: stream.url || 'rtsp://', ip: stream.ip || '192.168.1.100',
-      port: stream.port || 554, codec: stream.codec || 'H.265', resolution: stream.resolution || '1080P', fps: stream.fps || 30, bitrate: stream.bitrate || '4.0 Mbps',
-      recordMode: stream.recordMode || 'continuous', status: 'online', has_ptz: false
-    }
+    const newStream = createNewStreamItem(stream, totalStreams.value + 1)
     const target = folders.value.find(f => f.id === folderId)
     if (target) target.streams.push(newStream); else rootStreams.value.push(newStream)
     selectedStream.value = newStream; showNotification('Fluxo salvo.')

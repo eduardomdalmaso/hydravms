@@ -23,8 +23,13 @@ export interface RegisteredCamera {
   fps: number
   has_ptz: boolean
   status: 'online' | 'offline' | 'recording'
-  group: string
+  group?: string
+  protocol?: string
+  location?: string
+  bitrate_kbps?: number
+  folder_id?: string
 }
+
 
 export interface AdminUser {
   id: string
