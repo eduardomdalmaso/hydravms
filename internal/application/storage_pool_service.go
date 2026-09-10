@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"fmt"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,12 +33,37 @@ func NewStoragePoolService(repo ports.StoragePoolRepository, s3 ports.ObjectStor
 }
 
 func (s *StoragePoolService) ListPools(ctx context.Context, role *domain.StorageRole) ([]*domain.StoragePool, error) {
-	return s.repo.List(ctx, role)
+	pools, err := s.repo.List(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range pools {
+		if p.PathOrEndpoint != "" && !strings.HasPrefix(p.PathOrEndpoint, "s3://") && !strings.HasPrefix(p.PathOrEndpoint, "nfs://") {
+			var stat syscall.Statfs_t
+			if err := syscall.Statfs(p.PathOrEndpoint, &stat); err == nil {
+				p.TotalBytes = int64(stat.Blocks) * int64(stat.Bsize)
+				freeBytes := int64(stat.Bfree) * int64(stat.Bsize)
+				p.UsedBytes = p.TotalBytes - freeBytes
+				p.AvailableBytes = int64(stat.Bavail) * int64(stat.Bsize)
+			}
+		}
+	}
+	return pools, nil
 }
 
 func (s *StoragePoolService) CreatePool(ctx context.Context, pool *domain.StoragePool) error {
 	if pool.Name == "" {
 		return fmt.Errorf("storage pool name is required")
+	}
+	if pool.PathOrEndpoint != "" && !strings.HasPrefix(pool.PathOrEndpoint, "s3://") && !strings.HasPrefix(pool.PathOrEndpoint, "nfs://") {
+		var stat syscall.Statfs_t
+		if err := syscall.Statfs(pool.PathOrEndpoint, &stat); err == nil {
+			pool.TotalBytes = int64(stat.Blocks) * int64(stat.Bsize)
+			freeBytes := int64(stat.Bfree) * int64(stat.Bsize)
+			pool.UsedBytes = pool.TotalBytes - freeBytes
+			pool.AvailableBytes = int64(stat.Bavail) * int64(stat.Bsize)
+		}
 	}
 	if pool.TotalBytes <= 0 {
 		pool.TotalBytes = 1000 * 1024 * 1024 * 1024 // 1 TB default
@@ -45,7 +72,6 @@ func (s *StoragePoolService) CreatePool(ctx context.Context, pool *domain.Storag
 		pool.Status = domain.StorageStatusOnline
 	}
 	pool.IsActive = true
-	pool.AvailableBytes = pool.TotalBytes - pool.UsedBytes
 	return s.repo.Create(ctx, pool)
 }
 
@@ -54,7 +80,7 @@ func (s *StoragePoolService) DeletePool(ctx context.Context, id uuid.UUID) error
 }
 
 func (s *StoragePoolService) GetTelemetry(ctx context.Context) (*StorageTelemetry, error) {
-	pools, err := s.repo.List(ctx, nil)
+	pools, err := s.ListPools(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

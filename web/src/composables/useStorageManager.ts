@@ -1,11 +1,10 @@
 import { ref, computed, onMounted } from 'vue'
 import type { StoragePoolItem, UnallocatedDiskDevice, NewStoragePayload, StorageRole } from '../types/storagePool'
-import { initialStoragePools, detectedLocalDisks } from '../data/mockStoragePools'
-import { fetchStoragePools, createRemoteStoragePool, deleteRemoteStoragePool, triggerRemoteDrain } from '../services/storageApi'
+import { fetchStoragePools, fetchDetectedDisks, createRemoteStoragePool, deleteRemoteStoragePool, triggerRemoteDrain } from '../services/storageApi'
 
 export function useStorageManager() {
-  const pools = ref<StoragePoolItem[]>([...initialStoragePools])
-  const unallocatedDisks = ref<UnallocatedDiskDevice[]>([...detectedLocalDisks])
+  const pools = ref<StoragePoolItem[]>([])
+  const unallocatedDisks = ref<UnallocatedDiskDevice[]>([])
   const filterRole = ref<StorageRole | 'ALL'>('ALL'), searchQuery = ref(''), isAddModalOpen = ref(false)
   const notification = ref<string | null>(null)
 
@@ -15,7 +14,8 @@ export function useStorageManager() {
   }
 
   const loadPools = async () => {
-    pools.value = await fetchStoragePools(initialStoragePools)
+    pools.value = await fetchStoragePools([])
+    unallocatedDisks.value = await fetchDetectedDisks()
   }
   onMounted(loadPools)
 
@@ -35,13 +35,9 @@ export function useStorageManager() {
   })
 
   const addPool = async (payload: NewStoragePayload) => {
-    const pool: StoragePoolItem = {
-      id: `sp_${Date.now()}`, ...payload, usedGb: 0, status: 'ONLINE', isSpilloverActive: payload.role === 'HOT_BUFFER'
-    }
-    pools.value.push(pool)
-    unallocatedDisks.value = unallocatedDisks.value.filter(d => d.devicePath !== payload.pathOrEndpoint)
     isAddModalOpen.value = false
     await createRemoteStoragePool(payload)
+    await loadPools()
     showNotification(payload.role === 'WARM_ARCHIVE'
       ? `[ALERTA] Gravacao ativada em "${payload.name}". Requer disco NVMe de Buffer dedicado.`
       : `[STORAGE] Pool "${payload.name}" ativado com sucesso`)
@@ -54,8 +50,8 @@ export function useStorageManager() {
       showNotification(`[BLOQUEIO] O pool "${pool.name}" contem dados e nao pode ser desanexado`)
       return
     }
-    pools.value = pools.value.filter(p => p.id !== id)
     await deleteRemoteStoragePool(id)
+    await loadPools()
     showNotification(`[STORAGE] Pool "${pool.name}" desanexado`)
   }
 

@@ -6,8 +6,8 @@ const props = defineProps<{ unallocatedDisks: UnallocatedDiskDevice[]; hasBuffer
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', payload: NewStoragePayload): void }>()
 
 const sourceType = ref<StorageSourceType>('LOCAL_DISK')
-const role = ref<StorageRole>('WARM_ARCHIVE')
-const name = ref(''), serverHost = ref(''), sharePath = ref(''), s3Bucket = ref(''), retentionDays = ref(30)
+const role = ref<StorageRole>('HOT_BUFFER')
+const name = ref(''), serverHost = ref(''), sharePath = ref(''), s3Bucket = ref('')
 const selectedDisk = ref(props.unallocatedDisks[0]?.devicePath || '')
 
 const handleSubmit = () => {
@@ -17,8 +17,8 @@ const handleSubmit = () => {
     name: name.value.trim() || `Pool ${sourceType.value}`, sourceType: sourceType.value, role: role.value,
     nodeOrServer: isLocal ? 'MAQUINA LOCAL // NO 01' : `${isNas ? 'SERVIDOR' : 'CLUSTER S3'} // ${serverHost.value}`,
     pathOrEndpoint: isLocal ? selectedDisk.value : (isNas ? `nfs://${serverHost.value}${sharePath.value}` : `s3://${serverHost.value}/${s3Bucket.value}`),
-    filesystem: isLocal ? 'XFS' : (isNas ? 'NFSv4' : 'S3_API'),
-    totalGb: isLocal ? (disk?.sizeGb || 8000) : (isNas ? 32000 : 50000), retentionDays: retentionDays.value
+    filesystem: isLocal ? (disk?.filesystem || 'XFS') : (isNas ? 'NFSv4' : 'S3_API'),
+    totalGb: isLocal ? (disk?.sizeGb || 1000) : (isNas ? 32000 : 50000)
   })
 }
 </script>
@@ -41,31 +41,22 @@ const handleSubmit = () => {
         </div>
         <div class="vms-form-group">
           <label class="vms-label">NOME DE IDENTIFICACAO</label>
-          <input v-model="name" class="vms-auth-input" placeholder="Ex: HD Western Digital 18TB Docas" />
+          <input v-model="name" class="vms-auth-input" placeholder="Ex: SSD Local Buffer Quente" />
         </div>
         <div class="vms-form-group">
           <label class="vms-label">FUNCAO / TIER OPERACIONAL</label>
           <select v-model="role" class="vms-auth-input">
-            <option value="HOT_BUFFER">[HOT_BUFFER] DISCO DE BUFFER NVMe</option>
-            <option value="WARM_ARCHIVE">[WARM_ARCHIVE] ARMAZENAMENTO DE GRAVACOES</option>
-            <option value="SNAPSHOTS">[SNAPSHOTS] ARMAZENAMENTO DE SNAPSHOTS</option>
+            <option value="HOT_BUFFER">[HOT_BUFFER] DISCO DE BUFFER NVMe (ESCRITA RAPIDA)</option>
+            <option value="WARM_ARCHIVE">[WARM_ARCHIVE] ARMAZENAMENTO DE GRAVACOES (LONGO PRAZO)</option>
+            <option value="SNAPSHOTS">[SNAPSHOTS] ARMAZENAMENTO DE FOTOS/ALARMES</option>
             <option value="DATABASE">[DATABASE] BANCO DE DADOS & METADADOS</option>
           </select>
-        </div>
-        <!-- Alerta de Requisito de Gravacao -->
-        <div v-if="role === 'WARM_ARCHIVE'" class="vms-card" style="padding: 8px 10px; background: rgba(255, 94, 58, 0.08); border: 1px solid var(--vms-neu-accent-orange); gap: 2px;">
-          <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); font-weight: 700;">
-            [ALERTA // REQUISITO DE GRAVACAO]
-          </span>
-          <span class="vms-text-2xs" style="color: #ffffff; line-height: 1.3;">
-            Gravacao requer um disco distinto de Buffer (NVMe) e outro para Gravacoes. O disco de instalacao opera apenas Snapshots e Eventos.
-          </span>
         </div>
         <div v-if="sourceType === 'LOCAL_DISK'" class="vms-form-group">
           <label class="vms-label">DISPOSITIVO FISICO DETECTADO</label>
           <select v-model="selectedDisk" class="vms-auth-input">
             <option v-for="d in unallocatedDisks" :key="d.devicePath" :value="d.devicePath">
-              [{{ d.busType }}] {{ d.devicePath }} // {{ d.model }} ({{ (d.sizeGb / 1024).toFixed(1) }} TB)
+              [{{ d.busType }}] {{ d.devicePath }} // {{ d.model }} ({{ d.sizeGb }} GB)
             </option>
           </select>
         </div>

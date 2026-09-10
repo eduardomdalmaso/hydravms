@@ -59,6 +59,7 @@ func (rt *Router) BuildHandler() http.Handler {
 			}
 		})
 		mux.HandleFunc("/api/v1/storage/pools/", rt.storagePoolHandler.DeletePool)
+		mux.HandleFunc("/api/v1/storage/disks", rt.storagePoolHandler.DetectDisks)
 		mux.HandleFunc("/api/v1/storage/telemetry", rt.storagePoolHandler.GetTelemetry)
 		mux.HandleFunc("/api/v1/storage/spillover/drain", rt.storagePoolHandler.TriggerDrain)
 		mux.HandleFunc("/api/v1/storage/presigned-url", rt.storagePoolHandler.GetPresignedURL)

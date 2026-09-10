@@ -13,7 +13,7 @@ const emit = defineEmits<{
   (e: 'triggerDrain'): void
 }>()
 
-const toTb = (gb: number) => (gb / 1024).toFixed(1)
+const formatGb = (gb: number) => gb >= 1024 ? `${(gb / 1024).toFixed(1)} TB` : `${gb} GB`
 </script>
 
 <template>
@@ -25,10 +25,10 @@ const toTb = (gb: number) => (gb / 1024).toFixed(1)
         </span>
         <div class="vms-flex-row" style="gap: 12px; align-items: baseline;">
           <span class="vms-h2" style="color: #ffffff; font-family: var(--vms-font-jetbrains);">
-            {{ toTb(totalUsedGb) }} TB
+            {{ formatGb(totalUsedGb) }}
           </span>
           <span class="vms-text-mono vms-text-xs vms-text-dim">
-            DE {{ toTb(totalCapacityGb) }} TB TOTAL ({{ overallPercentage }}% OCUPADO)
+            DE {{ formatGb(totalCapacityGb) }} TOTAL ({{ overallPercentage }}% OCUPADO)
           </span>
         </div>
       </div>
@@ -59,10 +59,10 @@ const toTb = (gb: number) => (gb / 1024).toFixed(1)
         <div class="vms-marker mark-95" title="95% // Circuit Breaker"></div>
       </div>
       <div class="vms-flex-between vms-text-mono vms-text-2xs vms-text-dim">
-        <span>0 TB</span>
+        <span>0 GB</span>
         <span style="color: rgba(255, 94, 58, 0.7);">[80% PURGA RECOMENDADA]</span>
         <span style="color: #ff5e3a;">[95% CIRCUIT BREAKER]</span>
-        <span>{{ toTb(totalCapacityGb) }} TB</span>
+        <span>{{ formatGb(totalCapacityGb) }}</span>
       </div>
     </div>
   </div>

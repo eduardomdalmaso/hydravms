@@ -14,15 +14,15 @@ export interface StoragePoolItem {
   usedGb: number
   status: StorageStatus
   isSpilloverActive?: boolean
-  retentionDays?: number
 }
 
 export interface UnallocatedDiskDevice {
   devicePath: string
   model: string
   sizeGb: number
-  busType: 'NVMe' | 'SATA' | 'SAS' | 'USB'
-  status: 'NAO_FORMATADO' | 'PARTICAO_LIVRE'
+  busType: 'NVMe' | 'SATA' | 'SAS' | 'USB' | string
+  status?: 'NAO_FORMATADO' | 'PARTICAO_LIVRE' | string
+  filesystem?: string
 }
 
 export interface NewStoragePayload {
@@ -33,5 +33,4 @@ export interface NewStoragePayload {
   pathOrEndpoint: string
   filesystem: string
   totalGb: number
-  retentionDays?: number
 }

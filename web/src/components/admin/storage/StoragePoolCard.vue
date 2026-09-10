@@ -51,7 +51,7 @@ const isLocked = computed(() => props.pool.usedGb > 0 || props.pool.role === 'HO
       </span>
       <div class="vms-flex-between vms-text-mono vms-text-2xs" style="margin-top: 4px;">
         <span style="color: #ffffff;">FS: {{ pool.filesystem }}</span>
-        <span style="color: var(--vms-neu-accent-orange);">RETENCAO: {{ pool.retentionDays || 30 }} DIAS</span>
+        <span style="color: var(--vms-neu-accent-orange);">STATUS: {{ pool.status }}</span>
       </div>
     </div>
 
