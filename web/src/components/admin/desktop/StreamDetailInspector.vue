@@ -1,12 +1,25 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
+import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 
-defineProps<{ stream: StreamItem }>()
+const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'test', id: string): void
   (e: 'delete', id: string): void
 }>()
+
+const refreshKey = ref(Date.now()), isRefreshing = ref(false)
+const refreshSnapshot = async () => {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await fetch(getCameraSnapshotUrl(props.stream.id, true))
+    refreshKey.value = Date.now()
+  } catch {}
+  finally { setTimeout(() => { isRefreshing.value = false }, 500) }
+}
 </script>
 
 <template>
@@ -25,13 +38,18 @@ const emit = defineEmits<{
     <!-- Inspector Content -->
     <div class="vms-flex-col" style="padding: 1rem; gap: 1rem;">
       <!-- Mini Preview -->
-      <div style="height: 140px; background: #080a0e; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative; overflow: hidden;">
-        <img v-if="stream.snapshotUrl" :src="stream.snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
+      <div style="height: 140px; background: #000000; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative; overflow: hidden;">
+        <img v-if="stream.snapshotUrl" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" />
         <template v-else>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
           <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
         </template>
         <span class="vms-badge vms-badge-orange" style="position: absolute; top: 6px; left: 6px; font-size: 8px;">{{ stream.codec }}</span>
+        <button style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 4px; background: rgba(14, 17, 23, 0.85); border: 1px solid rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Atualizar Snapshot" @click.stop="refreshSnapshot">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s ease' }">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
       </div>
 
 

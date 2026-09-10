@@ -1,8 +1,21 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
+import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 
-defineProps<{ stream: StreamItem }>()
+const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
+const refreshKey = ref(Date.now()), isRefreshing = ref(false)
+
+const refreshSnapshot = async () => {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await fetch(getCameraSnapshotUrl(props.stream.id, true))
+    refreshKey.value = Date.now()
+  } catch {}
+  finally { setTimeout(() => { isRefreshing.value = false }, 500) }
+}
 </script>
 
 <template>
@@ -21,12 +34,14 @@ const emit = defineEmits<{ (e: 'close'): void }>()
     </div>
 
     <!-- Snapshot / Preview Box -->
-    <div style="width: 100%; aspect-ratio: 16 / 9; max-height: 480px; background: #07080c; border: 1px solid var(--vms-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-      <img v-if="stream.snapshotUrl" :src="stream.snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
+    <div style="width: 100%; aspect-ratio: 16 / 9; max-height: 480px; background: #000000; border: 1px solid var(--vms-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+      <img v-if="stream.snapshotUrl" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" />
       <svg v-else width="56" height="56" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
-      <div v-if="stream.snapshotUrl && stream.fps" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: rgba(0,0,0,0.7);" :style="{ color: stream.recordMode && stream.recordMode !== 'disabled' ? 'var(--vms-neu-accent-red)' : 'var(--vms-neu-accent-green)' }">
-        {{ stream.recordMode && stream.recordMode !== 'disabled' ? 'REC' : 'LIVE' }} // {{ stream.fps }} FPS
-      </div>
+      <button style="position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 6px; background: rgba(14, 17, 23, 0.85); border: 1px solid rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Capturar Novo Snapshot do Fluxo" @click.stop="refreshSnapshot">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s ease' }">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </button>
     </div>
 
 

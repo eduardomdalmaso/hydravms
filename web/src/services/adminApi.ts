@@ -77,11 +77,11 @@ export async function fetchLiveUsers(f: UserItem[] = []): Promise<UserItem[]> {
 export async function fetchLiveSystemLogs(f: LogEntry[] = []): Promise<LogEntry[]> {
   try { const r = await fetch(`${API_BASE}/api/v1/system/logs`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).logs || f : f } catch { return f }
 }
-const STREAM_BASE = import.meta.env.VITE_STREAM_URL || 'http://localhost:8080'
+import { getStreamBaseUrl } from '../utils/streamUrls'
 
 export async function discoverOnvifDevices(): Promise<any[]> {
   try {
-    const r = await fetch(`${STREAM_BASE}/api/v1/onvif/discover`, { signal: AbortSignal.timeout(6000) })
+    const r = await fetch(`${getStreamBaseUrl()}/api/v1/onvif/discover`, { signal: AbortSignal.timeout(6000) })
     return r.ok ? (await r.json()).devices || [] : []
   } catch { return [] }
 }
@@ -89,7 +89,7 @@ export async function discoverOnvifDevices(): Promise<any[]> {
 export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?: string; password?: string; url?: string; protocol?: string }): Promise<any> {
   try {
     const payload = { ip_address: p.ip, port: p.port || 80, username: p.user || '', password: p.password || '' }
-    const r = await fetch(`${STREAM_BASE}/api/v1/onvif/probe`, {
+    const r = await fetch(`${getStreamBaseUrl()}/api/v1/onvif/probe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload), signal: AbortSignal.timeout(10000)
     })

@@ -91,7 +91,20 @@ func (c *NATSClient) initStreamsAndBuckets(ctx context.Context) error {
 		return fmt.Errorf("failed to create HYDRA_TELEMETRY stream: %w", err)
 	}
 
-	// 3. Camera States KV Bucket for Live Status Cache
+	// 3. Persistent Recordings Stream (File Storage, 7-Day Retention)
+	recordingsStreamCfg := jetstream.StreamConfig{
+		Name:        "HYDRA_RECORDINGS",
+		Description: "Camera Video Recording Segments and Storage Metadata",
+		Subjects:    []string{"hydra.v1.*.cameras.*.recordings.segment", "hydra.recordings.>"},
+		Retention:   jetstream.LimitsPolicy,
+		Storage:     jetstream.FileStorage,
+		MaxAge:      7 * 24 * time.Hour,
+	}
+	if _, err := c.js.CreateOrUpdateStream(ctx, recordingsStreamCfg); err != nil {
+		return fmt.Errorf("failed to create HYDRA_RECORDINGS stream: %w", err)
+	}
+
+	// 4. Camera States KV Bucket for Live Status Cache
 	kvCfg := jetstream.KeyValueConfig{
 		Bucket:      "HYDRA_CAMERA_STATES",
 		Description: "Real-time operational states and health of cameras",

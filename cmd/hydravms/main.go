@@ -80,7 +80,15 @@ func main() {
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
-	// 5. Connect to NATS Event Mesh & JetStream if available
+	// 5. Initialize Recording Service & Repositories
+	var recordingRepo ports.RecordingRepository
+	var recordingService *application.RecordingService
+	if pgPool != nil {
+		recordingRepo = postgresAdapter.NewRecordingRepository(pgPool)
+		recordingService = application.NewRecordingService(recordingRepo)
+	}
+
+	// 6. Connect to NATS Event Mesh & JetStream if available
 	natsCfg := natsAdapter.DefaultConfig()
 	natsClient, err := natsAdapter.NewNATSClient(ctx, natsCfg)
 	if err != nil {
@@ -96,15 +104,17 @@ func main() {
 		} else {
 			log.Println("✅ [HydraVMS] NATS to WebSocket Bridge active for all tenants (hydra.v1.*.>)")
 		}
+
+		// Start Durable NATS Recording Consumer
+		if recordingRepo != nil {
+			recordingConsumer := natsAdapter.NewRecordingConsumer(natsClient, recordingRepo)
+			if err := recordingConsumer.Start(ctx); err != nil {
+				log.Printf("⚠️ [HydraVMS] Failed to start NATS recording consumer: %v\n", err)
+			}
+		}
 	}
 
-	// 6. Initialize HTTP Handlers & Router
-	var recordingService *application.RecordingService
-	if pgPool != nil {
-		recordingRepo := postgresAdapter.NewRecordingRepository(pgPool)
-		recordingService = application.NewRecordingService(recordingRepo)
-	}
-
+	// 7. Initialize HTTP Handlers & Router
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService, recordingService)
 

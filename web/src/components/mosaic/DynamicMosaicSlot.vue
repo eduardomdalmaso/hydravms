@@ -3,6 +3,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue"
 import type { WorkspaceSlot, CameraStreamInfo } from "../../types/mosaic"
 import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
 import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
+import { getCameraMjpegUrl } from "../../utils/streamUrls"
 import SlotLinkedAlarm from "./SlotLinkedAlarm.vue"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
@@ -59,7 +60,7 @@ onMounted(handleSeekOrSwitch)
     <template v-if="slot.type === 'camera' && slot.data">
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
         <video v-show="decoderMode === 'MSE' && (isPlaying || isPlayback)" ref="videoRef" playsinline muted style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
-        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`http://localhost:8080/api/v1/streams/${(slot.data as CameraStreamInfo).id}/mjpeg?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
         <div v-if="(decoderMode === 'MSE' && !isPlaying && !isPlayback) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
       <div class="vms-slot-hud">

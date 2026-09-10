@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -87,13 +88,17 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 
 	if strings.HasSuffix(rawID, "/live") || strings.HasSuffix(rawID, "/mjpeg") {
 		camID := strings.TrimSuffix(strings.TrimSuffix(rawID, "/live"), "/mjpeg")
-		http.Redirect(w, r, fmt.Sprintf("http://localhost:8080/api/v1/streams/%s/mjpeg", camID), http.StatusTemporaryRedirect)
+		target := fmt.Sprintf("%s/api/v1/streams/%s/mjpeg", getStreamBaseURL(), camID)
+		if r.URL.RawQuery != "" { target += "?" + r.URL.RawQuery }
+		http.Redirect(w, r, target, http.StatusTemporaryRedirect)
 		return
 	}
 
 	if strings.HasSuffix(rawID, "/snapshot") {
 		camID := strings.TrimSuffix(rawID, "/snapshot")
-		http.Redirect(w, r, fmt.Sprintf("http://localhost:8080/api/v1/streams/%s/snapshot.jpg", camID), http.StatusTemporaryRedirect)
+		target := fmt.Sprintf("%s/api/v1/streams/%s/snapshot.jpg", getStreamBaseURL(), camID)
+		if r.URL.RawQuery != "" { target += "?" + r.URL.RawQuery }
+		http.Redirect(w, r, target, http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -319,9 +324,16 @@ func syncCameraWithHydraStream(cam *domain.Camera) {
 	}
 	b, _ := json.Marshal(payload)
 	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Post("http://localhost:8080/api/v1/streams", "application/json", bytes.NewReader(b))
+	resp, err := client.Post(fmt.Sprintf("%s/api/v1/streams", getStreamBaseURL()), "application/json", bytes.NewReader(b))
 	if err == nil && resp != nil {
 		_ = resp.Body.Close()
 	}
+}
+
+func getStreamBaseURL() string {
+	if u := os.Getenv("HYDRASTREAM_URL"); u != "" {
+		return strings.TrimRight(u, "/")
+	}
+	return "http://localhost:8080"
 }
 
