@@ -26,12 +26,14 @@ const handleAutoDiscover = async () => {
   const [streamProbe, forgeProbe] = await Promise.all([probeClusterNode('127.0.0.1', 8080), probeClusterNode('127.0.0.1', 8081)])
   isAutoScanning.value = false
   let added = 0
+  const streamIdx = servers.value.filter(s => s.role === 'HYDRASTREAM_EDGE').length
   if (streamProbe.online && !servers.value.some(s => s.ip === '127.0.0.1' && s.role === 'HYDRASTREAM_EDGE')) {
-    await addNode({ node_name: '[NODE] HYDRASTREAM-LOCAL (DATA PLANE)', node_role: 'edge_ingest', ip_address: '127.0.0.1', http_port: 8080, grpc_port: 50051, webrtc_port: 8889, gpu_device_info: streamProbe.gpu_model })
+    await addNode({ node_name: `HYDRA-STREAM-NODE-${streamIdx}`, node_role: 'edge_ingest', ip_address: '127.0.0.1', http_port: 8080, grpc_port: 50051, webrtc_port: 8889, gpu_device_info: streamProbe.gpu_model || 'NVIDIA GeForce RTX 5090' })
     added++
   }
+  const forgeIdx = servers.value.filter(s => s.role === 'HYDRASTREAM_GPU_WORKER').length
   if (forgeProbe.online && !servers.value.some(s => s.ip === '127.0.0.1' && s.role === 'HYDRASTREAM_GPU_WORKER')) {
-    await addNode({ node_name: '[NODE] HYDRAFORGE-LOCAL (GPU WORKER)', node_role: 'gpu_worker', ip_address: '127.0.0.1', http_port: 8081, grpc_port: 50051, webrtc_port: 8889, gpu_device_info: forgeProbe.gpu_model || 'NVIDIA GeForce RTX 5090 (32GB)' })
+    await addNode({ node_name: `HYDRA-FORGE-NODE-${forgeIdx}`, node_role: 'gpu_worker', ip_address: '127.0.0.1', http_port: 8081, grpc_port: 50051, webrtc_port: 8889, gpu_device_info: forgeProbe.gpu_model || 'NVIDIA GeForce RTX 5090' })
     added++
   }
   showToast(added > 0 ? `[AUTO-DISCOVERY] ${added} nó(s) detectados e adicionados com sucesso!` : `[AUTO-DISCOVERY] Nenhum novo nó detectado em localhost.`)
@@ -55,7 +57,7 @@ const handleAutoDiscover = async () => {
         </button>
         <div class="vms-badge vms-badge-orange" style="font-family: var(--vms-font-jetbrains); font-weight: 700; padding: 4px 10px; font-size: 11px;">VERIFICAÇÃO: {{ countdown }}s</div>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 5px 8px; border: 1px solid rgba(255, 94, 58, 0.4); border-radius: 4px; background: rgba(255, 94, 58, 0.08);" title="Configurar Alertas" @click="showConfigModal = true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
     </div>

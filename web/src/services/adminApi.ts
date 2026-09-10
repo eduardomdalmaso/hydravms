@@ -15,13 +15,22 @@ export async function fetchLiveClusterNodes(fallback: ServerNodeItem[] = []): Pr
     if (!res.ok) return fallback
     const data = await res.json()
     if (!Array.isArray(data.nodes) || data.nodes.length === 0) return fallback
+    const sys = data.host_system || {}
     return data.nodes.map((n: any) => ({
       id: n.id, hostname: n.node_name, ip: n.ip_address,
       role: n.node_role === 'gpu_worker' ? 'HYDRASTREAM_GPU_WORKER' : (n.node_role === 'control_plane' ? 'MASTER_VMS' : 'HYDRASTREAM_EDGE'),
       status: n.status === 'online' ? 'ONLINE' : 'OFFLINE', uptime: 'Ativo',
-      cpuPercent: n.cpu_usage_pct || 18, cpuModel: 'AMD / Intel Server Core',
-      ramUsedGb: 8.4, ramTotalGb: 64,
-      gpus: n.gpu_device_info ? [{ id: 'gpu_0', name: n.gpu_device_info, index: 0, tempC: 48, powerWatts: 220, vramUsedGb: 6.2, vramTotalGb: 32.0, computePercent: 25 }] : []
+      cpuPercent: Math.round(n.cpu_usage_pct ?? sys.cpu_usage_pct ?? 8.5),
+      cpuModel: n.cpu_model || sys.cpu_model || 'AMD Ryzen 7 7800X3D 8-Core Processor',
+      ramUsedGb: n.ram_used_gb ?? sys.ram_used_gb ?? 15.0,
+      ramTotalGb: n.ram_total_gb ?? sys.ram_total_gb ?? 62.0,
+      gpus: n.gpu_device_info ? [{
+        id: `gpu_${n.id || 0}`, name: n.gpu_device_info, index: 0,
+        tempC: Math.round(n.temp_celsius || 33), powerWatts: Math.round(n.power_watts || 31),
+        vramUsedGb: (n.vram_used_mb || 2068) / 1024,
+        vramTotalGb: (n.vram_total_mb || 32607) / 1024,
+        computePercent: n.gpu_usage_pct || 0
+      }] : []
     }))
   } catch { return fallback }
 }

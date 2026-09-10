@@ -13,18 +13,11 @@ export function usePerformanceCluster() {
     servers.value = live
   }
 
-  const refreshMetrics = () => {
+  const refreshMetrics = async () => {
     isRefreshing.value = true
-    setTimeout(() => {
-      servers.value.forEach(s => {
-        s.cpuPercent = Math.min(95, Math.max(15, Math.round(s.cpuPercent + (Math.random() * 8 - 4))))
-        s.gpus.forEach(g => {
-          g.computePercent = Math.min(98, Math.max(20, Math.round(g.computePercent + (Math.random() * 6 - 3))))
-          g.vramUsedGb = parseFloat(Math.min(g.vramTotalGb, Math.max(4, g.vramUsedGb + (Math.random() * 1.6 - 0.8))).toFixed(1))
-        })
-      })
-      isRefreshing.value = false; countdown.value = 10
-    }, 300)
+    await loadNodes()
+    isRefreshing.value = false
+    countdown.value = 10
   }
 
   const addNode = async (data: { node_name: string; node_role: string; ip_address: string; http_port: number; grpc_port: number; webrtc_port: number; gpu_device_info?: string }) => {
@@ -41,7 +34,13 @@ export function usePerformanceCluster() {
 
   onMounted(() => {
     loadNodes()
-    timerInterval = setInterval(() => { if (countdown.value > 1) countdown.value--; else refreshMetrics() }, 1000)
+    timerInterval = setInterval(async () => {
+      if (countdown.value > 1) {
+        countdown.value--
+      } else {
+        await refreshMetrics()
+      }
+    }, 1000)
   })
 
   onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })

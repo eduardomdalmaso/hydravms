@@ -37,7 +37,7 @@ const handleSubmit = () => {
   <div class="vms-modal-backdrop" @click.self="emit('close')">
     <div class="vms-modal-card" style="width: 460px; padding: 1.25rem; background: #0e1117; border: 1px solid var(--vms-border); border-radius: 6px;">
       <div class="vms-flex-between" style="align-items: center; border-bottom: 1px solid var(--vms-border); padding-bottom: 0.6rem; margin-bottom: 0.85rem;">
-        <h3 class="vms-h3" style="color: #fff; margin: 0; font-size: 13px; font-family: var(--vms-font-jetbrains);">[CONECTAR NÓ HYDRASTREAM / FORGE]</h3>
+        <h3 class="vms-h3" style="color: #fff; margin: 0; font-size: 13px; font-family: var(--vms-font-jetbrains);">CONECTAR NÓ HYDRASTREAM / FORGE</h3>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" @click="emit('close')">✕</button>
       </div>
 
@@ -63,7 +63,7 @@ const handleSubmit = () => {
 
         <div>
           <label class="vms-text-2xs" style="color: var(--vms-text-dim); display: block; margin-bottom: 3px;">NOME DA INSTÂNCIA</label>
-          <input v-model="nodeName" class="vms-auth-input" style="width: 100%; height: 28px; font-size: 12px;" placeholder="[NODE] HYDRASTREAM-LOCAL" required />
+          <input v-model="nodeName" class="vms-auth-input" style="width: 100%; height: 28px; font-size: 12px;" placeholder="Ex: HYDRA-STREAM-NODE-1" required />
         </div>
 
         <div>

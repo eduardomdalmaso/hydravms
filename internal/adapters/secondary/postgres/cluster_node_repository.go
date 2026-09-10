@@ -19,7 +19,10 @@ type ClusterNode struct {
 	WebRTCPort    int       `json:"webrtc_port"`
 	HTTPPort      int       `json:"http_port"`
 	GPUInfo       string    `json:"gpu_device_info"`
+	CPUModel      string    `json:"cpu_model"`
 	CPUUsagePct   float64   `json:"cpu_usage_pct"`
+	RAMUsedGB     float64   `json:"ram_used_gb"`
+	RAMTotalGB    float64   `json:"ram_total_gb"`
 	RAMUsagePct   float64   `json:"ram_usage_pct"`
 	GPUUsagePct   float64   `json:"gpu_usage_pct"`
 	VRAMUsedMB    float64   `json:"vram_used_mb"`

@@ -31,19 +31,29 @@ func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		liveGPU := gpu.QueryGPU()
+		sys := gpu.QuerySystemMetrics()
+
 		for _, n := range nodes {
-			if (n.IPAddress == "127.0.0.1" || n.IPAddress == "localhost") && liveGPU.Detected {
-				if n.GPUInfo == "" || strings.Contains(n.GPUInfo, "RTX") {
-					n.GPUInfo = liveGPU.Model
+			if n.IPAddress == "127.0.0.1" || n.IPAddress == "localhost" {
+				n.CPUModel = sys.CPUModel
+				n.CPUUsagePct = sys.CPUUsagePct
+				n.RAMUsedGB = sys.RAMUsedGB
+				n.RAMTotalGB = sys.RAMTotalGB
+				n.RAMUsagePct = sys.RAMUsagePct
+
+				if liveGPU.Detected {
+					if n.GPUInfo == "" || strings.Contains(n.GPUInfo, "RTX") {
+						n.GPUInfo = liveGPU.Model
+					}
+					n.VRAMUsedMB = liveGPU.UsedVRAMMB
+					n.VRAMTotalMB = liveGPU.TotalVRAMMB
+					n.GPUUsagePct = liveGPU.GPUUtilPct
+					n.TempCelsius = liveGPU.TempCelsius
+					n.PowerWatts = liveGPU.PowerWatts
 				}
-				n.VRAMUsedMB = liveGPU.UsedVRAMMB
-				n.VRAMTotalMB = liveGPU.TotalVRAMMB
-				n.GPUUsagePct = liveGPU.GPUUtilPct
-				n.TempCelsius = liveGPU.TempCelsius
-				n.PowerWatts = liveGPU.PowerWatts
 			}
 		}
-		json.NewEncoder(w).Encode(map[string]any{"nodes": nodes, "total": len(nodes)})
+		json.NewEncoder(w).Encode(map[string]any{"nodes": nodes, "total": len(nodes), "host_system": sys})
 		return
 	}
 
@@ -65,6 +75,22 @@ func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request)
 		if req.WebRTCPort == 0 { req.WebRTCPort = 8889 }
 		if req.HTTPPort == 0 { req.HTTPPort = 8080 }
 		if req.NodeRole == "" { req.NodeRole = "edge_ingest" }
+
+		if req.NodeName == "" {
+			existing, _ := h.repo.List(r.Context(), tenantID)
+			count := 0
+			for _, en := range existing {
+				if en.NodeRole == req.NodeRole { count++ }
+			}
+			switch req.NodeRole {
+			case "gpu_worker":
+				req.NodeName = fmt.Sprintf("HYDRA-FORGE-NODE-%d", count)
+			case "control_plane":
+				req.NodeName = fmt.Sprintf("HYDRA-VMS-NODE-%d", count)
+			default:
+				req.NodeName = fmt.Sprintf("HYDRA-STREAM-NODE-%d", count)
+			}
+		}
 
 		if req.GPUInfo == "" && (req.IPAddress == "127.0.0.1" || req.IPAddress == "localhost") {
 			liveGPU := gpu.QueryGPU()
@@ -112,6 +138,7 @@ func (h *ClusterNodeHandler) HandleNodeByID(w http.ResponseWriter, r *http.Reque
 
 func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	tenantID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
 		return
@@ -127,6 +154,14 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 	}
 	if req.IPAddress == "" { req.IPAddress = "127.0.0.1" }
 	if req.HTTPPort == 0 { req.HTTPPort = 8080 }
+
+	existing, _ := h.repo.List(r.Context(), tenantID)
+	streamCount, forgeCount, vmsCount := 0, 0, 0
+	for _, en := range existing {
+		if en.NodeRole == "edge_ingest" { streamCount++ }
+		if en.NodeRole == "gpu_worker" { forgeCount++ }
+		if en.NodeRole == "control_plane" { vmsCount++ }
+	}
 
 	targetURL := fmt.Sprintf("http://%s:%d/api/v1/info", req.IPAddress, req.HTTPPort)
 	if req.HTTPPort == 8081 {
@@ -157,11 +192,11 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 		defer resp2.Body.Close()
 		appName := "HydraStream Service"
 		role := "edge_ingest"
-		suggestedName := fmt.Sprintf("[NODE] HYDRASTREAM-%s", req.IPAddress)
+		suggestedName := fmt.Sprintf("HYDRA-STREAM-NODE-%d", streamCount)
 		if req.HTTPPort == 8081 {
 			appName = "HydraForge Studio"
 			role = "gpu_worker"
-			suggestedName = fmt.Sprintf("[NODE] HYDRAFORGE-GPU-%s", req.IPAddress)
+			suggestedName = fmt.Sprintf("HYDRA-FORGE-NODE-%d", forgeCount)
 		}
 		json.NewEncoder(w).Encode(map[string]any{
 			"online": true, "latency_ms": latency, "app_name": appName,
@@ -177,7 +212,7 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 	}
 
 	role := "edge_ingest"
-	suggestedName := fmt.Sprintf("[NODE] HYDRASTREAM-%s", req.IPAddress)
+	suggestedName := fmt.Sprintf("HYDRA-STREAM-NODE-%d", streamCount)
 	gpuModel, _ := info["gpu_model"].(string)
 
 	if gpuStats, ok := info["gpu_stats"].(map[string]any); ok {
@@ -190,12 +225,16 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 		gpuModel = liveGPU.Model
 	}
 
-	if req.HTTPPort == 8081 {
+	switch req.HTTPPort {
+	case 8081:
 		role = "gpu_worker"
-		suggestedName = fmt.Sprintf("[NODE] HYDRAFORGE-GPU-%s", req.IPAddress)
+		suggestedName = fmt.Sprintf("HYDRA-FORGE-NODE-%d", forgeCount)
 		if info["app_name"] == nil {
 			info["app_name"] = "HydraForge AI Training & Inference"
 		}
+	case 8083:
+		role = "control_plane"
+		suggestedName = fmt.Sprintf("HYDRA-VMS-NODE-%d", vmsCount)
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{

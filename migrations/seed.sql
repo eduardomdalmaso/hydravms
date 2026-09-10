@@ -50,7 +50,7 @@ INSERT INTO cluster_nodes (id, tenant_id, node_name, node_role, ip_address, grpc
 VALUES (
     '60000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000001',
-    '[NODE] HYDRA-CORE-MASTER',
+    'HYDRA-VMS-NODE-0',
     'control_plane',
     '127.0.0.1',
     50051,
