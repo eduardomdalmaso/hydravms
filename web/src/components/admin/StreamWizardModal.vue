@@ -4,8 +4,7 @@ import type { FolderNode, StreamItem } from '../../types/streamTree'
 import { probeCameraSnapshot } from '../../services/adminApi'
 import StreamWizardNetworkPane from './desktop/StreamWizardNetworkPane.vue'
 import StreamWizardChannelsPane, { type ChannelItem } from './desktop/StreamWizardChannelsPane.vue'
-import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'
-import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
+import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'; import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
 
 const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[]; initialData?: Partial<StreamItem> }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', stream: Partial<StreamItem>, folderId: string): void }>()
@@ -40,12 +39,15 @@ const fetchSnapshot = async (cb?: () => void) => {
     let targetUrl = form.value.url
     if (form.value.protocol === 'ONVIF' || !targetUrl.includes(form.value.ip)) {
       const auth = form.value.user ? `${encodeURIComponent(form.value.user)}:${encodeURIComponent(form.value.pass)}@` : ''
-      targetUrl = `rtsp://${auth}${form.value.ip}:554/live`
+      targetUrl = `rtsp://${auth}${form.value.ip}:${form.value.port || 554}/live`
     }
     const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
     hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
     detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264')
     detectedRes.value = res.resolution || '1920x1080 Full HD'; detectedFps.value = res.fps || 30; latency.value = res.latency_ms || 1
+    if (res.manufacturer) form.value.brand = res.manufacturer; if (res.model) form.value.model = res.model
+    if (res.firmware) form.value.firmware = res.firmware; if (res.serial_number) form.value.serialNumber = res.serial_number
+    if (res.rtsp_url) form.value.url = res.rtsp_url
     if (cb) cb()
   } finally { isTesting.value = false }
 }

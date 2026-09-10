@@ -140,13 +140,45 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 	}
 
-	// 2. Build RTSP URL candidates
 	authPart := ""
 	if req.User != "" {
 		authPart = fmt.Sprintf("%s:%s@", req.User, req.Password)
 	}
 
+	authRequired := false
+	codecDisplay := "--"
+	resolutionDisplay := "--"
+	fpsDisplay := 0
+
+	// 2. Perform ONVIF WS-Security Authentication & Profile Extraction if ONVIF
+	var detectedProfiles []onvif.DiscoveredProfile
+	var devInfo onvif.ONVIFDeviceInfo
+
 	mainRTSP := req.URL
+	if req.Protocol == "ONVIF" || (actualPort != 554 && actualPort != 8554) {
+		onvifClient := onvif.NewClient(cleanIP, actualPort, req.User, req.Password)
+		profs, info, onvifErr := onvifClient.AuthenticateAndExtractProfiles(r.Context())
+		if onvifErr != nil && onvifErr.Error() == "ONVIF_UNAUTHORIZED" {
+			authRequired = true
+			codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
+			resolutionDisplay = "AGUARDANDO CREDENCIAIS ONVIF"
+			fpsDisplay = 0
+		} else if len(profs) > 0 {
+			detectedProfiles = profs
+			devInfo = info
+			if profs[0].RTSPUri != "" {
+				mainRTSP = profs[0].RTSPUri
+			}
+			if profs[0].Codec != "" {
+				codecDisplay = profs[0].Codec
+			}
+			if profs[0].Resolution != "" {
+				resolutionDisplay = profs[0].Resolution
+			}
+		}
+	}
+
+	// Build RTSP URL fallback if not extracted via ONVIF
 	if mainRTSP == "" || !strings.HasPrefix(mainRTSP, "rtsp://") || (cleanIP != "" && !strings.Contains(mainRTSP, cleanIP)) {
 		mainRTSP = fmt.Sprintf("rtsp://%s%s:554/live", authPart, cleanIP)
 	} else if authPart != "" && !strings.Contains(mainRTSP, "@") {
@@ -160,12 +192,8 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Probe real stream metadata and frame capture via HydraStream / FFmpeg
 	var snapshotB64 string
-	authRequired := false
-	codecDisplay := "--"
-	resolutionDisplay := "--"
-	fpsDisplay := 0
 
-	if isOnline {
+	if isOnline && !authRequired {
 		// Probe real video properties with ffprobe
 		meta, metaStatus, _ := probeStreamMetadata(r.Context(), mainRTSP)
 		switch metaStatus {
@@ -199,16 +227,24 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 				fpsDisplay = 0
 			} else if snap != "" {
 				snapshotB64 = snap
-				codecDisplay = "H.264 (AVC)"
-				resolutionDisplay = "1920x1080 Full HD"
+				if codecDisplay == "--" {
+					codecDisplay = "H.264 (AVC)"
+				}
+				if resolutionDisplay == "--" {
+					resolutionDisplay = "1920x1080 Full HD"
+				}
 				fpsDisplay = 30
 			} else if req.User == "" && req.Password == "" {
 				authRequired = true
 				codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
 				resolutionDisplay = "AGUARDANDO CREDENCIAIS"
 			} else {
-				codecDisplay = "H.264 / H.265 (TCP)"
-				resolutionDisplay = "1080P"
+				if codecDisplay == "--" {
+					codecDisplay = "H.264 / H.265 (TCP)"
+				}
+				if resolutionDisplay == "--" {
+					resolutionDisplay = "1080P"
+				}
 				fpsDisplay = 30
 			}
 		}
@@ -226,6 +262,11 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 		"auth_required": authRequired,
 		"has_ptz":       req.Protocol == "ONVIF",
 		"rtsp_url":      mainRTSP,
+		"profiles":      detectedProfiles,
+		"manufacturer":  devInfo.Manufacturer,
+		"model":         devInfo.Model,
+		"firmware":      devInfo.FirmwareVersion,
+		"serial_number": devInfo.SerialNumber,
 	})
 }
 
