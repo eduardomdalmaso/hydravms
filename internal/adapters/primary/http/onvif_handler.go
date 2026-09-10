@@ -328,12 +328,15 @@ func probeStreamMetadata(ctx context.Context, rtspURL string) (StreamProbeMetada
 }
 
 func captureAndSaveSnapshot(ctx context.Context, rtspURL, camID string) (string, string, error) {
-	cmdCtx, cancel := context.WithTimeout(ctx, 4000*time.Millisecond)
+	cmdCtx, cancel := context.WithTimeout(ctx, 4500*time.Millisecond)
 	defer cancel()
 
 	cmd := exec.CommandContext(cmdCtx, "ffmpeg",
 		"-y",
 		"-rtsp_transport", "tcp",
+		"-stimeout", "3000000",
+		"-analyzeduration", "1000000",
+		"-probesize", "1000000",
 		"-i", rtspURL,
 		"-vframes", "1",
 		"-q:v", "2",
@@ -360,6 +363,7 @@ func captureAndSaveSnapshot(ctx context.Context, rtspURL, camID string) (string,
 
 		cmdFb := exec.CommandContext(cmdFbCtx, "ffmpeg",
 			"-y",
+			"-stimeout", "3000000",
 			"-i", rtspURL,
 			"-vframes", "1",
 			"-q:v", "2",

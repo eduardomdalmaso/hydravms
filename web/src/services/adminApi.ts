@@ -84,10 +84,10 @@ export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?
   try {
     const r = await fetch(`${API_BASE}/api/v1/cameras/onvif/probe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(p), signal: AbortSignal.timeout(4000)
+      body: JSON.stringify(p), signal: AbortSignal.timeout(10000)
     })
-    return r.ok ? await r.json() : { online: false, latency_ms: 0, codec: 'H.265 (HEVC)', resolution: '1080P', fps: 30 }
-  } catch { return { online: false, latency_ms: 0, codec: 'H.265 (HEVC)', resolution: '1080P', fps: 30 } }
+    return r.ok ? await r.json() : { online: false, latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' }
+  } catch { return { online: false, latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' } }
 }
 
 export { fetchFolders }

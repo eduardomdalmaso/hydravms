@@ -39,7 +39,7 @@ const fetchSnapshot = async (cb?: () => void) => {
     let targetUrl = form.value.url
     if (form.value.protocol === 'ONVIF' || !targetUrl.includes(form.value.ip)) {
       const auth = form.value.user ? `${encodeURIComponent(form.value.user)}:${encodeURIComponent(form.value.pass)}@` : ''
-      targetUrl = `rtsp://${auth}${form.value.ip}:${form.value.port || 554}/live`
+      targetUrl = `rtsp://${auth}${form.value.ip}:554/live`
     }
     const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
     hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
