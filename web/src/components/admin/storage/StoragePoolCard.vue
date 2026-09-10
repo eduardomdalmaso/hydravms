@@ -7,7 +7,6 @@ const emit = defineEmits<{ (e: 'remove', id: string): void }>()
 
 const formatGb = (gb: number) => gb >= 1024 ? `${(gb / 1024).toFixed(1)} TB` : `${gb} GB`
 const percent = (used: number, total: number) => Math.round((used / total) * 100)
-const isLocked = computed(() => props.pool.usedGb > 0 || props.pool.role === 'HOT_BUFFER' || props.pool.role === 'DATABASE')
 </script>
 
 <template>
@@ -22,25 +21,14 @@ const isLocked = computed(() => props.pool.usedGb > 0 || props.pool.role === 'HO
       </div>
 
       <div class="vms-flex-row" style="gap: 4px;">
-        <!-- Botao Desanexar Bloqueado se houver gravacoes ativas -->
         <button
-          v-if="!isLocked"
           class="vms-btn vms-btn-ghost vms-btn-sm"
-          style="padding: 3px 6px; color: #ff5e3a;"
-          title="Desanexar storage vazio"
+          style="padding: 3px 6px; color: var(--vms-neu-accent-orange);"
+          title="Desanexar storage do HydraVMS"
           @click="emit('remove', pool.id)"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-        <!-- Indicador de Bloqueio de Seguranca -->
-        <span
-          v-else
-          class="vms-badge vms-badge-dim"
-          style="padding: 2px 6px; font-size: 9px; cursor: not-allowed; opacity: 0.6;"
-          :title="`[BLOQUEADO] Pool possui ${formatGb(pool.usedGb)} de gravações ativas. Impossível desanexar sem drenagem prévia.`"
-        >
-          [LOCKED]
-        </span>
       </div>
     </div>
 

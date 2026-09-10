@@ -46,10 +46,6 @@ export function useStorageManager() {
   const removePool = async (id: string) => {
     const pool = pools.value.find(p => p.id === id)
     if (!pool) return
-    if (pool.usedGb > 0 && pool.role !== 'WARM_ARCHIVE') {
-      showNotification(`[BLOQUEIO] O pool "${pool.name}" contem dados e nao pode ser desanexado`)
-      return
-    }
     await deleteRemoteStoragePool(id)
     await loadPools()
     showNotification(`[STORAGE] Pool "${pool.name}" desanexado`)
