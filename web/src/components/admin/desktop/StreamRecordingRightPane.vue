@@ -2,24 +2,19 @@
 import { ref } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
 import type { RecordingProfile } from '../../../types/recordingSchedule'
-import { createDefaultSchedule } from '../../../types/recordingSchedule'
 import ScheduleRecordingModal from './ScheduleRecordingModal.vue'
 
 const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{ (e: 'saved', msg: string): void }>()
 
-const profiles = ref<RecordingProfile[]>([
-  { id: 'REC_01', name: 'Gravacao 24/7 Continua', mode: 'continuous', isActive: props.stream.recordMode !== 'disabled', schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15 },
-  { id: 'REC_02', name: 'Alarme Perimetro Noturno (IA)', mode: 'ai_event', isActive: false, schedule: createDefaultSchedule(false), preBuffer: 10, postBuffer: 30 }
-])
-
+const profiles = ref<RecordingProfile[]>([])
 const isModalOpen = ref(false)
 const selectedProfile = ref<RecordingProfile | null>(null)
 
 const handleToggleActive = (p: RecordingProfile) => {
   p.isActive = !p.isActive
   props.stream.recordMode = p.isActive ? p.mode : 'disabled'
-  emit('saved', p.isActive ? `[STATUS] Perfil "${p.name}" ATIVADO com sucesso.` : `[STATUS] Perfil "${p.name}" DESATIVADO.`)
+  emit('saved', p.isActive ? `[STATUS] Perfil "${p.name}" ATIVADO.` : `[STATUS] Perfil "${p.name}" DESATIVADO.`)
 }
 
 const handleOpenCreate = () => { selectedProfile.value = null; isModalOpen.value = true }
@@ -60,7 +55,7 @@ const handleSaveProfile = (profile: RecordingProfile) => {
             <th style="width: 90px; text-align: center;">ACOES</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="profiles.length > 0">
           <tr v-for="p in profiles" :key="p.id">
             <td class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); text-align: left;">{{ p.id }}</td>
             <td style="text-align: left;">
@@ -83,6 +78,13 @@ const handleSaveProfile = (profile: RecordingProfile) => {
             </td>
           </tr>
         </tbody>
+        <tbody v-else>
+          <tr>
+            <td colspan="4" class="vms-text-mono vms-text-2xs vms-text-dim" style="text-align: center; padding: 2.5rem 1rem;">
+              // NENHUM PERFIL DE GRAVAÇÃO CADASTRADO. CLIQUE EM [+] PARA CRIAR.
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
@@ -90,3 +92,4 @@ const handleSaveProfile = (profile: RecordingProfile) => {
     <ScheduleRecordingModal :is-open="isModalOpen" :profile="selectedProfile" @close="isModalOpen = false" @save="handleSaveProfile" />
   </div>
 </template>
+
