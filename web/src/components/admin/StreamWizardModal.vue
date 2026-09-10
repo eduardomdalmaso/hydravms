@@ -36,18 +36,16 @@ watch(() => props.isOpen, (open) => {
 const fetchSnapshot = async (cb?: () => void) => {
   isTesting.value = true
   try {
-    let targetUrl = form.value.url
-    if (form.value.protocol === 'ONVIF' || !targetUrl.includes(form.value.ip)) {
-      const auth = form.value.user ? `${encodeURIComponent(form.value.user)}:${encodeURIComponent(form.value.pass)}@` : ''
-      targetUrl = `rtsp://${auth}${form.value.ip}:554/live`
-    }
+    let targetUrl = form.value.url; const auth = form.value.user ? `${form.value.user}:${form.value.pass}@` : ''
+    if (form.value.protocol === 'ONVIF' || !targetUrl.includes(form.value.ip)) targetUrl = `rtsp://${auth}${form.value.ip}:554/stream1`
+    else if (auth && !targetUrl.includes('@')) targetUrl = targetUrl.replace('rtsp://', `rtsp://${auth}`)
     const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
     hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
     detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264')
     detectedRes.value = res.resolution || '1920x1080 Full HD'; detectedFps.value = res.fps || 30; latency.value = res.latency_ms || 1
     if (res.manufacturer) form.value.brand = res.manufacturer; if (res.model) form.value.model = res.model
     if (res.firmware) form.value.firmware = res.firmware; if (res.serial_number) form.value.serialNumber = res.serial_number
-    if (res.rtsp_url) form.value.url = res.rtsp_url
+    if (res.rtsp_url) { form.value.url = res.rtsp_url; const p = res.rtsp_url.split('/'); if (p.length > 3) form.value.path = '/' + p.slice(3).join('/') }
     if (cb) cb()
   } finally { isTesting.value = false }
 }
@@ -60,14 +58,14 @@ const handleNext = () => {
 
 const finish = () => {
   if (!form.value.name.trim()) form.value.name = `Camera ${form.value.protocol} ${form.value.ip}`
-  const finalUrl = form.value.protocol === 'RTMP' ? `rtmp://localhost:1935/live/${form.value.streamKey}` : form.value.url
+  let finalUrl = form.value.protocol === 'RTMP' ? `rtmp://localhost:1935/live/${form.value.streamKey}` : form.value.url
+  if (form.value.user && !finalUrl.includes('@')) finalUrl = finalUrl.replace('rtsp://', `rtsp://${form.value.user}:${form.value.pass}@`)
   emit('save', {
     name: form.value.name, protocol: form.value.protocol, url: finalUrl, ip: form.value.ip, port: form.value.port,
     codec: detectedCodec.value.includes('H.265') ? 'H.265' : 'H.264', resolution: '1080P', fps: detectedFps.value,
     bitrate: '4.0 Mbps', recordMode: 'continuous', status: 'online', has_ptz: form.value.protocol === 'ONVIF',
     latitude: form.value.latitude, longitude: form.value.longitude, locationName: form.value.locationName
-  }, form.value.folderId)
-  emit('close')
+  }, form.value.folderId); emit('close')
 }
 </script>
 <template>
