@@ -32,3 +32,7 @@ func (s *RecordingService) DeleteProfile(ctx context.Context, tenantID uuid.UUID
 func (s *RecordingService) ListRecordings(ctx context.Context, tenantID uuid.UUID, cameraID string, start, end time.Time) ([]*domain.RecordingSegment, error) {
 	return s.repo.ListRecordings(ctx, tenantID, cameraID, start, end)
 }
+
+func (s *RecordingService) InsertSegment(ctx context.Context, segment *domain.RecordingSegment) error {
+	return s.repo.InsertSegment(ctx, segment)
+}

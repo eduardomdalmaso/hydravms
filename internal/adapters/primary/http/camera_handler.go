@@ -189,34 +189,54 @@ func (h *CameraHandler) handleListRecordings(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	startStr := r.URL.Query().Get("start")
-	endStr := r.URL.Query().Get("end")
+	switch r.Method {
+	case http.MethodGet:
+		startStr := r.URL.Query().Get("start")
+		endStr := r.URL.Query().Get("end")
 
-	now := time.Now()
-	startTime := now.Add(-24 * time.Hour)
-	endTime := now.Add(1 * time.Hour)
+		now := time.Now()
+		startTime := now.Add(-24 * time.Hour)
+		endTime := now.Add(1 * time.Hour)
 
-	if startStr != "" {
-		if t, err := time.Parse(time.RFC3339, startStr); err == nil {
-			startTime = t
+		if startStr != "" {
+			if t, err := time.Parse(time.RFC3339, startStr); err == nil {
+				startTime = t
+			}
 		}
-	}
-	if endStr != "" {
-		if t, err := time.Parse(time.RFC3339, endStr); err == nil {
-			endTime = t
+		if endStr != "" {
+			if t, err := time.Parse(time.RFC3339, endStr); err == nil {
+				endTime = t
+			}
 		}
-	}
 
-	segments, err := h.recordingService.ListRecordings(r.Context(), tenantID, camID, startTime, endTime)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+		segments, err := h.recordingService.ListRecordings(r.Context(), tenantID, camID, startTime, endTime)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"recordings": segments,
-		"total":      len(segments),
-	})
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"recordings": segments,
+			"total":      len(segments),
+		})
+
+	case http.MethodPost:
+		var seg domain.RecordingSegment
+		if err := json.NewDecoder(r.Body).Decode(&seg); err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid segment payload: "+err.Error())
+			return
+		}
+		seg.TenantID = tenantID
+		seg.CameraID = camID
+		if err := h.recordingService.InsertSegment(r.Context(), &seg); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to insert segment: "+err.Error())
+			return
+		}
+		writeJSON(w, http.StatusCreated, seg)
+
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+	}
 }
 
 // syncCameraWithHydraStream informs HydraStream Data Plane about a newly registered camera.

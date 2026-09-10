@@ -21,7 +21,7 @@ const emit = defineEmits<{ (e: 'select', cam: CameraStreamInfo): void }>()
         <img
           :src="`http://localhost:8080/api/v1/streams/${camera.id}/mjpeg`"
           alt="Camera Stream"
-          style="width: 100%; height: 100%; object-fit: cover; display: block;"
+          style="width: 100%; height: 100%; object-fit: contain; display: block;"
         />
       </div>
       <div class="vms-slot-hud">

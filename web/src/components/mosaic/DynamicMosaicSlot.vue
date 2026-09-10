@@ -49,9 +49,9 @@ onMounted(() => { syncStream() })
 
     <!-- CAMERA TYPE -->
     <template v-if="slot.type === 'camera' && slot.data">
-      <div class="vms-slot-video" style="background: #05070a; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
-        <video v-show="decoderMode === 'MSE' && isPlaying" ref="videoRef" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: block;"></video>
-        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`http://localhost:8080/api/v1/streams/${(slot.data as CameraStreamInfo).id}/mjpeg?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" @load="isImgLoading = false" @error="onImgError" />
+      <div class="vms-slot-video" style="background: #000000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
+        <video v-show="decoderMode === 'MSE' && isPlaying" ref="videoRef" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: contain; display: block;"></video>
+        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`http://localhost:8080/api/v1/streams/${(slot.data as CameraStreamInfo).id}/mjpeg?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="onImgError" />
         <div v-if="(decoderMode === 'MSE' && !isPlaying) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
 

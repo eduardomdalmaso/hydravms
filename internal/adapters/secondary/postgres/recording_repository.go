@@ -165,3 +165,40 @@ func (r *PostgresRecordingRepository) ListRecordings(ctx context.Context, tenant
 	}
 	return results, nil
 }
+
+func (r *PostgresRecordingRepository) InsertSegment(ctx context.Context, s *domain.RecordingSegment) error {
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
+	}
+	if s.TenantID == uuid.Nil {
+		s.TenantID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	}
+	if s.StartTime.IsZero() {
+		s.StartTime = time.Now().Add(-time.Duration(s.DurationSeconds) * time.Second)
+	}
+	if s.EndTime.IsZero() {
+		s.EndTime = time.Now()
+	}
+	if s.DurationSeconds <= 0 {
+		s.DurationSeconds = int(s.EndTime.Sub(s.StartTime).Seconds())
+	}
+	if s.RecordingMode == "" {
+		s.RecordingMode = "motion"
+	}
+
+	query := `
+		INSERT INTO recordings (
+			id, tenant_id, camera_id, recording_mode, start_time, end_time,
+			duration_seconds, file_size_bytes, s3_bucket, s3_key, is_pinned, is_purged
+		) VALUES (
+			$1, $2, $3, $4, $5, $6,
+			$7, $8, $9, $10, $11, FALSE
+		)
+		ON CONFLICT (id) DO NOTHING
+	`
+	_, err := r.pool.Exec(ctx, query,
+		s.ID, s.TenantID, s.CameraID, s.RecordingMode, s.StartTime, s.EndTime,
+		s.DurationSeconds, s.FileSizeBytes, s.S3Bucket, s.S3Key, s.IsPinned,
+	)
+	return err
+}

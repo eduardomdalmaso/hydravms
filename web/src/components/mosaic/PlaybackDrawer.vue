@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { CameraStreamInfo } from '../../types/mosaic'
 import { useTimelinePlayback } from '../../composables/useTimelinePlayback'
 import { fetchRemoteRecordings } from '../../services/recordingApi'
@@ -15,7 +15,7 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'exportClip'): void }>()
 
 const {
   isPlaying, playbackSpeed, currentTime, isLive,
-  togglePlay, setSpeed, jumpSeconds, goToLive
+  togglePlay, setSpeed, jumpSeconds, goToLive, seek
 } = useTimelinePlayback()
 
 const isExportMode = ref(false), isExportModalOpen = ref(false), isSyncActive = ref(false)
@@ -30,7 +30,14 @@ const loadSegments = async () => {
     end: new Date(s.end_time).getTime()
   }))
 }
-onMounted(loadSegments); watch(() => props.camera.id, loadSegments)
+
+let pollTimer: any = null
+onMounted(() => {
+  loadSegments()
+  pollTimer = setInterval(loadSegments, 4000)
+})
+onBeforeUnmount(() => { if (pollTimer) clearInterval(pollTimer) })
+watch(() => props.camera.id, loadSegments)
 
 const exportDurationText = computed(() => {
   const diffSec = Math.max(0, Math.round((exportRange.value.end - exportRange.value.start) / 1000))
@@ -47,7 +54,7 @@ const notify = (msg: string) => { if (typeof window !== 'undefined') window.aler
 <template>
   <div class="vms-vezha-timeline">
     <div class="vms-drawer-header" style="padding: 0.35rem 0.85rem; display: flex; align-items: center; gap: 0.75rem;">
-      <DayTemporalRuler :currentTime="currentTime" @seek="currentTime = $event" />
+      <DayTemporalRuler :currentTime="currentTime" @seek="seek($event)" />
       <button class="vms-ubuntu-close-btn" style="position: relative; top: 0; right: 0;" title="Fechar Reprodução" @click="emit('close')">
         <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2L10 10M10 2L2 10" /></svg>
       </button>
@@ -56,7 +63,7 @@ const notify = (msg: string) => { if (typeof window !== 'undefined') window.aler
     <VezhaCanvasTimeline
       :currentTime="currentTime" :isExportMode="isExportMode" :exportStart="exportRange.start" :exportEnd="exportRange.end"
       :recordedRanges="realRecordedRanges"
-      @seek="currentTime = $event" @updateExportRange="exportRange = $event"
+      @seek="seek($event)" @updateExportRange="exportRange = $event"
     />
 
     <div class="vms-vezha-footer">

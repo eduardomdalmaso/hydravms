@@ -31,7 +31,7 @@
 .vms-slot:hover { border-color: rgba(255, 94, 58, 0.4); }
 .vms-slot:hover .vms-text-dim { color: var(--vms-neu-accent-orange); }
 .vms-slot.active { border: 2px solid var(--vms-border-focus); }
-.vms-slot-video { width: 100%; height: 100%; object-fit: cover; }
+.vms-slot-video { width: 100%; height: 100%; object-fit: contain; }
 
 .vms-slot-hud {
   position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column;
