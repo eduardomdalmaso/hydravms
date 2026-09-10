@@ -35,28 +35,18 @@ defineProps<{
 
       <img v-else-if="hasSnapshot && snapshotUrl" :src="snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
       
-      <div v-else-if="hasSnapshot && !snapshotUrl" class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.4rem; padding: 1rem; text-align: center;">
-        <span class="vms-badge" :style="{ background: authRequired ? 'rgba(255, 94, 58, 0.15)' : 'rgba(0, 255, 157, 0.12)', color: authRequired ? 'var(--vms-neu-accent-orange)' : 'var(--vms-neu-accent-green)', border: authRequired ? '1px solid rgba(255, 94, 58, 0.4)' : '1px solid rgba(0, 255, 157, 0.3)', fontSize: '10px' }">
-          {{ authRequired ? '[AUTENTICAÇÃO NECESSÁRIA]' : '[SOCKET RTSP CONECTADO]' }}
-        </span>
-        <span class="vms-text-mono vms-text-xs" style="color: #ffffff;">LATÊNCIA: {{ latencyMs }}ms</span>
-        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-dim);">
-          {{ authRequired ? 'Câmera protegida. Preencha usuário e senha acima.' : 'Sinal verificado com sucesso.' }}
-        </span>
-      </div>
-
-      <div v-else class="vms-flex-col" style="align-items: center; gap: 0.4rem; text-align: center; padding: 0.75rem;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-dim);">Clique em "TESTAR" para verificar o sinal</span>
+      <div v-else class="vms-flex-col" style="align-items: center; justify-content: center;">
+        <svg width="52" height="52" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
       </div>
 
       <div v-if="hasSnapshot && snapshotUrl && detectedFps > 0 && !isTesting" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-green); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
         REC // {{ detectedFps }} FPS
       </div>
-      <div v-if="hasSnapshot && !isTesting" style="position: absolute; bottom: 6px; right: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-cyan); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
+      <div v-if="latencyMs > 0 && !isTesting" style="position: absolute; bottom: 6px; right: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-cyan); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
         LATENCIA: {{ latencyMs }}ms
       </div>
     </div>
+
 
     <!-- Auto-Detected Telemetry Box -->
     <div class="vms-flex-col" style="gap: 3px; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.45rem 0.65rem; border-radius: 3px; font-family: var(--vms-font-jetbrains); font-size: 10px;">

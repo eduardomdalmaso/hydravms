@@ -8,12 +8,10 @@ const emit = defineEmits<{ (e: 'update:channels', val: ChannelItem[]): void }>()
 const isTestingAll = ref(false)
 
 const addChannel = () => {
-  const nextId = props.channels.length + 1; const paths = generateChannelPaths(props.basePath, nextId)
+  const nextId = props.channels.length + 1; const paths = generateChannelPaths(props.basePath || '/stream1', nextId)
   emit('update:channels', [...props.channels, {
     id: nextId, name: `Canal ${nextId.toString().padStart(2, '0')}`,
-    path: props.isOnvif ? `/onvif-media/profile${nextId}_main` : paths.main,
-    subPath: props.isOnvif ? `/onvif-media/profile${nextId}_sub` : paths.sub,
-    status: props.isOnvif ? 'online' : 'pending'
+    path: paths.main, subPath: paths.sub, status: 'online'
   }])
 }
 
@@ -25,16 +23,15 @@ const removeChannel = (idx: number) => {
 const quickBatchAdd = (count: number) => {
   const list: ChannelItem[] = []
   for (let i = 1; i <= count; i++) {
-    const paths = generateChannelPaths(props.basePath, i)
+    const paths = generateChannelPaths(props.basePath || '/stream1', i)
     list.push({
       id: i, name: `Canal ${i.toString().padStart(2, '0')}`,
-      path: props.isOnvif ? `/onvif-media/profile${i}_main` : paths.main,
-      subPath: props.isOnvif ? `/onvif-media/profile${i}_sub` : paths.sub,
-      status: props.isOnvif ? 'online' : 'pending'
+      path: paths.main, subPath: paths.sub, status: 'online'
     })
   }
   emit('update:channels', list)
 }
+
 
 const testSingle = (ch: ChannelItem) => {
   ch.status = 'testing'; setTimeout(() => { ch.status = ch.path.trim().length > 3 ? 'online' : 'offline' }, 500)
