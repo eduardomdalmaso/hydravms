@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue"
 import type { MapResource, CarouselConfig, CameraStreamInfo, CustomLayout, AlarmItemInfo } from "../../types/mosaic"
 import { fetchCameras } from "../../services/api"
+import { useEventBus } from "../../services/eventSocket"
 import SidebarCamerasSection from "./SidebarCamerasSection.vue"
 import SidebarAlarmsSection from "./SidebarAlarmsSection.vue"
 import SidebarLayoutsSection from "./SidebarLayoutsSection.vue"
@@ -26,6 +27,17 @@ const toggleSection = (s: "cameras" | "alarms" | "layouts" | "maps" | "carousel"
 const liveAlarms = ref<AlarmItemInfo[]>([])
 const liveMaps = ref<MapResource[]>([])
 const liveCarousels = ref<CarouselConfig[]>([])
+
+const eventBus = useEventBus()
+eventBus.subscribe((evt) => {
+  if (evt.type === 'system.camera.offline' && evt.subject) {
+    const c = cameras.value.find(cam => cam.id === evt.subject)
+    if (c) c.status = 'offline' as any
+  } else if (evt.type === 'system.camera.online' && evt.subject) {
+    const c = cameras.value.find(cam => cam.id === evt.subject)
+    if (c) c.status = 'online' as any
+  }
+})
 
 onMounted(async () => {
   const remote = await fetchCameras()

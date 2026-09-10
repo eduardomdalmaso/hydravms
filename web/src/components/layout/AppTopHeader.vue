@@ -37,8 +37,9 @@ const handleSelectMode = (mode: "vms" | "admin") => {
 
 <template>
   <header class="vms-header" style="background: #15181d; border-bottom: 1px solid var(--vms-border); height: 44px; padding: 0 1rem;">
-    <!-- Left: Brand Title -->
-    <div class="vms-flex-row" style="align-items: center;">
+    <!-- Left: Brand Title with Hydra Icon -->
+    <div class="vms-flex-row" style="align-items: center; gap: 0.55rem;">
+      <img src="/hydra.svg" alt="Hydra" style="width: 22px; height: 22px; object-fit: contain;" />
       <span style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 15px; font-weight: 800; letter-spacing: 0.8px;">
         HYDRA VMS<template v-if="currentMode === 'admin'"> - ADMIN CENTER</template>
       </span>

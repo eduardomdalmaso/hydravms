@@ -13,8 +13,8 @@ const emit = defineEmits<{ (e: 'login', creds: LoginCredentials): void }>()
 <template>
   <div class="vms-auth-container">
     <div class="vms-auth-card">
-      <div class="vms-auth-logo-circle">
-        <span class="vms-text-mono" style="font-weight: 700; font-size: 24px;">H</span>
+      <div class="vms-auth-logo-circle" style="background: rgba(255, 94, 58, 0.12); border: 1px solid rgba(255, 94, 58, 0.35); display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%;">
+        <img src="/hydra.svg" alt="Hydra" style="width: 38px; height: 38px; object-fit: contain;" />
       </div>
       <div class="vms-flex-col" style="text-align: center; gap: 0.25rem;">
         <h1 class="vms-h1" style="font-size: 20px;">HYDRA VMS</h1>

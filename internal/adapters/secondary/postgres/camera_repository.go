@@ -156,13 +156,13 @@ func (r *PostgresCameraRepository) Update(ctx context.Context, c *domain.Camera)
 		SET 
 			name = $1, protocol = $2, rtsp_url = $3, sub_stream_url = $4,
 			location = $5, resolution = $6, fps = $7, bitrate_kbps = $8,
-			codec = $9, folder_id = $10, assigned_node_id = $11, updated_at = $12
-		WHERE id = $13 AND (tenant_id = $14 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+			codec = $9, folder_id = $10, assigned_node_id = $11, status = $12, updated_at = $13
+		WHERE id = $14 AND (tenant_id = $15 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
 	`
 	cmdTag, err := r.pool.Exec(ctx, query,
 		c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
 		c.Location, c.Resolution, c.FPS, c.BitrateKbps,
-		c.Codec, c.FolderID, c.AssignedNodeID, c.UpdatedAt,
+		c.Codec, c.FolderID, c.AssignedNodeID, string(c.Status), c.UpdatedAt,
 		c.ID, c.TenantID,
 	)
 	if err != nil {

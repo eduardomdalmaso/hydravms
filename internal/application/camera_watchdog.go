@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -26,14 +25,14 @@ type WSHubBroadcaster interface {
 
 // CameraWatchdog continuously monitors RTSP camera connectivity and emits real-time events.
 type CameraWatchdog struct {
-	cameraRepo       ports.CameraRepository
-	eventRepo        ports.EventRepository
-	eventPublisher   EventBroadcaster
-	wsHub            WSHubBroadcaster
-	checkInterval    time.Duration
-	mu               sync.RWMutex
-	lastStates       map[string]domain.CameraStatus
-	failureCount     map[string]int
+	cameraRepo     ports.CameraRepository
+	eventRepo      ports.EventRepository
+	eventPublisher EventBroadcaster
+	wsHub          WSHubBroadcaster
+	checkInterval  time.Duration
+	mu             sync.RWMutex
+	lastStates     map[string]domain.CameraStatus
+	failureCount   map[string]int
 }
 
 // NewCameraWatchdog creates a new CameraWatchdog.
@@ -45,7 +44,7 @@ func NewCameraWatchdog(
 	checkInterval time.Duration,
 ) *CameraWatchdog {
 	if checkInterval <= 0 {
-		checkInterval = 2500 * time.Millisecond
+		checkInterval = 2000 * time.Millisecond
 	}
 	return &CameraWatchdog{
 		cameraRepo:     cameraRepo,
@@ -78,7 +77,6 @@ func (w *CameraWatchdog) Start(ctx context.Context) {
 }
 
 func (w *CameraWatchdog) pollCameras(ctx context.Context) {
-	// List cameras for default tenant
 	defaultTenantID, _ := uuid.Parse("00000000-0000-0000-0000-000000000001")
 	cameras, err := w.cameraRepo.List(ctx, defaultTenantID, nil)
 	if err != nil || len(cameras) == 0 {
@@ -116,7 +114,6 @@ func (w *CameraWatchdog) checkCamera(ctx context.Context, cam *domain.Camera) {
 		}
 	} else {
 		w.failureCount[cam.ID]++
-		// Require 2 consecutive failed probes (avoid jitter) before declaring offline
 		if w.failureCount[cam.ID] >= 2 && lastStatus != domain.CameraStatusOffline {
 			w.lastStates[cam.ID] = domain.CameraStatusOffline
 			w.mu.Unlock()
@@ -128,29 +125,36 @@ func (w *CameraWatchdog) checkCamera(ctx context.Context, cam *domain.Camera) {
 }
 
 func (w *CameraWatchdog) probeCamera(cam *domain.Camera) bool {
-	// 1. Probe RTSP Host:Port
+	var targets []string
+
+	// 1. Extrai Host:Port do RTSPURL
 	if cam.RTSPURL != "" {
-		u, err := url.Parse(cam.RTSPURL)
-		if err == nil && u.Host != "" {
-			host := u.Host
-			if !strings.Contains(host, ":") {
-				host += ":554"
-			}
-			conn, err := net.DialTimeout("tcp", host, 1500*time.Millisecond)
-			if err == nil {
-				_ = conn.Close()
-				return true
-			}
+		raw := cam.RTSPURL
+		if atIdx := strings.LastIndex(raw, "@"); atIdx != -1 {
+			raw = raw[atIdx+1:]
+		} else {
+			raw = strings.TrimPrefix(raw, "rtsp://")
 		}
+		if slashIdx := strings.Index(raw, "/"); slashIdx != -1 {
+			raw = raw[:slashIdx]
+		}
+		if !strings.Contains(raw, ":") {
+			raw += ":554"
+		}
+		targets = append(targets, raw)
 	}
 
-	// 2. Probe ONVIF IP:Port if configured
+	// 2. Extrai ONVIF IP:Port
 	if cam.ONVIFIP != "" {
 		port := cam.ONVIFPort
 		if port <= 0 {
 			port = 80
 		}
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", cam.ONVIFIP, port), 1500*time.Millisecond)
+		targets = append(targets, fmt.Sprintf("%s:%d", cam.ONVIFIP, port))
+	}
+
+	for _, target := range targets {
+		conn, err := net.DialTimeout("tcp", target, 1200*time.Millisecond)
 		if err == nil {
 			_ = conn.Close()
 			return true
@@ -166,7 +170,7 @@ func (w *CameraWatchdog) onCameraOffline(ctx context.Context, cam *domain.Camera
 	cam.Status = domain.CameraStatusOffline
 	_ = w.cameraRepo.Update(ctx, cam)
 
-	// 1. Create and persist System Event in Database
+	// 1. Persist System Event in Database
 	if w.eventRepo != nil {
 		evt := &domain.Event{
 			TenantID:       cam.TenantID,
@@ -184,7 +188,7 @@ func (w *CameraWatchdog) onCameraOffline(ctx context.Context, cam *domain.Camera
 		_ = w.eventRepo.Create(ctx, evt)
 	}
 
-	// 2. Build CNCF CloudEvents v1.0 Envelope
+	// 2. Build CloudEvents v1.0 Envelope
 	cloudEvt := domain.NewCloudEvent(
 		cam.TenantID,
 		domain.TypeCameraOffline,
@@ -220,7 +224,7 @@ func (w *CameraWatchdog) onCameraOnline(ctx context.Context, cam *domain.Camera)
 	cam.Status = domain.CameraStatusOnline
 	_ = w.cameraRepo.Update(ctx, cam)
 
-	// 1. Create and persist Recovery Event in Database
+	// 1. Persist Recovery Event in Database
 	if w.eventRepo != nil {
 		evt := &domain.Event{
 			TenantID:       cam.TenantID,
@@ -238,7 +242,7 @@ func (w *CameraWatchdog) onCameraOnline(ctx context.Context, cam *domain.Camera)
 		_ = w.eventRepo.Create(ctx, evt)
 	}
 
-	// 2. Build CNCF CloudEvents v1.0 Envelope
+	// 2. Build CloudEvents v1.0 Envelope
 	cloudEvt := domain.NewCloudEvent(
 		cam.TenantID,
 		domain.TypeCameraOnline,

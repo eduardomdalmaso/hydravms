@@ -76,6 +76,7 @@ func (r *InMemoryCameraRepository) Update(ctx context.Context, camera *domain.Ca
 	existing.BitrateKbps = camera.BitrateKbps
 	existing.Codec = camera.Codec
 	existing.FolderID = camera.FolderID
+	existing.Status = camera.Status
 	existing.UpdatedAt = time.Now()
 
 	return nil
