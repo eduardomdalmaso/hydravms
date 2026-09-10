@@ -51,14 +51,14 @@ const emit = defineEmits<{
         <RtmpProtocolForm v-else-if="form.protocol === 'RTMP'" v-model:stream-key="form.streamKey" />
 
         <div class="vms-flex-row" style="gap: 0.5rem; align-items: flex-end;">
-          <div class="vms-form-group" style="flex: 1;">
+          <div class="vms-form-group" style="flex: 1; margin-bottom: 0;">
             <label class="vms-label">Pasta Destino</label>
-            <select v-model="form.folderId" class="vms-auth-input">
+            <select v-model="form.folderId" class="vms-auth-input" style="height: 38px; box-sizing: border-box;">
               <option value="">[RAIZ] Sem Pasta (Área Principal)</option>
               <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
             </select>
           </div>
-          <button class="vms-btn vms-btn-primary" style="height: 38px; padding: 0 1.5rem; white-space: nowrap;" :disabled="isTesting" @click="emit('test')">
+          <button class="vms-btn vms-btn-primary" style="height: 38px; padding: 0 1.5rem; white-space: nowrap; margin-bottom: 0; box-sizing: border-box;" :disabled="isTesting" @click="emit('test')">
             <span v-if="isTesting">TESTANDO...</span>
             <span v-else>TESTAR</span>
           </button>

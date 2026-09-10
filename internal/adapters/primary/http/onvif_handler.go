@@ -140,14 +140,14 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 	}
 
-	// 2. Build RTSP URL
+	// 2. Build RTSP URL candidates
 	authPart := ""
 	if req.User != "" {
 		authPart = fmt.Sprintf("%s:%s@", req.User, req.Password)
 	}
 
 	mainRTSP := req.URL
-	if mainRTSP == "" || !strings.HasPrefix(mainRTSP, "rtsp://") {
+	if mainRTSP == "" || !strings.HasPrefix(mainRTSP, "rtsp://") || (cleanIP != "" && !strings.Contains(mainRTSP, cleanIP)) {
 		mainRTSP = fmt.Sprintf("rtsp://%s%s:554/live", authPart, cleanIP)
 	} else if authPart != "" && !strings.Contains(mainRTSP, "@") {
 		mainRTSP = strings.Replace(mainRTSP, "rtsp://", fmt.Sprintf("rtsp://%s", authPart), 1)
@@ -190,8 +190,19 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 				snapshotB64 = snap
 			}
 		default:
-			// Fallback if ffprobe didn't extract stream yet but socket is open
-			if req.User == "" && req.Password == "" {
+			// Try capturing snapshot directly with UDP/TCP fallback
+			snap, snapStatus, _ := captureAndSaveSnapshot(r.Context(), mainRTSP, camID)
+			if snapStatus == "UNAUTHORIZED" {
+				authRequired = true
+				codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
+				resolutionDisplay = "AGUARDANDO CREDENCIAIS"
+				fpsDisplay = 0
+			} else if snap != "" {
+				snapshotB64 = snap
+				codecDisplay = "H.264 (AVC)"
+				resolutionDisplay = "1920x1080 Full HD"
+				fpsDisplay = 30
+			} else if req.User == "" && req.Password == "" {
 				authRequired = true
 				codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
 				resolutionDisplay = "AGUARDANDO CREDENCIAIS"
@@ -304,7 +315,31 @@ func captureAndSaveSnapshot(ctx context.Context, rtspURL, camID string) (string,
 	}
 
 	if err != nil || out.Len() == 0 {
-		return "", "CAPTURE_ERROR", err
+		// Fallback: try without -rtsp_transport tcp (UDP / auto)
+		cmdFbCtx, cancelFb := context.WithTimeout(ctx, 3500*time.Millisecond)
+		defer cancelFb()
+
+		cmdFb := exec.CommandContext(cmdFbCtx, "ffmpeg",
+			"-y",
+			"-i", rtspURL,
+			"-vframes", "1",
+			"-q:v", "2",
+			"-f", "image2pipe",
+			"-vcodec", "mjpeg",
+			"-",
+		)
+		var outFb, stderrFb bytes.Buffer
+		cmdFb.Stdout = &outFb
+		cmdFb.Stderr = &stderrFb
+		errFb := cmdFb.Run()
+		if strings.Contains(stderrFb.String(), "401 Unauthorized") || strings.Contains(stderrFb.String(), "authorization failed") {
+			return "", "UNAUTHORIZED", fmt.Errorf("401 Unauthorized")
+		}
+		if errFb == nil && outFb.Len() > 0 {
+			out = outFb
+		} else {
+			return "", "CAPTURE_ERROR", err
+		}
 	}
 
 	frameBytes := out.Bytes()

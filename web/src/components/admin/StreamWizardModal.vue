@@ -37,7 +37,12 @@ watch(() => props.isOpen, (open) => {
 const fetchSnapshot = async (cb?: () => void) => {
   isTesting.value = true
   try {
-    const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: form.value.url, protocol: form.value.protocol })
+    let targetUrl = form.value.url
+    if (form.value.protocol === 'ONVIF' || !targetUrl.includes(form.value.ip)) {
+      const auth = form.value.user ? `${encodeURIComponent(form.value.user)}:${encodeURIComponent(form.value.pass)}@` : ''
+      targetUrl = `rtsp://${auth}${form.value.ip}:554/live`
+    }
+    const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
     hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
     detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264')
     detectedRes.value = res.resolution || '1920x1080 Full HD'; detectedFps.value = res.fps || 30; latency.value = res.latency_ms || 1
