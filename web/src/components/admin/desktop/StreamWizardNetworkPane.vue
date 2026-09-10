@@ -14,6 +14,7 @@ defineProps<{
   isTesting: boolean
   hasSnapshot: boolean
   snapshotUrl?: string
+  authRequired?: boolean
   detectedCodec: string
   detectedResolution: string
   detectedFps: number
@@ -49,23 +50,27 @@ const emit = defineEmits<{
         <OnvifProtocolForm v-else-if="form.protocol === 'ONVIF'" v-model:ip="form.ip" v-model:port="form.port" v-model:user="form.user" v-model:pass="form.pass" />
         <RtmpProtocolForm v-else-if="form.protocol === 'RTMP'" v-model:stream-key="form.streamKey" />
 
-        <div class="vms-form-group">
-          <label class="vms-label">Pasta Destino</label>
-          <select v-model="form.folderId" class="vms-auth-input">
-            <option value="">[RAIZ] Sem Pasta (Área Principal)</option>
-            <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-          </select>
+        <div class="vms-flex-row" style="gap: 0.5rem; align-items: flex-end;">
+          <div class="vms-form-group" style="flex: 1;">
+            <label class="vms-label">Pasta Destino</label>
+            <select v-model="form.folderId" class="vms-auth-input">
+              <option value="">[RAIZ] Sem Pasta (Área Principal)</option>
+              <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+            </select>
+          </div>
+          <button class="vms-btn vms-btn-primary" style="height: 38px; padding: 0 1.5rem; white-space: nowrap;" :disabled="isTesting" @click="emit('test')">
+            <span v-if="isTesting">TESTANDO...</span>
+            <span v-else>TESTAR</span>
+          </button>
         </div>
       </div>
-      <button class="vms-btn vms-btn-secondary" style="margin-top: 0.25rem;" :disabled="isTesting" @click="emit('test')">
-        [BUSCAR SNAPSHOT & TESTAR {{ form.protocol }}]
-      </button>
     </div>
 
     <StreamWizardSnapshotPane 
       :is-testing="isTesting" 
       :has-snapshot="hasSnapshot" 
       :snapshot-url="snapshotUrl"
+      :auth-required="authRequired"
       :detected-codec="detectedCodec" 
       :detected-resolution="detectedResolution" 
       :detected-fps="detectedFps" 

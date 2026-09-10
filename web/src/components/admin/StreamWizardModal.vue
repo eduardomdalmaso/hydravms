@@ -9,7 +9,7 @@ import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
 
 const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[]; initialData?: Partial<StreamItem> }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', stream: Partial<StreamItem>, folderId: string): void }>()
-const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), snapshotUrl = ref<string | undefined>(undefined)
+const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), snapshotUrl = ref<string | undefined>(undefined), authRequired = ref(false)
 const detectedCodec = ref('H.265'), detectedRes = ref('1920x1080 Full HD'), detectedFps = ref(30), latency = ref(1)
 const channels = ref<ChannelItem[]>([{ id: 1, name: 'Canal 01 (Principal)', path: '/live', subPath: '/sub', status: 'online' }])
 const form = ref({
@@ -21,7 +21,7 @@ const form = ref({
 
 watch(() => props.isOpen, (open) => {
   if (open) {
-    step.value = 1; isTesting.value = false; hasSnapshot.value = false; snapshotUrl.value = undefined
+    step.value = 1; isTesting.value = false; hasSnapshot.value = false; snapshotUrl.value = undefined; authRequired.value = false
     const init = props.initialData
     form.value.name = init?.name || ''; form.value.protocol = init?.protocol || 'RTSP'
     form.value.url = init?.url || 'rtsp://192.168.1.100:554/live'; form.value.path = '/live'
@@ -37,20 +37,12 @@ watch(() => props.isOpen, (open) => {
 const fetchSnapshot = async (cb?: () => void) => {
   isTesting.value = true
   try {
-    const res = await probeCameraSnapshot({
-      ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass,
-      url: form.value.url, protocol: form.value.protocol
-    })
-    hasSnapshot.value = true
-    snapshotUrl.value = res.snapshot_url || undefined
+    const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: form.value.url, protocol: form.value.protocol })
+    hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
     detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264')
-    detectedRes.value = res.resolution || '1920x1080 Full HD'
-    detectedFps.value = res.fps || 30
-    latency.value = res.latency_ms || 1
+    detectedRes.value = res.resolution || '1920x1080 Full HD'; detectedFps.value = res.fps || 30; latency.value = res.latency_ms || 1
     if (cb) cb()
-  } finally {
-    isTesting.value = false
-  }
+  } finally { isTesting.value = false }
 }
 
 const handleNext = () => {
@@ -85,14 +77,14 @@ const finish = () => {
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 4 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">4. GEOLOCALIZACAO</span>
       </div>
       <div class="vms-modal-body" style="padding: 1.25rem; min-height: 420px; overflow-x: hidden; box-sizing: border-box;">
-        <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :snapshot-url="snapshotUrl" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined" />
+        <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :snapshot-url="snapshotUrl" :auth-required="authRequired" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined; authRequired = false" />
         <StreamWizardChannelsPane v-else-if="step === 2" v-model:channels="channels" :base-path="form.path" :is-onvif="form.protocol === 'ONVIF'" />
         <StreamWizardDevicePane v-else-if="step === 3" v-model:brand="form.brand" v-model:model="form.model" v-model:serial-number="form.serialNumber" v-model:firmware="form.firmware" v-model:mac-address="form.macAddress" />
         <StreamWizardGeoPane v-else-if="step === 4" v-model:latitude="form.latitude" v-model:longitude="form.longitude" v-model:location-name="form.locationName" />
       </div>
       <div class="vms-modal-footer">
         <button v-if="step > 1" class="vms-btn vms-btn-secondary" @click="step--">ANTERIOR</button>
-        <button v-if="step < 4" class="vms-btn vms-btn-primary" :disabled="isTesting" @click="handleNext"><span v-if="isTesting">VALIDANDO...</span><span v-else-if="step === 1">PROXIMO: CANAIS</span><span v-else-if="step === 2">PROXIMO: DISPOSITIVO</span><span v-else>PROXIMO: GEOLOCALIZACAO</span></button>
+        <button v-if="step < 4" class="vms-btn vms-btn-primary" :disabled="isTesting" @click="handleNext"><span v-if="isTesting">VALIDANDO...</span><span v-else>PROXIMO</span></button>
         <button v-else class="vms-btn vms-btn-primary" @click="finish">SALVAR</button>
       </div>
     </div>
