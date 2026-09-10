@@ -45,6 +45,9 @@ const onMouseDown = (e: MouseEvent) => {
     if (Math.abs(clickX - x2) <= 12) { dragType.value = 'end'; return }
     if (clickX > Math.min(x1, x2) && clickX < Math.max(x1, x2)) { dragType.value = 'range'; return }
   }
+  const clickedTime = Math.round(windowStart + (clickX / cssW) * windowSpan)
+  dragStartTime.value = clickedTime
+  emit('seek', Math.min(Date.now(), clickedTime))
   dragType.value = 'pan'
 }
 
@@ -61,18 +64,12 @@ const onMouseMove = (e: MouseEvent) => {
     emit('updateExportRange', { start: Math.min(props.exportEnd - 10000, mouseTime), end: props.exportEnd })
   } else if (dragType.value === 'end' && props.exportStart) {
     emit('updateExportRange', { start: props.exportStart, end: Math.max(props.exportStart + 10000, mouseTime) })
-  } else if (dragType.value === 'pan') {
-    emit('seek', Math.min(Date.now(), dragStartTime.value - deltaShift))
+  } else if (dragType.value === 'pan' && Math.abs(e.clientX - dragStartX.value) > 8) {
+    emit('seek', Math.min(Date.now(), Math.round(dragStartTime.value - deltaShift)))
   }
 }
 
-const onMouseUp = (e: MouseEvent) => {
-  if (dragType.value === 'pan' && Math.abs(e.clientX - dragStartX.value) < 4 && canvasRef.value) {
-    const ratio = (e.clientX - canvasRef.value.getBoundingClientRect().left) / canvasRef.value.offsetWidth
-    emit('seek', props.currentTime - (zoomMinutes.value * 60000) / 2 + ratio * (zoomMinutes.value * 60000))
-  }
-  dragType.value = 'none'
-}
+const onMouseUp = () => { dragType.value = 'none' }
 </script>
 
 <template>

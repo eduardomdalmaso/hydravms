@@ -7,44 +7,48 @@ import SlotLinkedAlarm from "./SlotLinkedAlarm.vue"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
-
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
 const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
-const { isPlaying: isLivePlaying, start: startLive, stop: stopLive } = useWebRTCPlayer(videoRef)
-const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId } = useTimelinePlayback()
+const { start: startLive, stop: stopLive } = useWebRTCPlayer(videoRef)
+const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId, seekTrigger } = useTimelinePlayback()
 
 const isPlayback = computed(() => {
   const cam = props.slot.type === 'camera' ? props.slot.data as CameraStreamInfo : null
   return !!cam && !isLive.value && activePlaybackCameraId.value === cam.id
 })
-const playbackSrc = computed(() => !isPlayback.value ? '' : `http://localhost:8083/api/v1/cameras/${(props.slot.data as CameraStreamInfo).id}/recordings/stream?t=${currentTime.value}`)
+
+const handleSeekOrSwitch = () => {
+  if (isPlayback.value && videoRef.value) {
+    stopLive()
+    const cam = props.slot.data as CameraStreamInfo
+    videoRef.value.src = `http://localhost:8083/api/v1/cameras/${cam.id}/recordings/stream?t=${currentTime.value}`
+    videoRef.value.playbackRate = playbackSpeed.value
+    if (isPlaying.value) videoRef.value.play().catch(() => {})
+    else videoRef.value.pause()
+  } else if (!isPlayback.value && props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
+    if (videoRef.value?.src.includes('recordings')) videoRef.value.src = ''
+    startLive((props.slot.data as CameraStreamInfo).id, props.isHero)
+  }
+}
 
 const syncStream = () => {
   isImgLoading.value = true
-  if (isPlayback.value) {
-    stopLive()
-    if (videoRef.value && videoRef.value.src !== playbackSrc.value) {
-      videoRef.value.src = playbackSrc.value; videoRef.value.playbackRate = playbackSpeed.value
-      if (isPlaying.value) videoRef.value.play().catch(() => {})
-      else videoRef.value.pause()
-    }
-  } else if (props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
-    if (videoRef.value && videoRef.value.src.includes('recordings')) videoRef.value.src = ''
-    startLive((props.slot.data as CameraStreamInfo).id, props.isHero)
-  } else { stopLive() }
+  if (isPlayback.value && videoRef.value) {
+    videoRef.value.playbackRate = playbackSpeed.value
+    if (isPlaying.value && videoRef.value.paused) videoRef.value.play().catch(() => {})
+    else if (!isPlaying.value && !videoRef.value.paused) videoRef.value.pause()
+  } else { handleSeekOrSwitch() }
 }
 
-const onImgError = () => { setTimeout(() => { retryKey.value = Date.now() }, 1500) }
-const handleVis = () => { if (!document.hidden) { retryKey.value = Date.now(); syncStream() } }
+const retryImg = () => setTimeout(() => { retryKey.value = Date.now() }, 1500)
+const handleVis = () => { if (!document.hidden) { retryKey.value = Date.now(); handleSeekOrSwitch() } }
 document.addEventListener('visibilitychange', handleVis)
 window.addEventListener('focus', handleVis)
-onBeforeUnmount(() => {
-  document.removeEventListener('visibilitychange', handleVis)
-  window.removeEventListener('focus', handleVis)
-})
+onBeforeUnmount(() => { document.removeEventListener('visibilitychange', handleVis); window.removeEventListener('focus', handleVis) })
 
-watch(() => [props.slot.data, props.isHero, decoderMode.value, isLive.value, isPlayback.value, playbackSrc.value, isPlaying.value, playbackSpeed.value], syncStream, { deep: true })
-onMounted(syncStream)
+watch(() => [isPlayback.value, seekTrigger.value], handleSeekOrSwitch)
+watch(() => [props.slot.data, props.isHero, decoderMode.value, isPlaying.value, playbackSpeed.value], syncStream, { deep: true })
+onMounted(handleSeekOrSwitch)
 </script>
 
 <template>
@@ -52,15 +56,12 @@ onMounted(syncStream)
     <button v-if="slot.data" class="vms-slot-close-btn" title="Fechar Slot" @click.stop="emit('clear', slot.slot_index)">
       <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2L10 10M10 2L2 10" /></svg>
     </button>
-
-    <!-- CAMERA TYPE -->
     <template v-if="slot.type === 'camera' && slot.data">
-      <div class="vms-slot-video" style="background: #000000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
-        <video v-show="decoderMode === 'MSE' && isPlaying" ref="videoRef" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: contain; display: block;"></video>
-        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`http://localhost:8080/api/v1/streams/${(slot.data as CameraStreamInfo).id}/mjpeg?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="onImgError" />
-        <div v-if="(decoderMode === 'MSE' && !isPlaying) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
+      <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
+        <video v-show="decoderMode === 'MSE' && (isPlaying || isPlayback)" ref="videoRef" playsinline muted style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
+        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`http://localhost:8080/api/v1/streams/${(slot.data as CameraStreamInfo).id}/mjpeg?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <div v-if="(decoderMode === 'MSE' && !isPlaying && !isPlayback) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
-
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.35rem; margin-top: 1.1rem; align-items: center;">
           <span class="vms-badge" style="background: rgba(15, 23, 42, 0.9); color: #fff; font-size: 11px;">{{ (slot.data as CameraStreamInfo).name }}</span>
@@ -81,8 +82,6 @@ onMounted(syncStream)
         </div>
       </div>
     </template>
-
-    <!-- MAP / CAROUSEL / EMPTY -->
     <template v-else-if="slot.type === 'map' && slot.data">
       <div class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.4rem; width: 100%; height: 100%; background: #111419;"><span class="vms-badge vms-channel-pill-telegram">[MAPA INTERATIVO]</span><span class="vms-text-sm vms-font-semibold" style="color: #fff;">{{ (slot.data as any).name }}</span></div>
     </template>
