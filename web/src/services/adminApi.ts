@@ -9,70 +9,64 @@ import { fetchFolders } from './api'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8083'
 
-export async function fetchLiveLayouts(fallback: EnterpriseLayoutItem[] = []): Promise<EnterpriseLayoutItem[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/layouts`, { signal: AbortSignal.timeout(3000) })
-    if (!res.ok) return fallback
-    const data = await res.json()
-    return Array.isArray(data.layouts) && data.layouts.length > 0 ? data.layouts : fallback
-  } catch {
-    return fallback
-  }
-}
-
-export async function fetchLiveMaps(fallback: EnterpriseMapItem[] = []): Promise<EnterpriseMapItem[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/maps`, { signal: AbortSignal.timeout(3000) })
-    if (!res.ok) return fallback
-    const data = await res.json()
-    return Array.isArray(data.maps) && data.maps.length > 0 ? data.maps : fallback
-  } catch {
-    return fallback
-  }
-}
-
-export async function fetchLiveTours(fallback: EnterpriseRondaItem[] = []): Promise<EnterpriseRondaItem[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/tours`, { signal: AbortSignal.timeout(3000) })
-    if (!res.ok) return fallback
-    const data = await res.json()
-    return Array.isArray(data.tours) && data.tours.length > 0 ? data.tours : fallback
-  } catch {
-    return fallback
-  }
-}
-
-export async function fetchLiveUsers(fallback: UserItem[] = []): Promise<UserItem[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/users`, { signal: AbortSignal.timeout(3000) })
-    if (!res.ok) return fallback
-    const data = await res.json()
-    return Array.isArray(data.users) && data.users.length > 0 ? data.users : fallback
-  } catch {
-    return fallback
-  }
-}
-
 export async function fetchLiveClusterNodes(fallback: ServerNodeItem[] = []): Promise<ServerNodeItem[]> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/cluster/nodes`, { signal: AbortSignal.timeout(3000) })
     if (!res.ok) return fallback
     const data = await res.json()
-    return Array.isArray(data.nodes) && data.nodes.length > 0 ? data.nodes : fallback
-  } catch {
-    return fallback
-  }
+    if (!Array.isArray(data.nodes) || data.nodes.length === 0) return fallback
+    return data.nodes.map((n: any) => ({
+      id: n.id, hostname: n.node_name, ip: n.ip_address,
+      role: n.node_role === 'gpu_worker' ? 'HYDRASTREAM_GPU_WORKER' : (n.node_role === 'control_plane' ? 'MASTER_VMS' : 'HYDRASTREAM_EDGE'),
+      status: n.status === 'online' ? 'ONLINE' : 'OFFLINE', uptime: 'Ativo',
+      cpuPercent: n.cpu_usage_pct || 18, cpuModel: 'AMD / Intel Server Core',
+      ramUsedGb: 8.4, ramTotalGb: 64,
+      gpus: n.gpu_device_info ? [{ id: 'gpu_0', name: n.gpu_device_info, index: 0, tempC: 48, powerWatts: 220, vramUsedGb: 6.2, vramTotalGb: 32.0, computePercent: 25 }] : []
+    }))
+  } catch { return fallback }
 }
 
-export async function fetchLiveSystemLogs(fallback: LogEntry[] = []): Promise<LogEntry[]> {
+export async function probeClusterNode(ip: string, port: number): Promise<any> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/system/logs`, { signal: AbortSignal.timeout(3000) })
-    if (!res.ok) return fallback
-    const data = await res.json()
-    return Array.isArray(data.logs) && data.logs.length > 0 ? data.logs : fallback
-  } catch {
-    return fallback
-  }
+    const res = await fetch(`${API_BASE}/api/v1/cluster/probe`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip_address: ip, http_port: port }), signal: AbortSignal.timeout(3000)
+    })
+    return res.ok ? await res.json() : { online: false, error: 'HTTP error' }
+  } catch (err: any) { return { online: false, error: err?.message || 'Timeout' } }
+}
+
+export async function createRemoteClusterNode(node: { node_name: string; node_role: string; ip_address: string; http_port: number; grpc_port: number; webrtc_port: number; gpu_device_info?: string }): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(node), signal: AbortSignal.timeout(3000)
+    })
+    return res.ok
+  } catch { return false }
+}
+
+export async function deleteRemoteClusterNode(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes/${id}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    return res.ok
+  } catch { return false }
+}
+
+export async function fetchLiveLayouts(f: EnterpriseLayoutItem[] = []): Promise<EnterpriseLayoutItem[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/layouts`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).layouts || f : f } catch { return f }
+}
+export async function fetchLiveMaps(f: EnterpriseMapItem[] = []): Promise<EnterpriseMapItem[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/maps`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).maps || f : f } catch { return f }
+}
+export async function fetchLiveTours(f: EnterpriseRondaItem[] = []): Promise<EnterpriseRondaItem[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/tours`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).tours || f : f } catch { return f }
+}
+export async function fetchLiveUsers(f: UserItem[] = []): Promise<UserItem[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/users`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).users || f : f } catch { return f }
+}
+export async function fetchLiveSystemLogs(f: LogEntry[] = []): Promise<LogEntry[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/system/logs`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).logs || f : f } catch { return f }
 }
 
 export { fetchFolders }

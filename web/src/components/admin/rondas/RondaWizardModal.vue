@@ -8,7 +8,6 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'save', ronda: EnterpriseRond
 const name = ref('')
 const folderId = ref(props.targetFolderId || '')
 const transition = ref<'CORTE SECO' | 'CROSSFADE' | 'FADE PRETO'>('CORTE SECO')
-const defaultInterval = ref(10)
 const isLocked = ref(false)
 
 watch(() => props.isOpen, (open) => {
@@ -16,7 +15,6 @@ watch(() => props.isOpen, (open) => {
     name.value = ''
     folderId.value = props.targetFolderId || ''
     transition.value = 'CORTE SECO'
-    defaultInterval.value = 10
     isLocked.value = false
   }
 })
@@ -32,12 +30,9 @@ const handleSave = () => {
     is_locked: isLocked.value,
     status: 'ATIVO',
     transition: transition.value,
-    allowedUserIds: ['usr_02', 'usr_03'],
+    allowedUserIds: [],
     createdAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-    streams: [
-      { id: `rs_${Date.now()}_1`, cameraId: 'cam_01', cameraName: 'Portaria Principal (Entrada)', resolution: '1080P', fps: 30, intervalSeconds: defaultInterval.value, orderIndex: 0 },
-      { id: `rs_${Date.now()}_2`, cameraId: 'cam_02', cameraName: 'Estacionamento Visitantes', resolution: '1080P', fps: 25, intervalSeconds: defaultInterval.value, orderIndex: 1 }
-    ]
+    streams: []
   }
   emit('save', newRonda)
   emit('close')

@@ -102,10 +102,16 @@ func main() {
 	if storagePoolService != nil {
 		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
 	}
+	var clusterNodeHandler *httpAdapter.ClusterNodeHandler
+	if pgPool != nil {
+		clusterNodeRepo := postgresAdapter.NewClusterNodeRepository(pgPool)
+		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(clusterNodeRepo)
+	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
-	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, wsHandler)
+	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, wsHandler)
 	handler := router.BuildHandler()
+
 
 	port := os.Getenv("PORT")
 	if port == "" {

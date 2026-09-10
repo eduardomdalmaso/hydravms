@@ -2,16 +2,12 @@ import { ref } from 'vue'
 import type { PlaybackSpeed, TimelineSegment } from '../types/mosaic'
 
 export function useTimelinePlayback() {
-  const isPlaying = ref(true)
+  const isPlaying = ref(false)
   const playbackSpeed = ref<PlaybackSpeed>(1)
-  const currentTime = ref(Date.now() - 3600000) // 1 hour ago
-  const isLive = ref(false)
+  const currentTime = ref(Date.now())
+  const isLive = ref(true)
 
-  const segments = ref<TimelineSegment[]>([
-    { id: 's1', start_time: Date.now() - 86400000, end_time: Date.now(), type: 'continuous' },
-    { id: 's2', start_time: Date.now() - 7200000, end_time: Date.now() - 6600000, type: 'motion', label: 'Movimento' },
-    { id: 's3', start_time: Date.now() - 3600000, end_time: Date.now() - 3400000, type: 'ai_alert', label: 'Invasão IA' }
-  ])
+  const segments = ref<TimelineSegment[]>([])
 
   const togglePlay = () => {
     isPlaying.value = !isPlaying.value

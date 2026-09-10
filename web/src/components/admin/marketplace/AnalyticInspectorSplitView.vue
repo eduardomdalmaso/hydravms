@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import type { AnalyticInstance } from '../../../types/marketplace'
+import { fetchCameras } from '../../../services/api'
 
 const props = defineProps<{ instance: AnalyticInstance }>()
 const emit = defineEmits<{
@@ -13,6 +14,12 @@ const formName = ref(props.instance.name), formCamera = ref(props.instance.camer
 const formStream = ref(props.instance.stream_type), formHardware = ref(props.instance.hardware_target)
 const formConfidence = ref(props.instance.confidence_threshold), formSahi = ref(!!props.instance.specific_params?.sahi_enabled)
 const formActive = ref(props.instance.is_active)
+const cameras = ref<{ id: string; name: string }[]>([])
+
+onMounted(async () => {
+  const cams = await fetchCameras()
+  cameras.value = cams.map(c => ({ id: c.id, name: c.name }))
+})
 
 watch(() => props.instance, (i) => {
   formName.value = i.name; formCamera.value = i.camera_id; formStream.value = i.stream_type
@@ -20,15 +27,8 @@ watch(() => props.instance, (i) => {
   formSahi.value = !!i.specific_params?.sahi_enabled; formActive.value = i.is_active
 })
 
-const cameras = [
-  { id: 'cam_portaria_01', name: 'CAM_01 // Portaria Principal' },
-  { id: 'cam_garagem_02', name: 'CAM_02 // Garagem Subsolo' },
-  { id: 'cam_hall_03', name: 'CAM_03 // Catracas Recepção' },
-  { id: 'cam_galpao_04', name: 'CAM_04 // Galpão Logística B' }
-]
-
 const handleSave = () => {
-  const camObj = cameras.find(c => c.id === formCamera.value)
+  const camObj = cameras.value.find(c => c.id === formCamera.value)
   const updated: AnalyticInstance = {
     ...props.instance, name: formName.value, camera_id: formCamera.value,
     camera_name: camObj?.name || props.instance.camera_name, stream_type: formStream.value,
@@ -60,7 +60,10 @@ const handleSave = () => {
 
       <div class="vms-flex-col" style="gap: 0.25rem;">
         <label class="vms-text-xs vms-font-semibold">CÂMERA ASSOCIADA:</label>
-        <select v-model="formCamera" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+        <select v-model="formCamera" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;">
+          <option v-if="cameras.length === 0" :value="formCamera">{{ formCamera || '[SEM CÂMERA]' }}</option>
+          <option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
       </div>
 
       <div class="vms-flex-row" style="gap: 0.75rem;">
@@ -73,7 +76,6 @@ const handleSave = () => {
           <select v-model="formHardware" class="vms-auth-input" style="padding: 6px 8px; font-size: 11px;"><option value="rtx_5090_cuda">RTX 5090</option><option value="cpu_shm">CPU SHM</option></select>
         </div>
       </div>
-
 
       <div class="vms-flex-col" style="gap: 0.25rem;">
         <div class="vms-flex-between">
@@ -91,7 +93,6 @@ const handleSave = () => {
           <input v-model="formActive" type="checkbox" style="accent-color: #00ff9d;" /> Instância Ativa
         </label>
       </div>
-
     </div>
   </div>
 </template>

@@ -73,7 +73,7 @@ export function useDesktopAlarms() {
   const handleSaveAlarm = (alarm: Partial<AlarmItem>, folderId?: string) => {
     const newAlarm: AlarmItem = {
       id: `alm_0${totalAlarms.value + 1}`, name: alarm.name || 'Novo Sensor', zone: alarm.zone || 'Zona Geral', type: alarm.type || 'IVS',
-      status: 'online', sensitivity: alarm.sensitivity || 80, linkedCameraId: alarm.linkedCameraId || 'cam_01', linkedCameraName: alarm.linkedCameraName || 'CAM_01 Portaria', lastTrigger: 'Agora'
+      status: 'online', sensitivity: alarm.sensitivity || 80, linkedCameraId: alarm.linkedCameraId || '', linkedCameraName: alarm.linkedCameraName || '', lastTrigger: 'N/A'
     }
     const target = folders.value.find(f => f.id === folderId)
     if (target) target.alarms.push(newAlarm); else rootAlarms.value.push(newAlarm)

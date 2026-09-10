@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import type { PluginManifest } from '../../../types/marketplace'
+import { fetchCameras } from '../../../services/api'
 
 defineProps<{
   plugins: PluginManifest[]; selectedPluginId: string; selectedCameraId: string
@@ -13,13 +15,12 @@ const emit = defineEmits<{
   (e: 'export', format: 'csv' | 'json'): void
 }>()
 
-const cameras = [
-  { id: 'ALL', name: '[CÂMERAS: TODAS]' },
-  { id: 'cam_portaria_01', name: 'CAM_01 // Portaria Principal' },
-  { id: 'cam_garagem_02', name: 'CAM_02 // Garagem Subsolo' },
-  { id: 'cam_hall_03', name: 'CAM_03 // Catracas Recepção' },
-  { id: 'cam_galpao_04', name: 'CAM_04 // Galpão Logística B' }
-]
+const cameras = ref<{ id: string; name: string }[]>([{ id: 'ALL', name: '[CÂMERAS: TODAS]' }])
+
+onMounted(async () => {
+  const cams = await fetchCameras()
+  cameras.value = [{ id: 'ALL', name: '[CÂMERAS: TODAS]' }, ...cams.map(c => ({ id: c.id, name: c.name }))]
+})
 </script>
 
 <template>

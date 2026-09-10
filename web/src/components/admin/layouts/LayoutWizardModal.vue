@@ -7,19 +7,8 @@ const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: L
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', layout: EnterpriseLayoutItem): void }>()
 
 const name = ref(''), grid = ref<GridLayout>('2x2'), folderId = ref(''), isLocked = ref(true)
-const selectedUsers = ref<string[]>(['usr_03', 'usr_04'])
-const slots = ref<LayoutSlotItem[]>([
-  { slotIndex: 0, cameraId: 'cam_01', cameraName: 'Portaria Principal' },
-  { slotIndex: 1, cameraId: 'cam_02', cameraName: 'Estacionamento' }
-])
-
-const availableCameras = [
-  { id: 'cam_01', name: 'Portaria Principal' },
-  { id: 'cam_02', name: 'Estacionamento' },
-  { id: 'cam_03', name: 'Docas' },
-  { id: 'cam_04', name: 'Perímetro' },
-  { id: 'cam_05', name: 'NOC' }
-]
+const selectedUsers = ref<string[]>([])
+const slots = ref<LayoutSlotItem[]>([])
 
 watch(() => props.isOpen, (open) => {
   if (open) {
@@ -27,6 +16,8 @@ watch(() => props.isOpen, (open) => {
     grid.value = '2x2'
     folderId.value = props.targetFolderId || (props.folders[0]?.id || '')
     isLocked.value = true
+    selectedUsers.value = []
+    slots.value = []
   }
 })
 
@@ -41,7 +32,7 @@ const handleSave = () => {
     folderId: folderId.value || undefined,
     is_locked: isLocked.value,
     created_by: 'adminMaster',
-    createdAt: '2026-09-05',
+    createdAt: new Date().toISOString().split('T')[0],
     targetScope: 'specific_users',
     allowedUserIds: [...selectedUsers.value],
     slots: [...slots.value]
@@ -79,7 +70,6 @@ const handleSave = () => {
               style="font-size: 10px; padding: 3px 8px;" @click="grid = g">{{ g }}</button>
           </div>
         </div>
-        <!-- Lock option -->
         <div class="vms-flex-between" style="background: #07080c; padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid var(--vms-border); cursor: pointer;" @click="isLocked = !isLocked">
           <div class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

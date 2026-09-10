@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { AnalyticInstance, AnalyticFolderNode, PluginManifest } from '../../../types/marketplace'
+import { fetchCameras } from '../../../services/api'
 
 const props = defineProps<{
-  isOpen: boolean
-  plugin: PluginManifest
-  folders: AnalyticFolderNode[]
-  currentFolderId?: string | null
+  isOpen: boolean; plugin: PluginManifest; folders: AnalyticFolderNode[]; currentFolderId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -14,24 +12,24 @@ const emit = defineEmits<{
   (e: 'save', payload: { inst: AnalyticInstance; targetFolderId: string | null }): void
 }>()
 
-const name = ref(''), camera = ref('cam_portaria_01'), stream = ref<'main_1080p' | 'sub_stream'>('main_1080p')
+const name = ref(''), camera = ref(''), stream = ref<'main_1080p' | 'sub_stream'>('main_1080p')
 const hardware = ref<'rtx_5090_cuda' | 'cpu_shm'>('rtx_5090_cuda')
 const confidence = ref(0.70), sahi = ref(true)
 const selectedFolder = ref<string | null>(props.currentFolderId || null)
+const cameras = ref<{ id: string; name: string }[]>([])
 
-const cameras = [
-  { id: 'cam_portaria_01', name: 'CAM_01 // Portaria Principal' },
-  { id: 'cam_garagem_02', name: 'CAM_02 // Garagem Subsolo' },
-  { id: 'cam_hall_03', name: 'CAM_03 // Catracas Recepção' },
-  { id: 'cam_galpao_04', name: 'CAM_04 // Galpão Logística B' }
-]
+onMounted(async () => {
+  const cams = await fetchCameras()
+  cameras.value = cams.map(c => ({ id: c.id, name: c.name }))
+  if (cameras.value.length > 0) camera.value = cameras.value[0].id
+})
 
 const handleConfirm = () => {
-  const camObj = cameras.find(c => c.id === camera.value)
+  const camObj = cameras.value.find(c => c.id === camera.value)
   const newInst: AnalyticInstance = {
     id: `inst-${Date.now()}`, plugin_id: props.plugin.id, plugin_name: props.plugin.name,
     name: name.value.trim() || `${props.plugin.name} // ${camObj?.name || 'Câmera'}`,
-    camera_id: camera.value, camera_name: camObj?.name || 'Câmera',
+    camera_id: camera.value || 'cam_stream', camera_name: camObj?.name || 'Câmera',
     stream_type: stream.value, hardware_target: hardware.value,
     confidence_threshold: confidence.value, roi_mode: 'full_frame',
     specific_params: { sahi_enabled: sahi.value },
@@ -63,12 +61,18 @@ const handleConfirm = () => {
 
         <div class="vms-flex-col" style="gap: 0.25rem;">
           <label class="vms-text-xs vms-font-semibold">CÂMERA DE VÍDEO:</label>
-          <select v-model="camera" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+          <select v-model="camera" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;">
+            <option v-if="cameras.length === 0" value="">[NENHUMA CÂMERA DISPONÍVEL]</option>
+            <option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
         </div>
 
         <div class="vms-flex-col" style="gap: 0.25rem;">
           <label class="vms-text-xs vms-font-semibold">PASTA DE DESTINO:</label>
-          <select v-model="selectedFolder" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;"><option :value="null">[RAIZ DO DESKTOP]</option><option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option></select>
+          <select v-model="selectedFolder" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;">
+            <option :value="null">[RAIZ DO DESKTOP]</option>
+            <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </select>
         </div>
 
         <div class="vms-flex-row" style="gap: 0.75rem;">

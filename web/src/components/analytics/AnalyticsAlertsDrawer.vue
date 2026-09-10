@@ -15,7 +15,7 @@ const emit = defineEmits<{
     <div class="vms-flex-between" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--vms-border); background: #0c0e14;">
       <span class="vms-text-sm vms-font-bold" style="color: var(--vms-neu-accent-orange); letter-spacing: 0.5px;">ALERTA</span>
       <div class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
-        <button class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 11px; padding: 2px 6px;" @click="emit('clearAll')">[LIMPAR]</button>
+        <button v-if="alerts.length > 0" class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 11px; padding: 2px 6px;" @click="emit('clearAll')">[LIMPAR]</button>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -23,7 +23,12 @@ const emit = defineEmits<{
     </div>
 
     <!-- Sequential Snapshots Feed -->
-    <TransitionGroup name="vms-alert" tag="div" class="vms-alerts-snapshots-feed">
+    <div v-if="alerts.length === 0" class="vms-flex-col vms-flex-center" style="padding: 3rem 1rem; color: var(--vms-text-dim); text-align: center; gap: 0.5rem;">
+      <span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">[SEM ALERTAS ATIVOS]</span>
+      <span class="vms-text-2xs" style="opacity: 0.6;">Aguardando eventos da IA</span>
+    </div>
+
+    <TransitionGroup v-else name="vms-alert" tag="div" class="vms-alerts-snapshots-feed">
       <div
         v-for="alt in alerts"
         :key="alt.id"
@@ -45,7 +50,6 @@ const emit = defineEmits<{
           </div>
         </div>
 
-        <!-- Apenas o nome da deteccao abaixo -->
         <div class="vms-snapshot-label">
           {{ alt.event_type }}
         </div>

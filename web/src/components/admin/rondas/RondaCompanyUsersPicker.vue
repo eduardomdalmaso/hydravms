@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { fetchLiveUsers } from '../../../services/adminApi'
 
 const props = defineProps<{ companyName: string; allowedUserIds: string[] }>()
 const emit = defineEmits<{ (e: 'toggleUser', userId: string): void }>()
 
-const companyUsers = computed(() => [
-  { id: 'usr_02', name: 'gestor_alpha_seguranca', role: 'GESTOR EMPRESA' },
-  { id: 'usr_03', name: 'operador_portaria', role: 'OPERADOR CENTRAL' },
-  { id: 'usr_05', name: 'auditor_externo_ti', role: 'AUDITOR DE TI' }
-])
+const companyUsers = ref<{ id: string; name: string; role: string }[]>([])
+
+onMounted(async () => {
+  const users = await fetchLiveUsers()
+  companyUsers.value = users.map(u => ({
+    id: u.id,
+    name: u.username || u.fullName,
+    role: u.role ? u.role.toUpperCase() : 'OPERADOR'
+  }))
+})
 
 const allowedInCompanyCount = computed(() =>
   companyUsers.value.filter(u => props.allowedUserIds?.includes(u.id)).length
@@ -26,7 +32,11 @@ const allowedInCompanyCount = computed(() =>
       </span>
     </div>
 
-    <div class="vms-flex-col" style="gap: 0.35rem; max-height: 140px; overflow-y: auto;">
+    <div v-if="companyUsers.length === 0" class="vms-text-dim vms-text-2xs" style="text-align: center; padding: 0.75rem 0;">
+      Nenhum operador cadastrado
+    </div>
+
+    <div v-else class="vms-flex-col" style="gap: 0.35rem; max-height: 140px; overflow-y: auto;">
       <div
         v-for="u in companyUsers"
         :key="u.id"

@@ -1,57 +1,29 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { GridLayout, CameraStreamInfo } from '../types/mosaic'
+import { fetchCameras } from '../services/api'
 
 export function useMosaic() {
   const currentLayout = ref<GridLayout>('2x2')
   const selectedCamera = ref<CameraStreamInfo | null>(null)
   const isPlaybackDrawerOpen = ref(false)
+  const cameras = ref<CameraStreamInfo[]>([])
 
-  const cameras = ref<CameraStreamInfo[]>([
-    {
-      id: 'cam_01',
-      name: 'Portaria Principal (Entrada)',
-      location: 'Acesso A',
-      status: 'recording',
-      has_ptz: true,
-      main_stream_url: 'webrtc://vms/live/cam_01_main',
-      sub_stream_url: 'webrtc://vms/live/cam_01_sub',
-      fps: 30,
-      resolution: '1080P'
-    },
-    {
-      id: 'cam_02',
-      name: 'Estacionamento Visitantes',
-      location: 'Pátio Externo',
-      status: 'recording',
-      has_ptz: false,
-      main_stream_url: 'webrtc://vms/live/cam_02_main',
-      sub_stream_url: 'webrtc://vms/live/cam_02_sub',
-      fps: 25,
-      resolution: '1080P'
-    },
-    {
-      id: 'cam_03',
-      name: 'Corredor de Cargas & Docas',
-      location: 'Galpão 02',
-      status: 'recording',
-      has_ptz: false,
-      main_stream_url: 'webrtc://vms/live/cam_03_main',
-      sub_stream_url: 'webrtc://vms/live/cam_03_sub',
-      fps: 30,
-      resolution: '1080P'
-    },
-    {
-      id: 'cam_04',
-      name: 'Perímetro dos Fundos',
-      location: 'Cerca Elétrica',
-      status: 'recording',
-      has_ptz: true,
-      main_stream_url: 'webrtc://vms/live/cam_04_main',
-      sub_stream_url: 'webrtc://vms/live/cam_04_sub',
-      fps: 30,
-      resolution: '4K'
+  onMounted(async () => {
+    const liveCams = await fetchCameras()
+    if (liveCams.length > 0) {
+      cameras.value = liveCams.map(c => ({
+        id: c.id,
+        name: c.name,
+        location: c.location || c.ip || 'Rede Local',
+        status: c.status === 'online' ? 'recording' : 'offline',
+        has_ptz: c.has_ptz || false,
+        main_stream_url: c.rtsp_url || '',
+        sub_stream_url: c.rtsp_url || '',
+        fps: c.fps || 30,
+        resolution: c.resolution || '1080P'
+      }))
     }
-  ])
+  })
 
   const maxSlots = computed(() => {
     switch (currentLayout.value) {

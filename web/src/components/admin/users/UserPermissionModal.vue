@@ -6,7 +6,7 @@ const props = defineProps<{ isOpen: boolean; rule?: UserPermissionRule | null }>
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', rule: UserPermissionRule): void }>()
 
 const form = ref<UserPermissionRule>({
-  id: '', name: '', category: 'cameras', isActive: true, scope: 'CAM_01, CAM_02'
+  id: '', name: '', category: 'cameras', isActive: true, scope: 'ALL'
 })
 
 watch(() => props.isOpen, (open) => {
@@ -18,7 +18,7 @@ watch(() => props.isOpen, (open) => {
       name: 'Diretriz de Acesso de Cameras',
       category: 'cameras',
       isActive: true,
-      scope: 'CAM_01, CAM_02'
+      scope: 'ALL'
     }
   }
 })
@@ -61,7 +61,7 @@ const handleSave = () => {
 
       <div class="vms-form-group">
         <label class="vms-label">Escopo / Alvos Autorizados</label>
-        <input v-model="form.scope" class="vms-auth-input" placeholder="Ex: CAM_01, CAM_02 ou ZONA_NORTE ou ALL" />
+        <input v-model="form.scope" class="vms-auth-input" placeholder="Ex: ALL ou ZONA_NORTE ou cam_entrance_01" />
       </div>
 
       <div class="vms-modal-footer" style="padding: 0.75rem 0 0 0; margin-top: 0.5rem; border-top: 1px solid var(--vms-border); display: flex; justify-content: flex-end; gap: 0.75rem; background: transparent;">

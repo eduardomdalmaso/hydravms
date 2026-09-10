@@ -18,7 +18,7 @@ const zone = ref('')
 const sensorType = ref<AlarmSensorType>('IVS')
 const sensitivity = ref(80)
 const selectedFolderId = ref(props.targetFolderId || '')
-const linkedCamera = ref('CAM_01 Portaria')
+const linkedCamera = ref('')
 
 watch(() => props.isOpen, (open) => {
   if (open) {
@@ -27,6 +27,7 @@ watch(() => props.isOpen, (open) => {
     sensorType.value = 'IVS'
     sensitivity.value = 80
     selectedFolderId.value = props.targetFolderId || ''
+    linkedCamera.value = ''
   }
 })
 

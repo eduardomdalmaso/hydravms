@@ -11,6 +11,7 @@ type Router struct {
 	folderHandler      *FolderHandler
 	cameraHandler      *CameraHandler
 	storagePoolHandler *StoragePoolHandler
+	clusterNodeHandler *ClusterNodeHandler
 	wsHandler          *ws.WebSocketHandler
 }
 
@@ -18,12 +19,14 @@ func NewRouter(
 	folderHandler *FolderHandler,
 	cameraHandler *CameraHandler,
 	storagePoolHandler *StoragePoolHandler,
+	clusterNodeHandler *ClusterNodeHandler,
 	wsHandler *ws.WebSocketHandler,
 ) *Router {
 	return &Router{
 		folderHandler:      folderHandler,
 		cameraHandler:      cameraHandler,
 		storagePoolHandler: storagePoolHandler,
+		clusterNodeHandler: clusterNodeHandler,
 		wsHandler:          wsHandler,
 	}
 }
@@ -37,6 +40,14 @@ func (rt *Router) BuildHandler() http.Handler {
 	mux.HandleFunc("/api/v1/folders/", rt.folderHandler.HandleFolderByID)
 	mux.HandleFunc("/api/v1/cameras", rt.cameraHandler.HandleCameras)
 	mux.HandleFunc("/api/v1/cameras/", rt.cameraHandler.HandleCameraByID)
+
+	// Cluster Nodes (HydraStream & HydraForge Instances)
+	if rt.clusterNodeHandler != nil {
+		mux.HandleFunc("/api/v1/cluster/nodes", rt.clusterNodeHandler.HandleNodes)
+		mux.HandleFunc("/api/v1/cluster/nodes/", rt.clusterNodeHandler.HandleNodeByID)
+		mux.HandleFunc("/api/v1/cluster/probe", rt.clusterNodeHandler.HandleProbe)
+	}
+
 
 	// Storage & MinIO S3 Endpoints
 	if rt.storagePoolHandler != nil {
