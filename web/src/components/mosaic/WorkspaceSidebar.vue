@@ -23,16 +23,9 @@ const isCollapsed = ref(false), cameras = ref<CameraStreamInfo[]>([])
 const openSections = ref({ cameras: true, alarms: true, layouts: true, maps: false, carousel: false })
 const toggleSection = (s: "cameras" | "alarms" | "layouts" | "maps" | "carousel") => { openSections.value[s] = !openSections.value[s] }
 
-const liveAlarms = ref<AlarmItemInfo[]>([
-  { id: "alm_01", name: "[ALERTA] Intrusao Perimetro Norte", zone: "Zona 01", status: "alert", type: "IVS" },
-  { id: "alm_02", name: "[AVISO] Barreira Infravermelha", zone: "Zona 02", status: "alert", type: "PIR" }
-])
-const liveMaps = ref<MapResource[]>([
-  { id: "70000000-0000-0000-0000-000000000001", name: "Planta Geral - Galpao Principal", image_url: "/map1.png", cameras_count: 3 }
-])
-const liveCarousels = ref<CarouselConfig[]>([
-  { id: "80000000-0000-0000-0000-000000000001", name: "Ronda Perimetral Noturna", camera_ids: ["cam_entrance_01", "cam_perimeter_02"], interval_seconds: 10 }
-])
+const liveAlarms = ref<AlarmItemInfo[]>([])
+const liveMaps = ref<MapResource[]>([])
+const liveCarousels = ref<CarouselConfig[]>([])
 
 onMounted(async () => {
   const remote = await fetchCameras()
