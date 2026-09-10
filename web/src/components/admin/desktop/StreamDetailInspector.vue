@@ -24,12 +24,16 @@ const emit = defineEmits<{
 
     <!-- Inspector Content -->
     <div class="vms-flex-col" style="padding: 1rem; gap: 1rem;">
-      <!-- Mini Preview Placeholder -->
-      <div style="height: 140px; background: #080a0e; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
+      <!-- Mini Preview -->
+      <div style="height: 140px; background: #080a0e; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative; overflow: hidden;">
+        <img v-if="stream.snapshotUrl" :src="stream.snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
+        <template v-else>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+          <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
+        </template>
         <span class="vms-badge vms-badge-orange" style="position: absolute; top: 6px; left: 6px; font-size: 8px;">{{ stream.codec }}</span>
       </div>
+
 
       <!-- Specs Card -->
       <div class="vms-flex-col" style="gap: 0.5rem; background: rgba(255, 255, 255, 0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--vms-border);">

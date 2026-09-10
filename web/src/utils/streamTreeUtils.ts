@@ -24,7 +24,8 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
       bitrate: `${((c.bitrate_kbps || 2048) / 1024).toFixed(1)} Mbps`,
       recordMode: 'continuous',
       status: (c.status as any) || 'online',
-      has_ptz: c.has_ptz
+      has_ptz: c.has_ptz,
+      snapshotUrl: (c as any).snapshot_url
     }
     if (c.folder_id && folderMap.has(c.folder_id)) {
       folderMap.get(c.folder_id)!.streams.push(item)
@@ -38,7 +39,7 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
 
 export function createNewStreamItem(stream: Partial<StreamItem>, index: number): StreamItem {
   return {
-    id: `cam_0${index}`,
+    id: stream.id || `cam_${index.toString().padStart(2, '0')}`,
     name: stream.name || 'Nova Camera',
     protocol: stream.protocol || 'RTSP',
     url: stream.url || 'rtsp://',
@@ -50,6 +51,8 @@ export function createNewStreamItem(stream: Partial<StreamItem>, index: number):
     bitrate: stream.bitrate || '4.0 Mbps',
     recordMode: stream.recordMode || 'continuous',
     status: 'online',
-    has_ptz: false
+    has_ptz: !!stream.has_ptz,
+    snapshotUrl: stream.snapshotUrl
   }
 }
+

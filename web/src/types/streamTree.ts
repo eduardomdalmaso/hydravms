@@ -15,7 +15,9 @@ export interface StreamItem {
   latitude?: number
   longitude?: number
   locationName?: string
+  snapshotUrl?: string
 }
+
 
 export interface FolderNode {
   id: string

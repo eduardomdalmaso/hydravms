@@ -33,7 +33,8 @@ export function generateChannelPaths(basePath: string, ch: number): { main: stri
   if (/realmonitor/i.test(basePath)) return { main: `/cam/realmonitor?channel=${num}&subtype=0`, sub: `/cam/realmonitor?channel=${num}&subtype=1` }
   if (/channel=\d+/i.test(basePath)) return { main: basePath.replace(/channel=\d+/, `channel=${num}`), sub: basePath.replace(/channel=\d+/, `channel=${num}`).replace(/stream=0/, 'stream=1') }
   if (/Preview_\d+/i.test(basePath)) { const pad = num.toString().padStart(2, '0'); return { main: `/Preview_${pad}_main`, sub: `/Preview_${pad}_sub` } }
-  if (/stream\d+/i.test(basePath)) return { main: `/stream${num}`, sub: `/stream${num}_sub` }
+  if (/stream\d+/i.test(basePath)) return { main: `/stream${num}`, sub: num === 1 ? '/stream2' : `/stream${num}_sub` }
+
   if (/H264\?ch=/i.test(basePath)) return { main: `/H264?ch=${num}&subtype=0`, sub: `/H264?ch=${num}&subtype=1` }
   return { main: `/ch${num}/main`, sub: `/ch${num}/sub` }
 }
