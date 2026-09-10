@@ -9,10 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	httpAdapter "hydravms/internal/adapters/primary/http"
 	"hydravms/internal/adapters/primary/ws"
 	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
+	onvifAdapter "hydravms/internal/adapters/secondary/onvif"
 	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	s3Adapter "hydravms/internal/adapters/secondary/s3"
 	"hydravms/internal/application"
@@ -29,6 +31,7 @@ func main() {
 	var folderRepo ports.FolderRepository
 	var cameraRepo ports.CameraRepository
 	var storagePoolRepo ports.StoragePoolRepository
+	var pgPool *pgxpool.Pool
 
 	dbURL := os.Getenv("DATABASE_URL")
 	pgCfg := postgresAdapter.DefaultConfig()
@@ -36,44 +39,45 @@ func main() {
 		pgCfg.URL = dbURL
 	}
 
-	pgPool, err := postgresAdapter.NewPool(ctx, pgCfg)
+	pool, err := postgresAdapter.NewPool(ctx, pgCfg)
 	if err != nil {
-		log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to In-Memory persistence)\n", err)
+		log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to In-Memory repository)\n", err)
 		folderRepo = memory.NewInMemoryFolderRepository()
 		cameraRepo = memory.NewInMemoryCameraRepository()
 	} else {
 		log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
-		defer pgPool.Close()
-		folderRepo = postgresAdapter.NewFolderRepository(pgPool)
-		cameraRepo = postgresAdapter.NewCameraRepository(pgPool)
-		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pgPool)
+		pgPool = pool
+		defer pool.Close()
+		folderRepo = postgresAdapter.NewFolderRepository(pool)
+		cameraRepo = postgresAdapter.NewCameraRepository(pool)
+		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
 	}
 
-	// 2. Initialize MinIO S3 Object Storage
+	// 2. Initialize Application Core Services (Hexagonal Architecture)
+	folderService := application.NewFolderService(folderRepo)
+	cameraService := application.NewCameraService(cameraRepo)
+
+	// 3. Connect to S3 / MinIO Object Storage for Video Recordings & Snapshots
 	s3Cfg := s3Adapter.DefaultConfig()
 	if endpoint := os.Getenv("MINIO_ENDPOINT"); endpoint != "" {
 		s3Cfg.Endpoint = endpoint
 	}
+	var storagePoolService *application.StoragePoolService
 	minioClient, err := s3Adapter.NewMinIOClient(s3Cfg)
 	if err != nil {
-		log.Printf("⚠️ [HydraVMS] MinIO client initialization failed: %v\n", err)
+		log.Printf("⚠️ [HydraVMS] MinIO S3 storage not reachable: %v (video archiving disabled)\n", err)
 	} else {
 		if err := minioClient.EnsureBuckets(ctx, "hydravms-recordings", "hydravms-snapshots", "hydravms-reports", "hydravms-maps"); err != nil {
 			log.Printf("⚠️ [HydraVMS] MinIO bucket auto-creation warning: %v\n", err)
 		} else {
 			log.Println("✅ [HydraVMS] MinIO S3 Object Storage connected & buckets verified")
 		}
+		if storagePoolRepo != nil {
+			storagePoolService = application.NewStoragePoolService(storagePoolRepo, minioClient)
+		}
 	}
 
-	// 3. Initialize Application Services
-	folderService := application.NewFolderService(folderRepo)
-	cameraService := application.NewCameraService(cameraRepo)
-	var storagePoolService *application.StoragePoolService
-	if storagePoolRepo != nil {
-		storagePoolService = application.NewStoragePoolService(storagePoolRepo, minioClient)
-	}
-
-	// 4. Initialize WebSocket Hub
+	// 4. Initialize Real-Time WebSocket Hub
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
@@ -98,6 +102,9 @@ func main() {
 	// 6. Initialize HTTP Handlers & Router
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService)
+	onvifDiscoverer := onvifAdapter.NewDeviceDiscoverer()
+	onvifHandler := httpAdapter.NewONVIFHandler(onvifDiscoverer)
+
 	var storagePoolHandler *httpAdapter.StoragePoolHandler
 	if storagePoolService != nil {
 		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
@@ -109,9 +116,8 @@ func main() {
 	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
-	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, wsHandler)
+	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, onvifHandler, wsHandler)
 	handler := router.BuildHandler()
-
 
 	port := os.Getenv("PORT")
 	if port == "" {

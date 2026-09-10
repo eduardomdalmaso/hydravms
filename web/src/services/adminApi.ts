@@ -77,5 +77,9 @@ export async function fetchLiveUsers(f: UserItem[] = []): Promise<UserItem[]> {
 export async function fetchLiveSystemLogs(f: LogEntry[] = []): Promise<LogEntry[]> {
   try { const r = await fetch(`${API_BASE}/api/v1/system/logs`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).logs || f : f } catch { return f }
 }
+export async function discoverOnvifDevices(): Promise<any[]> {
+  try { const r = await fetch(`${API_BASE}/api/v1/cameras/onvif/discovery`, { signal: AbortSignal.timeout(6000) }); return r.ok ? (await r.json()).devices || [] : [] } catch { return [] }
+}
 
 export { fetchFolders }
+

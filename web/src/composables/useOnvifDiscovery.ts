@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import type { DiscoveredOnvifCamera } from '../types/onvifDiscovery'
 import type { StreamItem } from '../types/streamTree'
+import { discoverOnvifDevices } from '../services/adminApi'
 
 const discoveredDevices = ref<DiscoveredOnvifCamera[]>([])
 const lastScanTime = ref<string>('Nunca')
@@ -16,12 +17,17 @@ export function useOnvifDiscovery() {
 
   const availableCount = computed(() => discoveredDevices.value.filter(d => !d.isImported).length)
 
-  const scanNetwork = () => {
+  const scanNetwork = async () => {
     isScanning.value = true
-    setTimeout(() => {
-      isScanning.value = false
+    try {
+      const devices = await discoverOnvifDevices()
+      if (Array.isArray(devices)) {
+        discoveredDevices.value = devices
+      }
       lastScanTime.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    }, 1200)
+    } finally {
+      isScanning.value = false
+    }
   }
 
   const convertToStreamItem = (camera: DiscoveredOnvifCamera): Partial<StreamItem> => {
