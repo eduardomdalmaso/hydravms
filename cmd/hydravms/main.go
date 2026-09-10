@@ -14,6 +14,7 @@ import (
 	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
 	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
+	s3Adapter "hydravms/internal/adapters/secondary/s3"
 	"hydravms/internal/application"
 	"hydravms/internal/ports"
 )
@@ -27,6 +28,7 @@ func main() {
 	// 1. Initialize Database Repositories (PostgreSQL with fallback to In-Memory)
 	var folderRepo ports.FolderRepository
 	var cameraRepo ports.CameraRepository
+	var storagePoolRepo ports.StoragePoolRepository
 
 	dbURL := os.Getenv("DATABASE_URL")
 	pgCfg := postgresAdapter.DefaultConfig()
@@ -44,17 +46,38 @@ func main() {
 		defer pgPool.Close()
 		folderRepo = postgresAdapter.NewFolderRepository(pgPool)
 		cameraRepo = postgresAdapter.NewCameraRepository(pgPool)
+		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pgPool)
 	}
 
-	// 2. Initialize Application Services
+	// 2. Initialize MinIO S3 Object Storage
+	s3Cfg := s3Adapter.DefaultConfig()
+	if endpoint := os.Getenv("MINIO_ENDPOINT"); endpoint != "" {
+		s3Cfg.Endpoint = endpoint
+	}
+	minioClient, err := s3Adapter.NewMinIOClient(s3Cfg)
+	if err != nil {
+		log.Printf("⚠️ [HydraVMS] MinIO client initialization failed: %v\n", err)
+	} else {
+		if err := minioClient.EnsureBuckets(ctx, "hydravms-recordings", "hydravms-snapshots", "hydravms-reports", "hydravms-maps"); err != nil {
+			log.Printf("⚠️ [HydraVMS] MinIO bucket auto-creation warning: %v\n", err)
+		} else {
+			log.Println("✅ [HydraVMS] MinIO S3 Object Storage connected & buckets verified")
+		}
+	}
+
+	// 3. Initialize Application Services
 	folderService := application.NewFolderService(folderRepo)
 	cameraService := application.NewCameraService(cameraRepo)
+	var storagePoolService *application.StoragePoolService
+	if storagePoolRepo != nil {
+		storagePoolService = application.NewStoragePoolService(storagePoolRepo, minioClient)
+	}
 
-	// 3. Initialize WebSocket Hub
+	// 4. Initialize WebSocket Hub
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
-	// 4. Connect to NATS Event Mesh & JetStream if available
+	// 5. Connect to NATS Event Mesh & JetStream if available
 	natsCfg := natsAdapter.DefaultConfig()
 	natsClient, err := natsAdapter.NewNATSClient(ctx, natsCfg)
 	if err != nil {
@@ -72,12 +95,16 @@ func main() {
 		}
 	}
 
-	// 5. Initialize HTTP Handlers & Router
+	// 6. Initialize HTTP Handlers & Router
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService)
+	var storagePoolHandler *httpAdapter.StoragePoolHandler
+	if storagePoolService != nil {
+		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
+	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
-	router := httpAdapter.NewRouter(folderHandler, cameraHandler, wsHandler)
+	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, wsHandler)
 	handler := router.BuildHandler()
 
 	port := os.Getenv("PORT")
