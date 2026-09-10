@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"hydravms/internal/adapters/secondary/gpu"
 	"hydravms/internal/adapters/secondary/postgres"
 )
 
@@ -28,6 +29,19 @@ func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			http.Error(w, `{"error":"failed to fetch cluster nodes"}`, http.StatusInternalServerError)
 			return
+		}
+		liveGPU := gpu.QueryGPU()
+		for _, n := range nodes {
+			if (n.IPAddress == "127.0.0.1" || n.IPAddress == "localhost") && liveGPU.Detected {
+				if n.GPUInfo == "" || strings.Contains(n.GPUInfo, "RTX") {
+					n.GPUInfo = liveGPU.Model
+				}
+				n.VRAMUsedMB = liveGPU.UsedVRAMMB
+				n.VRAMTotalMB = liveGPU.TotalVRAMMB
+				n.GPUUsagePct = liveGPU.GPUUtilPct
+				n.TempCelsius = liveGPU.TempCelsius
+				n.PowerWatts = liveGPU.PowerWatts
+			}
 		}
 		json.NewEncoder(w).Encode(map[string]any{"nodes": nodes, "total": len(nodes)})
 		return
@@ -51,6 +65,13 @@ func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request)
 		if req.WebRTCPort == 0 { req.WebRTCPort = 8889 }
 		if req.HTTPPort == 0 { req.HTTPPort = 8080 }
 		if req.NodeRole == "" { req.NodeRole = "edge_ingest" }
+
+		if req.GPUInfo == "" && (req.IPAddress == "127.0.0.1" || req.IPAddress == "localhost") {
+			liveGPU := gpu.QueryGPU()
+			if liveGPU.Detected {
+				req.GPUInfo = liveGPU.Model
+			}
+		}
 
 		node := &postgres.ClusterNode{
 			TenantID: tenantID, NodeName: req.NodeName, NodeRole: req.NodeRole,
@@ -108,14 +129,23 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 	if req.HTTPPort == 0 { req.HTTPPort = 8080 }
 
 	targetURL := fmt.Sprintf("http://%s:%d/api/v1/info", req.IPAddress, req.HTTPPort)
+	if req.HTTPPort == 8081 {
+		targetURL = fmt.Sprintf("http://%s:%d/api/v1/training/telemetry", req.IPAddress, req.HTTPPort)
+	}
+
 	client := &http.Client{Timeout: 2 * time.Second}
 	start := time.Now()
 
 	resp, err := client.Get(targetURL)
 	latency := time.Since(start).Milliseconds()
 
+	liveGPU := gpu.QueryGPU()
+	defaultGPUModel := ""
+	if liveGPU.Detected {
+		defaultGPUModel = liveGPU.Model
+	}
+
 	if err != nil {
-		// Fallback test /healthz
 		healthURL := fmt.Sprintf("http://%s:%d/healthz", req.IPAddress, req.HTTPPort)
 		resp2, err2 := client.Get(healthURL)
 		if err2 != nil {
@@ -125,9 +155,17 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		defer resp2.Body.Close()
+		appName := "HydraStream Service"
+		role := "edge_ingest"
+		suggestedName := fmt.Sprintf("[NODE] HYDRASTREAM-%s", req.IPAddress)
+		if req.HTTPPort == 8081 {
+			appName = "HydraForge Studio"
+			role = "gpu_worker"
+			suggestedName = fmt.Sprintf("[NODE] HYDRAFORGE-GPU-%s", req.IPAddress)
+		}
 		json.NewEncoder(w).Encode(map[string]any{
-			"online": true, "latency_ms": latency, "app_name": "HydraStream Service",
-			"suggested_role": "edge_ingest", "suggested_name": fmt.Sprintf("[NODE] HYDRASTREAM-%s", req.IPAddress),
+			"online": true, "latency_ms": latency, "app_name": appName,
+			"suggested_role": role, "suggested_name": suggestedName, "gpu_model": defaultGPUModel,
 		})
 		return
 	}
@@ -135,16 +173,29 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 
 	var info map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		info = map[string]any{"app_name": "HydraStream Engine"}
+		info = map[string]any{"app_name": "Hydra Engine"}
 	}
 
 	role := "edge_ingest"
 	suggestedName := fmt.Sprintf("[NODE] HYDRASTREAM-%s", req.IPAddress)
 	gpuModel, _ := info["gpu_model"].(string)
 
+	if gpuStats, ok := info["gpu_stats"].(map[string]any); ok {
+		if m, ok := gpuStats["model"].(string); ok && m != "" {
+			gpuModel = m
+		}
+	}
+
+	if gpuModel == "" && liveGPU.Detected {
+		gpuModel = liveGPU.Model
+	}
+
 	if req.HTTPPort == 8081 {
 		role = "gpu_worker"
 		suggestedName = fmt.Sprintf("[NODE] HYDRAFORGE-GPU-%s", req.IPAddress)
+		if info["app_name"] == nil {
+			info["app_name"] = "HydraForge AI Training & Inference"
+		}
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{

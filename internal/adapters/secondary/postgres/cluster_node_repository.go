@@ -22,7 +22,10 @@ type ClusterNode struct {
 	CPUUsagePct   float64   `json:"cpu_usage_pct"`
 	RAMUsagePct   float64   `json:"ram_usage_pct"`
 	GPUUsagePct   float64   `json:"gpu_usage_pct"`
-	VRAMUsedMB    int64     `json:"vram_used_mb"`
+	VRAMUsedMB    float64   `json:"vram_used_mb"`
+	VRAMTotalMB   float64   `json:"vram_total_mb"`
+	TempCelsius   float64   `json:"temp_celsius"`
+	PowerWatts    float64   `json:"power_watts"`
 	ActiveStreams int       `json:"active_streams_count"`
 	Status        string    `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
@@ -47,9 +50,11 @@ func (r *PostgresClusterNodeRepository) List(ctx context.Context, tenantID uuid.
 	var nodes []*ClusterNode
 	for rows.Next() {
 		var n ClusterNode
-		if err := rows.Scan(&n.ID, &n.TenantID, &n.NodeName, &n.NodeRole, &n.IPAddress, &n.GRPCPort, &n.WebRTCPort, &n.HTTPPort, &n.GPUInfo, &n.CPUUsagePct, &n.RAMUsagePct, &n.GPUUsagePct, &n.VRAMUsedMB, &n.ActiveStreams, &n.Status, &n.CreatedAt); err != nil {
+		var vramUsedInt int64
+		if err := rows.Scan(&n.ID, &n.TenantID, &n.NodeName, &n.NodeRole, &n.IPAddress, &n.GRPCPort, &n.WebRTCPort, &n.HTTPPort, &n.GPUInfo, &n.CPUUsagePct, &n.RAMUsagePct, &n.GPUUsagePct, &vramUsedInt, &n.ActiveStreams, &n.Status, &n.CreatedAt); err != nil {
 			return nil, err
 		}
+		n.VRAMUsedMB = float64(vramUsedInt)
 		nodes = append(nodes, &n)
 	}
 	return nodes, nil
