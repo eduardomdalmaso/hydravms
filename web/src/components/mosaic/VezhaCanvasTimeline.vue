@@ -14,25 +14,17 @@ const emit = defineEmits<{
   (e: 'updateExportRange', range: { start: number; end: number }): void
 }>()
 
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-const zoomMinutes = ref(1440)
+const canvasRef = ref<HTMLCanvasElement | null>(null), zoomMinutes = ref(1440)
 const dragType = ref<'none' | 'start' | 'end' | 'range' | 'pan'>('none')
-const dragStartX = ref(0), dragStartTime = ref(0)
-const initStart = ref(0), initEnd = ref(0)
+const dragStartX = ref(0), dragStartTime = ref(0), initStart = ref(0), initEnd = ref(0)
 
 const render = () => {
-  const canvas = canvasRef.value
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  const canvas = canvasRef.value; if (!canvas) return
+  const ctx = canvas.getContext('2d'); if (!ctx) return
   canvas.width = canvas.offsetWidth * window.devicePixelRatio
   canvas.height = canvas.offsetHeight * window.devicePixelRatio
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-  drawCanvasTimeline(
-    ctx, canvas.offsetWidth, canvas.offsetHeight, props.currentTime,
-    zoomMinutes.value, !!props.isExportMode, props.exportStart, props.exportEnd,
-    props.recordedRanges || []
-  )
+  drawCanvasTimeline(ctx, canvas.offsetWidth, canvas.offsetHeight, props.currentTime, zoomMinutes.value, !!props.isExportMode, props.exportStart, props.exportEnd, props.recordedRanges || [])
 }
 
 onMounted(render)

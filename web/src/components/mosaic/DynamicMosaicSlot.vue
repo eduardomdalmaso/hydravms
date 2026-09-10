@@ -1,44 +1,50 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from "vue"
+import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue"
 import type { WorkspaceSlot, CameraStreamInfo } from "../../types/mosaic"
 import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
+import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
 import SlotLinkedAlarm from "./SlotLinkedAlarm.vue"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
 
-const videoRef = ref<HTMLVideoElement | null>(null)
-const isGearOpen = ref(false)
-const decoderMode = ref<"MSE" | "H264">("MSE")
-const retryKey = ref(Date.now())
-const isImgLoading = ref(true)
-const { isPlaying, start, stop } = useWebRTCPlayer(videoRef)
+const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
+const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
+const { isPlaying: isLivePlaying, start: startLive, stop: stopLive } = useWebRTCPlayer(videoRef)
+const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId } = useTimelinePlayback()
+
+const isPlayback = computed(() => {
+  const cam = props.slot.type === 'camera' ? props.slot.data as CameraStreamInfo : null
+  return !!cam && !isLive.value && activePlaybackCameraId.value === cam.id
+})
+const playbackSrc = computed(() => !isPlayback.value ? '' : `http://localhost:8083/api/v1/cameras/${(props.slot.data as CameraStreamInfo).id}/recordings/stream?t=${currentTime.value}`)
 
 const syncStream = () => {
   isImgLoading.value = true
-  if (props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
-    start((props.slot.data as CameraStreamInfo).id, props.isHero)
-  } else {
-    stop()
-  }
+  if (isPlayback.value) {
+    stopLive()
+    if (videoRef.value && videoRef.value.src !== playbackSrc.value) {
+      videoRef.value.src = playbackSrc.value; videoRef.value.playbackRate = playbackSpeed.value
+      if (isPlaying.value) videoRef.value.play().catch(() => {})
+      else videoRef.value.pause()
+    }
+  } else if (props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
+    if (videoRef.value && videoRef.value.src.includes('recordings')) videoRef.value.src = ''
+    startLive((props.slot.data as CameraStreamInfo).id, props.isHero)
+  } else { stopLive() }
 }
 
 const onImgError = () => { setTimeout(() => { retryKey.value = Date.now() }, 1500) }
-const handleVisibility = () => {
-  if (document.hidden) return
-  retryKey.value = Date.now()
-  syncStream()
-}
-
-document.addEventListener('visibilitychange', handleVisibility)
-window.addEventListener('focus', handleVisibility)
+const handleVis = () => { if (!document.hidden) { retryKey.value = Date.now(); syncStream() } }
+document.addEventListener('visibilitychange', handleVis)
+window.addEventListener('focus', handleVis)
 onBeforeUnmount(() => {
-  document.removeEventListener('visibilitychange', handleVisibility)
-  window.removeEventListener('focus', handleVisibility)
+  document.removeEventListener('visibilitychange', handleVis)
+  window.removeEventListener('focus', handleVis)
 })
 
-watch(() => [props.slot.data, props.isHero, decoderMode.value], syncStream, { deep: true })
-onMounted(() => { syncStream() })
+watch(() => [props.slot.data, props.isHero, decoderMode.value, isLive.value, isPlayback.value, playbackSrc.value, isPlaying.value, playbackSpeed.value], syncStream, { deep: true })
+onMounted(syncStream)
 </script>
 
 <template>

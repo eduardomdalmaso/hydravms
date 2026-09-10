@@ -14,7 +14,7 @@ const props = defineProps<{ camera: CameraStreamInfo }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'exportClip'): void }>()
 
 const {
-  isPlaying, playbackSpeed, currentTime, isLive,
+  isPlaying, playbackSpeed, currentTime, isLive, activePlaybackCameraId,
   togglePlay, setSpeed, jumpSeconds, goToLive, seek
 } = useTimelinePlayback()
 
@@ -24,6 +24,7 @@ const realRecordedRanges = ref<{ start: number; end: number }[]>([])
 
 const loadSegments = async () => {
   if (!props.camera?.id) return
+  activePlaybackCameraId.value = props.camera.id
   const segs = await fetchRemoteRecordings(props.camera.id)
   realRecordedRanges.value = segs.map(s => ({
     start: new Date(s.start_time).getTime(),
@@ -36,7 +37,10 @@ onMounted(() => {
   loadSegments()
   pollTimer = setInterval(loadSegments, 4000)
 })
-onBeforeUnmount(() => { if (pollTimer) clearInterval(pollTimer) })
+onBeforeUnmount(() => {
+  if (pollTimer) clearInterval(pollTimer)
+  activePlaybackCameraId.value = null
+})
 watch(() => props.camera.id, loadSegments)
 
 const exportDurationText = computed(() => {

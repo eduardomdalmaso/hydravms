@@ -1,13 +1,14 @@
 import { ref } from 'vue'
 import type { PlaybackSpeed, TimelineSegment } from '../types/mosaic'
 
-export function useTimelinePlayback() {
-  const isPlaying = ref(false)
-  const playbackSpeed = ref<PlaybackSpeed>(1)
-  const currentTime = ref(Date.now())
-  const isLive = ref(true)
+const isPlaying = ref(false)
+const playbackSpeed = ref<PlaybackSpeed>(1)
+const currentTime = ref(Date.now())
+const isLive = ref(true)
+const activePlaybackCameraId = ref<string | null>(null)
+const segments = ref<TimelineSegment[]>([])
 
-  const segments = ref<TimelineSegment[]>([])
+export function useTimelinePlayback() {
 
   const togglePlay = () => {
     if (isLive.value) {
@@ -65,7 +66,7 @@ export function useTimelinePlayback() {
   }
 
   return {
-    isPlaying, playbackSpeed, currentTime, isLive, segments,
+    isPlaying, playbackSpeed, currentTime, isLive, activePlaybackCameraId, segments,
     togglePlay, setSpeed, jumpSeconds, stepFrame, goToLive, seek
   }
 }

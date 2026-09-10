@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -101,8 +102,12 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if strings.HasSuffix(rawID, "/recordings") {
-		camID := strings.TrimSuffix(rawID, "/recordings")
+	if strings.Contains(rawID, "/recordings") {
+		camID := strings.Split(rawID, "/recordings")[0]
+		if strings.Contains(rawID, "/recordings/stream") {
+			h.handleRecordingStream(w, r, tenantID, camID)
+			return
+		}
 		h.handleListRecordings(w, r, tenantID, camID)
 		return
 	}
@@ -237,6 +242,64 @@ func (h *CameraHandler) handleListRecordings(w http.ResponseWriter, r *http.Requ
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
+}
+
+func (h *CameraHandler) handleRecordingStream(w http.ResponseWriter, r *http.Request, tenantID uuid.UUID, camID string) {
+	if h.recordingService == nil {
+		writeError(w, http.StatusServiceUnavailable, "Recording service not initialized")
+		return
+	}
+
+	tStr := r.URL.Query().Get("t")
+	targetTime := time.Now()
+	if tStr != "" {
+		if ms, err := strconv.ParseInt(tStr, 10, 64); err == nil {
+			targetTime = time.UnixMilli(ms)
+		} else if t, err := time.Parse(time.RFC3339, tStr); err == nil {
+			targetTime = t
+		}
+	}
+
+	startTime := targetTime.Add(-1 * time.Minute)
+	endTime := targetTime.Add(1 * time.Minute)
+	segments, err := h.recordingService.ListRecordings(r.Context(), tenantID, camID, startTime, endTime)
+	if err != nil || len(segments) == 0 {
+		segments, _ = h.recordingService.ListRecordings(r.Context(), tenantID, camID, targetTime.Add(-24*time.Hour), targetTime.Add(24*time.Hour))
+	}
+
+	if len(segments) == 0 {
+		writeError(w, http.StatusNotFound, "No recording segment available for this time")
+		return
+	}
+
+	var chosen *domain.RecordingSegment = segments[0]
+	minDiff := time.Duration(1<<63 - 1)
+	for _, seg := range segments {
+		if (targetTime.Equal(seg.StartTime) || targetTime.After(seg.StartTime)) && (targetTime.Equal(seg.EndTime) || targetTime.Before(seg.EndTime)) {
+			chosen = seg
+			break
+		}
+		diff := targetTime.Sub(seg.StartTime)
+		if diff < 0 {
+			diff = -diff
+		}
+		if diff < minDiff {
+			minDiff = diff
+			chosen = seg
+		}
+	}
+
+	if chosen.S3Key == "" {
+		writeError(w, http.StatusNotFound, "Recording file path not found")
+		return
+	}
+
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("X-Segment-Start", chosen.StartTime.Format(time.RFC3339))
+	w.Header().Set("X-Segment-End", chosen.EndTime.Format(time.RFC3339))
+	w.Header().Set("X-Segment-ID", chosen.ID.String())
+	http.ServeFile(w, r, chosen.S3Key)
 }
 
 // syncCameraWithHydraStream informs HydraStream Data Plane about a newly registered camera.
