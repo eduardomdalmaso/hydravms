@@ -30,7 +30,13 @@ defineProps<{
 
     <!-- Snapshot Screen / Canvas with enlarged 16:9 frame -->
     <div style="width: 100%; height: 245px; background: #020305; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 3px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-      <img v-if="hasSnapshot" :src="snapshotUrl || 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&q=80'" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
+      <img v-if="hasSnapshot && snapshotUrl" :src="snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
+      
+      <div v-else-if="hasSnapshot && !snapshotUrl" class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.4rem; padding: 1rem; text-align: center;">
+        <span class="vms-badge" style="background: rgba(0, 255, 157, 0.12); color: var(--vms-neu-accent-green); border: 1px solid rgba(0, 255, 157, 0.3); font-size: 10px;">[SOCKET RTSP CONECTADO]</span>
+        <span class="vms-text-mono vms-text-xs" style="color: #ffffff;">LATÊNCIA: {{ latencyMs }}ms</span>
+        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-dim);">Sinal verificado com sucesso</span>
+      </div>
       
       <div v-if="isTesting" class="vms-flex-col" style="align-items: center; gap: 0.5rem; z-index: 2;">
         <div style="width: 28px; height: 28px; border: 2px solid var(--vms-neu-accent-cyan); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>

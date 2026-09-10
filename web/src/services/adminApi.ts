@@ -80,6 +80,16 @@ export async function fetchLiveSystemLogs(f: LogEntry[] = []): Promise<LogEntry[
 export async function discoverOnvifDevices(): Promise<any[]> {
   try { const r = await fetch(`${API_BASE}/api/v1/cameras/onvif/discovery`, { signal: AbortSignal.timeout(6000) }); return r.ok ? (await r.json()).devices || [] : [] } catch { return [] }
 }
+export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?: string; password?: string; url?: string; protocol?: string }): Promise<any> {
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/cameras/onvif/probe`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p), signal: AbortSignal.timeout(4000)
+    })
+    return r.ok ? await r.json() : { online: false, latency_ms: 0, codec: 'H.265 (HEVC)', resolution: '1080P', fps: 30 }
+  } catch { return { online: false, latency_ms: 0, codec: 'H.265 (HEVC)', resolution: '1080P', fps: 30 } }
+}
 
 export { fetchFolders }
+
 

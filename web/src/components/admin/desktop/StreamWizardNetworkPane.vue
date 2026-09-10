@@ -13,6 +13,7 @@ defineProps<{
   folders: FolderNode[]
   isTesting: boolean
   hasSnapshot: boolean
+  snapshotUrl?: string
   detectedCodec: string
   detectedResolution: string
   detectedFps: number
@@ -64,6 +65,7 @@ const emit = defineEmits<{
     <StreamWizardSnapshotPane 
       :is-testing="isTesting" 
       :has-snapshot="hasSnapshot" 
+      :snapshot-url="snapshotUrl"
       :detected-codec="detectedCodec" 
       :detected-resolution="detectedResolution" 
       :detected-fps="detectedFps" 
