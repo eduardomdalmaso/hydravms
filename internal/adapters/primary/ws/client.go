@@ -2,7 +2,10 @@ package ws
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,13 +24,72 @@ var (
 	space   = []byte{' '}
 )
 
-// Client is a middleman between the websocket connection and the Hub.
+type ClientCommand struct {
+	Action string   `json:"action"` // "subscribe", "unsubscribe", "ping"
+	Topics []string `json:"topics"`
+}
+
+// Client represents a single active WebSocket subscriber.
 type Client struct {
 	Hub      *Hub
 	Conn     *websocket.Conn
 	TenantID uuid.UUID
 	UserID   uuid.UUID
 	Send     chan []byte
+	mu       sync.RWMutex
+	topics   map[string]bool
+}
+
+func (c *Client) Matches(topic string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if len(c.topics) == 0 || c.topics["*"] {
+		return true
+	}
+	if c.topics[topic] {
+		return true
+	}
+	for pattern := range c.topics {
+		if strings.HasSuffix(pattern, ".*") {
+			prefix := strings.TrimSuffix(pattern, ".*")
+			if strings.HasPrefix(topic, prefix) {
+				return true
+			}
+		} else if strings.HasSuffix(pattern, ".>") {
+			prefix := strings.TrimSuffix(pattern, ".>")
+			if strings.HasPrefix(topic, prefix) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (c *Client) handleMessage(msg []byte) {
+	var cmd ClientCommand
+	if err := json.Unmarshal(msg, &cmd); err != nil {
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	switch strings.ToLower(cmd.Action) {
+	case "subscribe":
+		for _, t := range cmd.Topics {
+			c.topics[strings.TrimSpace(t)] = true
+		}
+	case "unsubscribe":
+		for _, t := range cmd.Topics {
+			delete(c.topics, strings.TrimSpace(t))
+		}
+	case "ping":
+		select {
+		case c.Send <- []byte(`{"type":"pong"}`):
+		default:
+		}
+	}
 }
 
 func (c *Client) ReadPump() {
@@ -52,7 +114,7 @@ func (c *Client) ReadPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		// Handle incoming client messages if necessary
+		c.handleMessage(message)
 	}
 }
 
@@ -78,7 +140,6 @@ func (c *Client) WritePump() {
 			}
 			w.Write(message)
 
-			// Drain queued messages into the current frame to optimize network packets
 			n := len(c.Send)
 			for i := 0; i < n; i++ {
 				w.Write(newline)

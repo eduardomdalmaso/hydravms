@@ -65,8 +65,9 @@ func (rt *Router) BuildHandler() http.Handler {
 		mux.HandleFunc("/api/v1/storage/presigned-url", rt.storagePoolHandler.GetPresignedURL)
 	}
 
-	// WebSocket Real-time Gateway
+	// WebSocket Real-time Gateway (Multiplexed Pub/Sub)
 	mux.HandleFunc("/ws/v1/live", rt.wsHandler.ServeWS)
+	mux.HandleFunc("/ws/v1/events", rt.wsHandler.ServeWS)
 
 	// Health check
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

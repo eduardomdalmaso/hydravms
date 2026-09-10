@@ -4,6 +4,7 @@ import { initialFolders } from '../data/mockStreamFolders'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { fetchFolders, fetchCameras, createRemoteFolder, createRemoteCamera, deleteRemoteFolder, deleteRemoteCamera } from '../services/api'
 import { buildStreamTree, createNewStreamItem } from '../utils/streamTreeUtils'
+import { useEventBus } from '../services/eventSocket'
 
 export function useStreamTree() {
   const searchQuery = ref(''), folders = ref<FolderNode[]>(initialFolders), notification = ref<string | null>(null)
@@ -16,6 +17,17 @@ export function useStreamTree() {
     folders.value = buildStreamTree(dbF || [], dbC || []).folders
   }
   onMounted(loadData)
+
+  const eventBus = useEventBus()
+  eventBus.subscribe((evt) => {
+    if (evt.type === 'system.camera.offline' && evt.subject) {
+      folders.value.forEach(f => { const s = f.streams.find(item => item.id === evt.subject); if (s) s.status = 'offline' })
+      showNotification(`[SISTEMA] Câmera ${evt.subject} OFFLINE!`)
+    } else if (evt.type === 'system.camera.online' && evt.subject) {
+      folders.value.forEach(f => { const s = f.streams.find(item => item.id === evt.subject); if (s) s.status = 'online' })
+      showNotification(`[SISTEMA] Câmera ${evt.subject} restabelecida.`)
+    }
+  })
 
   const totalStreams = computed(() => folders.value.reduce((acc, f) => acc + f.streams.length, 0))
   const filteredFolders = computed(() => {
@@ -48,8 +60,7 @@ export function useStreamTree() {
 
   const handleSaveFolder = async (name: string) => {
     if (isRenameFolder.value && selectedFolderId.value) {
-      const f = folders.value.find(fold => fold.id === selectedFolderId.value)
-      if (f) f.name = name
+      const f = folders.value.find(fold => fold.id === selectedFolderId.value); if (f) f.name = name
     } else {
       const res = await createRemoteFolder('cameras', name)
       folders.value.push({ id: res?.id || `f_${Date.now()}`, name, isExpanded: true, streams: [] })

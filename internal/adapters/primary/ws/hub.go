@@ -8,10 +8,11 @@ import (
 
 type TenantMessage struct {
 	TenantID uuid.UUID
+	Topic    string
 	Payload  []byte
 }
 
-// Hub maintains the set of active clients and broadcasts messages scoped by tenant.
+// Hub maintains the set of active clients and broadcasts messages scoped by tenant and topic.
 type Hub struct {
 	mu         sync.RWMutex
 	tenants    map[uuid.UUID]map[*Client]bool
@@ -60,6 +61,9 @@ func (h *Hub) Run() {
 			clients, exists := h.tenants[msg.TenantID]
 			if exists {
 				for client := range clients {
+					if !client.Matches(msg.Topic) {
+						continue
+					}
 					select {
 					case client.Send <- msg.Payload:
 					default:
@@ -74,10 +78,11 @@ func (h *Hub) Run() {
 	}
 }
 
-// BroadcastToTenant sends a message to all connected clients of a specific tenant.
-func (h *Hub) BroadcastToTenant(tenantID uuid.UUID, payload []byte) {
+// BroadcastToTenant sends a message to all connected clients of a specific tenant matching topic.
+func (h *Hub) BroadcastToTenant(tenantID uuid.UUID, topic string, payload []byte) {
 	h.Broadcast <- &TenantMessage{
 		TenantID: tenantID,
+		Topic:    topic,
 		Payload:  payload,
 	}
 }

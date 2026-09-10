@@ -52,6 +52,14 @@ func main() {
 		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
 	}
 
+	// Initialize Event Repository
+	var eventRepo ports.EventRepository
+	if pgPool != nil {
+		eventRepo = postgresAdapter.NewEventRepository(pgPool)
+	} else {
+		eventRepo = memory.NewInMemoryEventRepository()
+	}
+
 	// 2. Initialize Application Core Services (Hexagonal Architecture)
 	folderService := application.NewFolderService(folderRepo)
 	cameraService := application.NewCameraService(cameraRepo)
@@ -89,6 +97,7 @@ func main() {
 	}
 
 	// 6. Connect to NATS Event Mesh & JetStream if available
+	var eventPublisher *natsAdapter.EventPublisher
 	natsCfg := natsAdapter.DefaultConfig()
 	natsClient, err := natsAdapter.NewNATSClient(ctx, natsCfg)
 	if err != nil {
@@ -96,6 +105,8 @@ func main() {
 	} else {
 		log.Println("✅ [HydraVMS] NATS JetStream Event Mesh connected and active on", natsCfg.URL)
 		defer natsClient.Close()
+
+		eventPublisher = natsAdapter.NewEventPublisher(natsClient)
 
 		// Start NATS to WebSocket Bridge
 		bridge := ws.NewNATSWebSocketBridge(natsClient.Conn(), wsHub)
@@ -114,7 +125,15 @@ func main() {
 		}
 	}
 
-	// 7. Initialize HTTP Handlers & Router
+	// 7. Launch Automatic Camera Health Watchdog Service
+	var broadcaster application.EventBroadcaster
+	if eventPublisher != nil {
+		broadcaster = eventPublisher
+	}
+	watchdog := application.NewCameraWatchdog(cameraRepo, eventRepo, broadcaster, wsHub, 2500*time.Millisecond)
+	watchdog.Start(ctx)
+
+	// 8. Initialize HTTP Handlers & Router
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService, recordingService)
 

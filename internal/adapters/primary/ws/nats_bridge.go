@@ -35,7 +35,12 @@ func (b *NATSWebSocketBridge) Start(ctx context.Context) error {
 			return
 		}
 
-		b.hub.BroadcastToTenant(tenantUUID, msg.Data)
+		subtopic := ""
+		if len(parts) > 3 {
+			subtopic = strings.Join(parts[3:], ".")
+		}
+
+		b.hub.BroadcastToTenant(tenantUUID, subtopic, msg.Data)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to NATS wildcard subject: %w", err)

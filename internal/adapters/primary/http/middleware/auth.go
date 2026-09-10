@@ -30,19 +30,27 @@ func AuthMiddleware(validateToken TokenValidatorFunc) func(http.Handler) http.Ha
 				return
 			}
 
+			var rawToken string
 			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				renderError(w, http.StatusUnauthorized, "missing authorization header")
+			if authHeader != "" {
+				parts := strings.SplitN(authHeader, " ", 2)
+				if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+					rawToken = parts[1]
+				}
+			}
+			if rawToken == "" {
+				rawToken = r.URL.Query().Get("token")
+			}
+			if rawToken == "" && r.Header.Get("Sec-WebSocket-Protocol") != "" {
+				rawToken = strings.TrimSpace(r.Header.Get("Sec-WebSocket-Protocol"))
+			}
+
+			if rawToken == "" {
+				renderError(w, http.StatusUnauthorized, "missing authorization token")
 				return
 			}
 
-			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-				renderError(w, http.StatusUnauthorized, "invalid authorization scheme, expected Bearer")
-				return
-			}
-
-			claims, err := validateToken(parts[1])
+			claims, err := validateToken(rawToken)
 			if err != nil {
 				renderError(w, http.StatusUnauthorized, "invalid or expired authentication token")
 				return

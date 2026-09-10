@@ -1,7 +1,10 @@
 package middleware
 
 import (
+	"bufio"
+	"errors"
 	"log"
+	"net"
 	"net/http"
 	"time"
 )
@@ -14,6 +17,19 @@ type responseRecorder struct {
 func (rec *responseRecorder) WriteHeader(code int) {
 	rec.statusCode = code
 	rec.ResponseWriter.WriteHeader(code)
+}
+
+func (rec *responseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hj, ok := rec.ResponseWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+	return nil, nil, errors.New("underlying ResponseWriter does not implement http.Hijacker")
+}
+
+func (rec *responseRecorder) Flush() {
+	if fl, ok := rec.ResponseWriter.(http.Flusher); ok {
+		fl.Flush()
+	}
 }
 
 // LoggerMiddleware logs incoming HTTP requests and response latency.
