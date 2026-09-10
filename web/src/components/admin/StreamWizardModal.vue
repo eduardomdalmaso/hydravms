@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { FolderNode, StreamItem } from '../../types/streamTree'
+import { probeCameraSnapshot } from '../../services/adminApi'
 import StreamWizardNetworkPane from './desktop/StreamWizardNetworkPane.vue'
 import StreamWizardChannelsPane, { type ChannelItem } from './desktop/StreamWizardChannelsPane.vue'
 import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'
@@ -8,18 +9,20 @@ import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
 
 const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[]; initialData?: Partial<StreamItem> }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', stream: Partial<StreamItem>, folderId: string): void }>()
-const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), detectedCodec = ref('H.265'), detectedRes = ref('1920x1080 Full HD'), detectedFps = ref(30), latency = ref(28)
+const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), snapshotUrl = ref<string | undefined>(undefined)
+const detectedCodec = ref('H.265'), detectedRes = ref('1920x1080 Full HD'), detectedFps = ref(30), latency = ref(1)
 const channels = ref<ChannelItem[]>([{ id: 1, name: 'Canal 01 (Principal)', path: '/live', subPath: '/sub', status: 'online' }])
 const form = ref({
   name: '', protocol: 'RTSP' as 'RTSP' | 'RTMP' | 'ONVIF', url: 'rtsp://192.168.1.100:554/live', path: '/live', subUrl: '',
-  ip: '192.168.1.100', port: 554, user: 'admin', pass: '', streamKey: 'stream_alpha_01', folderId: '',
+  ip: '192.168.1.100', port: 554, user: '', pass: '', streamKey: 'stream_alpha_01', folderId: '',
   brand: 'Intelbras', model: 'VIP 3230 B', serialNumber: 'SN-94820194812', firmware: 'V5.5.80', macAddress: '3C:52:A1:8B:4F:10',
   latitude: -23.550520, longitude: -46.633308, locationName: ''
 })
 
 watch(() => props.isOpen, (open) => {
   if (open) {
-    step.value = 1; isTesting.value = false; hasSnapshot.value = false; const init = props.initialData
+    step.value = 1; isTesting.value = false; hasSnapshot.value = false; snapshotUrl.value = undefined
+    const init = props.initialData
     form.value.name = init?.name || ''; form.value.protocol = init?.protocol || 'RTSP'
     form.value.url = init?.url || 'rtsp://192.168.1.100:554/live'; form.value.path = '/live'
     form.value.ip = init?.ip || (form.value.protocol === 'ONVIF' ? '192.168.1.145' : '192.168.1.100')
@@ -31,13 +34,23 @@ watch(() => props.isOpen, (open) => {
   }
 })
 
-const fetchSnapshot = (cb?: () => void) => {
+const fetchSnapshot = async (cb?: () => void) => {
   isTesting.value = true
-  setTimeout(() => {
-    isTesting.value = false; hasSnapshot.value = true; detectedCodec.value = form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264'
-    detectedRes.value = '1920x1080 Full HD'; detectedFps.value = 30; latency.value = Math.floor(Math.random() * 20) + 20
+  try {
+    const res = await probeCameraSnapshot({
+      ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass,
+      url: form.value.url, protocol: form.value.protocol
+    })
+    hasSnapshot.value = true
+    snapshotUrl.value = res.snapshot_url || undefined
+    detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264')
+    detectedRes.value = res.resolution || '1920x1080 Full HD'
+    detectedFps.value = res.fps || 30
+    latency.value = res.latency_ms || 1
     if (cb) cb()
-  }, 1000)
+  } finally {
+    isTesting.value = false
+  }
 }
 
 const handleNext = () => {
@@ -49,7 +62,6 @@ const handleNext = () => {
 const finish = () => {
   if (!form.value.name.trim()) form.value.name = `Camera ${form.value.protocol} ${form.value.ip}`
   const finalUrl = form.value.protocol === 'RTMP' ? `rtmp://localhost:1935/live/${form.value.streamKey}` : form.value.url
-  const activeChannels = channels.value.filter(c => c.status !== 'offline')
   emit('save', {
     name: form.value.name, protocol: form.value.protocol, url: finalUrl, ip: form.value.ip, port: form.value.port,
     codec: detectedCodec.value.includes('H.265') ? 'H.265' : 'H.264', resolution: '1080P', fps: detectedFps.value,
@@ -73,7 +85,7 @@ const finish = () => {
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 4 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">4. GEOLOCALIZACAO</span>
       </div>
       <div class="vms-modal-body" style="padding: 1.25rem; min-height: 420px; overflow-x: hidden; box-sizing: border-box;">
-        <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false" />
+        <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :snapshot-url="snapshotUrl" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined" />
         <StreamWizardChannelsPane v-else-if="step === 2" v-model:channels="channels" :base-path="form.path" :is-onvif="form.protocol === 'ONVIF'" />
         <StreamWizardDevicePane v-else-if="step === 3" v-model:brand="form.brand" v-model:model="form.model" v-model:serial-number="form.serialNumber" v-model:firmware="form.firmware" v-model:mac-address="form.macAddress" />
         <StreamWizardGeoPane v-else-if="step === 4" v-model:latitude="form.latitude" v-model:longitude="form.longitude" v-model:location-name="form.locationName" />
