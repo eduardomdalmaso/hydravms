@@ -272,7 +272,7 @@ func (c *Client) AuthenticateAndExtractProfiles(ctx context.Context) ([]Discover
 		})
 	}
 
-	// 5. Query exact RTSP stream URI for each profile
+	// 5. Query exact RTSP stream URI and Snapshot URI for each profile
 	for i := range profiles {
 		token := profiles[i].Token
 		getStreamUriXML := fmt.Sprintf(`<trt:GetStreamUri>
@@ -295,6 +295,19 @@ func (c *Client) AuthenticateAndExtractProfiles(ctx context.Context) ([]Discover
 
 		if profiles[i].RTSPUri == "" {
 			profiles[i].RTSPUri = c.InjectCredentialsIntoRTSP(fmt.Sprintf("rtsp://%s:554/stream%d", c.IP, i+1))
+		}
+
+		// 6. Query Snapshot URI via GetSnapshotUri
+		getSnapUriXML := fmt.Sprintf(`<trt:GetSnapshotUri>
+      <trt:ProfileToken>%s</trt:ProfileToken>
+    </trt:GetSnapshotUri>`, token)
+
+		snapResp, snapStatus, snapErr := c.sendSOAPRequest(ctx, activeMediaURL, getSnapUriXML)
+		if snapErr == nil && snapStatus == 200 {
+			snapUri := extractTag(snapResp, "Uri")
+			if snapUri != "" {
+				profiles[i].SnapshotUri = snapUri
+			}
 		}
 	}
 

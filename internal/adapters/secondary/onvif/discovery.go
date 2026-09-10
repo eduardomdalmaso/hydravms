@@ -14,11 +14,12 @@ import (
 
 // DiscoveredProfile represents a video stream profile exposed by the camera.
 type DiscoveredProfile struct {
-	Name       string `json:"name"`
-	Token      string `json:"token"`
-	Resolution string `json:"resolution"`
-	Codec      string `json:"codec"`
-	RTSPUri    string `json:"rtspUri"`
+	Name        string `json:"name"`
+	Token       string `json:"token"`
+	Resolution  string `json:"resolution"`
+	Codec       string `json:"codec"`
+	RTSPUri     string `json:"rtspUri"`
+	SnapshotUri string `json:"snapshotUri,omitempty"`
 }
 
 // DiscoveredCamera represents an ONVIF/RTSP device found on the local network.
