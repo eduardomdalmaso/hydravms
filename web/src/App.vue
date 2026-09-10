@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineAsyncComponent } from 'vue'
+import { ref, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useAuth } from './composables/useAuth'
 import { useAnalyticsAlerts } from './composables/useAnalyticsAlerts'
 import LoginView from './views/auth/LoginView.vue'
@@ -12,7 +12,39 @@ const AdminCenterView = defineAsyncComponent(() => import('./views/admin/AdminCe
 const { isAuthenticated, isLoading, errorMessage, username, isAdmin, handleLogin, handleLogout } = useAuth()
 const { isDrawerOpen, alerts, unreadCount, toggleDrawer, acknowledgeAlert, clearAllAlerts } = useAnalyticsAlerts()
 
-const currentMode = ref<'vms' | 'admin'>('vms')
+const getInitialMode = (): 'vms' | 'admin' => {
+  if (typeof window !== 'undefined' && window.location.hash === '#admin') return 'admin'
+  return 'vms'
+}
+
+const currentMode = ref<'vms' | 'admin'>(getInitialMode())
+
+const syncFromHash = () => {
+  const isHashAdmin = window.location.hash === '#admin'
+  if (isHashAdmin) {
+    currentMode.value = 'admin'
+    window.name = 'hydravms_admin_center'
+    document.title = 'HydraVMS - ADMIN CENTER'
+  } else {
+    currentMode.value = 'vms'
+    window.name = 'hydravms_main_vms'
+    document.title = 'HydraVMS'
+  }
+}
+
+watch(currentMode, (mode) => {
+  document.title = mode === 'admin' ? 'HydraVMS - ADMIN CENTER' : 'HydraVMS'
+  const targetHash = mode === 'admin' ? '#admin' : '#vms'
+  window.name = mode === 'admin' ? 'hydravms_admin_center' : 'hydravms_main_vms'
+  if (window.location.hash !== targetHash) {
+    window.history.replaceState(null, '', targetHash)
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  syncFromHash()
+  window.addEventListener('hashchange', syncFromHash)
+})
 
 const handleSwitchMode = (mode: 'vms' | 'admin') => {
   if (mode === 'admin' && !isAdmin.value) return

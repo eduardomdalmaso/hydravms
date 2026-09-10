@@ -14,7 +14,6 @@ import (
 	"hydravms/internal/adapters/primary/ws"
 	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
-	onvifAdapter "hydravms/internal/adapters/secondary/onvif"
 	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	s3Adapter "hydravms/internal/adapters/secondary/s3"
 	"hydravms/internal/application"
@@ -100,10 +99,14 @@ func main() {
 	}
 
 	// 6. Initialize HTTP Handlers & Router
+	var recordingService *application.RecordingService
+	if pgPool != nil {
+		recordingRepo := postgresAdapter.NewRecordingRepository(pgPool)
+		recordingService = application.NewRecordingService(recordingRepo)
+	}
+
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
-	cameraHandler := httpAdapter.NewCameraHandler(cameraService)
-	onvifDiscoverer := onvifAdapter.NewDeviceDiscoverer()
-	onvifHandler := httpAdapter.NewONVIFHandler(onvifDiscoverer)
+	cameraHandler := httpAdapter.NewCameraHandler(cameraService, recordingService)
 
 	var storagePoolHandler *httpAdapter.StoragePoolHandler
 	if storagePoolService != nil {
@@ -116,7 +119,7 @@ func main() {
 	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
-	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, onvifHandler, wsHandler)
+	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, wsHandler)
 	handler := router.BuildHandler()
 
 	port := os.Getenv("PORT")

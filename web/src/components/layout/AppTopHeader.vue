@@ -26,7 +26,11 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 
 const handleSelectMode = (mode: "vms" | "admin") => {
   if (mode === "admin" && !props.isAdmin) return
-  emit("switchMode", mode)
+  if (mode === "admin" && props.currentMode === "vms") {
+    window.open(window.location.origin + window.location.pathname + "#admin", "hydravms_admin_center")
+  } else if (mode === "vms" && props.currentMode === "admin") {
+    window.open(window.location.origin + window.location.pathname + "#vms", "hydravms_main_vms")
+  } else emit("switchMode", mode)
   isUserMenuOpen.value = false
 }
 </script>

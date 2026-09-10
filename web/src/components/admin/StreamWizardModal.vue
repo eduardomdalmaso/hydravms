@@ -65,7 +65,7 @@ const finish = () => {
   emit('save', {
     name: form.value.name, protocol: form.value.protocol, url: finalUrl, ip: form.value.ip, port: form.value.port,
     codec: detectedCodec.value.includes('H.265') ? 'H.265' : 'H.264', resolution: '1080P', fps: detectedFps.value,
-    bitrate: '4.0 Mbps', recordMode: 'continuous', status: 'online', has_ptz: form.value.protocol === 'ONVIF',
+    bitrate: '4.0 Mbps', recordMode: 'disabled', status: 'online', has_ptz: form.value.protocol === 'ONVIF',
     latitude: form.value.latitude, longitude: form.value.longitude, locationName: form.value.locationName, snapshotUrl: snapshotUrl.value
   }, form.value.folderId); emit('close')
 }

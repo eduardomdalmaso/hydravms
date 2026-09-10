@@ -40,7 +40,7 @@ defineProps<{
       </div>
 
       <div v-if="hasSnapshot && snapshotUrl && detectedFps > 0 && !isTesting" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-green); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
-        REC // {{ detectedFps }} FPS
+        LIVE // {{ detectedFps }} FPS
       </div>
       <div v-if="latencyMs > 0 && !isTesting" style="position: absolute; bottom: 6px; right: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-cyan); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
         LATENCIA: {{ latencyMs }}ms

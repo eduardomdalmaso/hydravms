@@ -41,18 +41,21 @@
 }
 .vms-slot:hover .vms-slot-hud { opacity: 1; pointer-events: auto; }
 
-/* Offline Ubuntu-Style Circular Spinner with Red Blur Glow */
-.vms-offline-sphere-container { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+/* HUD Orange Circular Loading Spinner */
+.vms-offline-sphere-container {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; z-index: 10; pointer-events: none; background: #05070a;
+}
 .vms-ubuntu-spinner {
   width: 26px; height: 26px; border-radius: 50%;
-  border: 3px solid rgba(255, 0, 60, 0.15); border-top-color: #ff003c; border-right-color: rgba(255, 0, 60, 0.7);
-  box-shadow: 0 0 14px rgba(255, 0, 60, 0.6);
+  border: 3px solid rgba(255, 94, 58, 0.2); border-top-color: #ff5e3a; border-right-color: rgba(255, 94, 58, 0.8);
+  box-shadow: 0 0 14px rgba(255, 94, 58, 0.6);
   animation: vms-spin 0.8s linear infinite, vms-pulse-glow 1.8s ease-in-out infinite alternate;
 }
 @keyframes vms-spin { to { transform: rotate(360deg); } }
 @keyframes vms-pulse-glow {
-  from { filter: blur(0.5px); box-shadow: 0 0 10px rgba(255, 0, 60, 0.4); }
-  to { filter: blur(1.5px); box-shadow: 0 0 22px #ff003c, 0 0 35px rgba(255, 94, 58, 0.5); }
+  from { filter: blur(0.5px); box-shadow: 0 0 10px rgba(255, 94, 58, 0.4); }
+  to { filter: blur(1.2px); box-shadow: 0 0 20px #ff5e3a, 0 0 30px rgba(255, 94, 58, 0.6); }
 }
 
 /* Orange Gear Popover */

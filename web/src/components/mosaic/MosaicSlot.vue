@@ -17,8 +17,12 @@ const emit = defineEmits<{ (e: 'select', cam: CameraStreamInfo): void }>()
     @click="camera && emit('select', camera)"
   >
     <template v-if="camera">
-      <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center;">
-        <span class="vms-text-mono vms-text-xs vms-text-dim">STREAM // {{ camera.id }} ({{ camera.resolution }} @ {{ camera.fps }} FPS)</span>
+      <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; overflow: hidden; position: relative;">
+        <img
+          :src="`http://localhost:8080/api/v1/streams/${camera.id}/mjpeg`"
+          alt="Camera Stream"
+          style="width: 100%; height: 100%; object-fit: cover; display: block;"
+        />
       </div>
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.5rem;">

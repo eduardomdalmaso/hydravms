@@ -25,10 +25,15 @@ A estrutura de código deve respeitar rigorosamente a separação de camadas:
 
 Para garantir escalabilidade independente de custos e resiliência:
 
-1. **Data Plane (HydraStream Nodes):** Ingestão RTSP/RTMP, demuxing TCP, entrega WebRTC (WHEP) e buffer Zero-Copy `/dev/shm` a 8.46 GB/s. Roda em nós de CPU leves e baratos.
-2. **Analytics Plane (HydraForge / Workers):** Motion-Gated Pre-Filter (VMD CPU), SAHI slicing e inferência YOLO TensorRT. Roda exclusivamente onde houver GPU (RTX 5090).
+1. **Data Plane (HydraStream Nodes :8080 & MediaMTX :8554/:8889):** Descoberta ONVIF WS-Discovery, probing, ingestão RTSP/RTMP, demuxing TCP, entrega WebRTC (WHEP), HLS, snapshots e buffer Zero-Copy `/dev/shm` a 8.46 GB/s e CUDA IPC. Roda em nós de CPU leves e baratos.
+2. **Analytics Plane (HydraForge / Workers :8081):** Motion-Gated Pre-Filter (VMD CPU), SAHI slicing e inferência/treinamento YOLO TensorRT. Roda exclusivamente onde houver GPU (RTX 5090).
 3. **Storage & Cache Tier (StorageGuard / MinIO):** Buffer de escrita NVMe Quente (*Write-Back*) com *Spillover Daemon* para HDDs mecânicos e buckets S3 distribuídos.
-4. **Control Plane (HydraVMS Management):** Banco de dados multi-tenant, autenticação estrita por Token, catálogo de metadados, Workflows de Alertas e UI Vue 3.
+4. **Control Plane (HydraVMS Management :8083 & UI :5173):** Banco de dados PostgreSQL multi-tenant, autenticação estrita por Token, catálogo de metadados, Workflows de Alertas e UI Vue 3.
+
+### ⚠️ Regra Inviolável do Control Plane (HydraVMS):
+- **O HydraVMS NUNCA processa vídeo, nem executa FFmpeg/FFprobe ou sockets de descoberta de câmeras.**
+- Toda descoberta ONVIF, probing, captura de snapshots e entrega de streaming é responsabilidade **exclusiva do HydraStream**.
+- O frontend consome streaming e snapshots diretamente das portas do HydraStream (`:8080` e `:8889`).
 
 ---
 

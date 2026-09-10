@@ -16,7 +16,7 @@ export function useDesktopLayouts() {
 
   onMounted(async () => {
     const dbF = await fetchFolders('layouts')
-    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, layouts: [] }))
+    folders.value = (dbF || []).map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, layouts: [] }))
   })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)

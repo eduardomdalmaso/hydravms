@@ -41,46 +41,53 @@ export async function createRemoteFolder(module: string, name: string, parentId?
   }
 }
 
+export async function deleteRemoteFolder(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/folders/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    return res.ok
+  } catch { return false }
+}
+
 export async function fetchCameras(fallback: RegisteredCamera[] = []): Promise<RegisteredCamera[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/cameras`, {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(3000)
-    })
+    const res = await fetch(`${API_BASE}/api/v1/cameras`, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     return Array.isArray(data.cameras) && data.cameras.length > 0 ? data.cameras : fallback
-  } catch {
-    return fallback
-  }
+  } catch { return fallback }
+}
+
+export async function createRemoteCamera(cam: any): Promise<RegisteredCamera | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/cameras`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cam), signal: AbortSignal.timeout(3000)
+    })
+    return res.ok ? await res.json() : null
+  } catch { return null }
+}
+
+export async function deleteRemoteCamera(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/cameras/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    return res.ok
+  } catch { return false }
 }
 
 export function connectLiveWebSocket(onMessage: (data: any) => void, onStatusChange?: (online: boolean) => void) {
   let ws: WebSocket | null = null, retryCount = 0, isStopped = false
-
   const connect = () => {
     if (isStopped) return
     try {
       ws = new WebSocket(WS_BASE)
       ws.onopen = () => { retryCount = 0; onStatusChange?.(true) }
-      ws.onmessage = (e) => {
-        try { onMessage(JSON.parse(e.data)) } catch { onMessage(e.data) }
-      }
+      ws.onmessage = (e) => { try { onMessage(JSON.parse(e.data)) } catch { onMessage(e.data) } }
       ws.onclose = () => {
         onStatusChange?.(false)
-        if (!isStopped) {
-          const delay = Math.min(30000, Math.pow(1.5, retryCount++) * 1000 + Math.random() * 500)
-          setTimeout(connect, delay)
-        }
+        if (!isStopped) setTimeout(connect, Math.min(30000, Math.pow(1.5, retryCount++) * 1000 + 500))
       }
-      ws.onerror = () => { ws?.close() }
-    } catch {
-      setTimeout(connect, 3000)
-    }
+      ws.onerror = () => ws?.close()
+    } catch { setTimeout(connect, 3000) }
   }
-
   connect()
-  return {
-    disconnect: () => { isStopped = true; ws?.close() }
-  }
+  return { disconnect: () => { isStopped = true; ws?.close() } }
 }

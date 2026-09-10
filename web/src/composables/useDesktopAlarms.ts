@@ -14,7 +14,7 @@ export function useDesktopAlarms() {
 
   onMounted(async () => {
     const dbF = await fetchFolders('alarms')
-    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, isExpanded: true, alarms: [] }))
+    folders.value = (dbF || []).map(f => ({ id: f.id, name: f.name, isExpanded: true, alarms: [] }))
   })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)

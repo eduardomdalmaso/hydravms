@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"hydravms/internal/domain"
@@ -20,7 +21,7 @@ func NewCameraService(repo ports.CameraRepository) *CameraService {
 
 func (s *CameraService) CreateCamera(ctx context.Context, cam *domain.Camera) (*domain.Camera, error) {
 	if strings.TrimSpace(cam.ID) == "" {
-		return nil, fmt.Errorf("camera ID is required")
+		cam.ID = fmt.Sprintf("cam_%d", time.Now().UnixMilli())
 	}
 	if strings.TrimSpace(cam.Name) == "" {
 		return nil, fmt.Errorf("camera name is required")
@@ -28,6 +29,22 @@ func (s *CameraService) CreateCamera(ctx context.Context, cam *domain.Camera) (*
 	if cam.Status == "" {
 		cam.Status = domain.CameraStatusOnline
 	}
+	if cam.Protocol == "" {
+		cam.Protocol = domain.ProtocolRTSP
+	}
+	if cam.Codec == "" {
+		cam.Codec = "H.265"
+	}
+	if cam.Resolution == "" {
+		cam.Resolution = "1920x1080"
+	}
+	if cam.FPS <= 0 {
+		cam.FPS = 30.0
+	}
+	if cam.BitrateKbps <= 0 {
+		cam.BitrateKbps = 4096
+	}
+	cam.IsActive = true
 
 	if err := s.repo.Create(ctx, cam); err != nil {
 		return nil, err

@@ -4,6 +4,39 @@ Este documento define a arquitetura de software, **protocolos de ingestão de c�
 
 ---
 
+## 0. Arquitetura Split-Plane & Limites Invioláveis do Ecossistema
+
+O ecossistema Hydra segue estritamente a divisão em 4 planos desacoplados:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ CONTROL PLANE: HydraVMS (:8083)                                                 │
+│ • PostgreSQL 15+, RBAC, Tokens JWT, Gravação, Pastas, Workflows & UI Web (:5173)│
+└────────────────────────────────────────┬────────────────────────────────────────┘
+                                         │ Chamadas REST / Sincronização
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ DATA PLANE (MOTOR DE MÍDIA): HydraStream (:8080 & MediaMTX :8554/:8889)         │
+│ • Descoberta ONVIF WS-Discovery & Probing (/api/v1/onvif/*)                     │
+│ • Ingestão RFC 2326 TCP, MediaMTX Relay (WebRTC WHEP, HLS, RTSP) & Snapshots    │
+│ • Zero-Copy Ring Buffer (/dev/shm) & CUDA IPC VRAM na RTX 5090                  │
+└──────────────────┬─────────────────────────────────────────────┬────────────────┘
+                   │ /dev/shm (Zero-Copy)                        │ Datasets Curados
+                   ▼                                             ▼
+┌──────────────────────────────────────┐     ┌────────────────────────────────────┐
+│ ANALYTICS PLANE: HydraForge (:8081)  │     │ CURATION PLANE: HydraVault (:8082) │
+│ • Treinamento YOLO na RTX 5090       │     │ • Curadoria, SAM 2 & Auto-Labeling │
+│ • TensorRT .engine / Exportação      │     │ • Exportação versionada data.yaml  │
+└──────────────────────────────────────┘     └────────────────────────────────────┘
+```
+
+### ⚠️ Regras Inquebráveis de Limites Arquiteturais (Inviolable Rules):
+1. **HydraVMS NUNCA processa mídia diretamente:** É estritamente proibido importar codecs de vídeo, executar subprocessos `ffmpeg`/`ffprobe` ou abrir sockets UDP de descoberta de câmeras dentro do HydraVMS. Toda descoberta, captura de snapshots e entrega de streaming DEVE ser delegada ao **HydraStream**.
+2. **HydraStream é o único ponto de contato de vídeo com as câmeras:** O HydraStream centraliza a ingestão TCP RFC 2326 e multiplexa para downstream (IA e Web Clients), eliminando conexões redundantes contra câmeras físicas.
+3. **Frontend VMS consome mídia diretamente do HydraStream:** Tags de vídeo, WebRTC WHEP e snapshots no frontend consomem as portas do HydraStream (`:8080` e `:8889`), mantendo a API do HydraVMS (`:8083`) leve e focada exclusivamente no Control Plane.
+
+---
+
 ## 1. Protocolos de Ingestão de Câmeras (ONVIF, RTSP & RTMP)
 
 As diretrizes detalhadas encontram-se em [`.agents/skills/vms-camera-ingest/SKILL.md`](file:///home/hades/Documents/HydraVMS/.agents/skills/vms-camera-ingest/SKILL.md):

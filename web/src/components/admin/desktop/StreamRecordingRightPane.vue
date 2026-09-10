@@ -1,34 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
 import type { RecordingProfile } from '../../../types/recordingSchedule'
+import { fetchRemoteRecordingProfiles, saveRemoteRecordingProfile, deleteRemoteRecordingProfile } from '../../../services/recordingApi'
 import ScheduleRecordingModal from './ScheduleRecordingModal.vue'
 
 const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{ (e: 'saved', msg: string): void }>()
+const profiles = ref<RecordingProfile[]>([]), isModalOpen = ref(false), selectedProfile = ref<RecordingProfile | null>(null)
 
-const profiles = ref<RecordingProfile[]>([])
-const isModalOpen = ref(false)
-const selectedProfile = ref<RecordingProfile | null>(null)
+const syncRecordMode = () => { props.stream.recordMode = profiles.value.find(p => p.isActive)?.mode || 'disabled' }
+const loadProfiles = async () => { if (!props.stream?.id) return; profiles.value = await fetchRemoteRecordingProfiles(props.stream.id); syncRecordMode() }
+onMounted(loadProfiles); watch(() => props.stream.id, loadProfiles)
 
-const handleToggleActive = (p: RecordingProfile) => {
-  p.isActive = !p.isActive
-  props.stream.recordMode = p.isActive ? p.mode : 'disabled'
+const handleToggleActive = async (p: RecordingProfile) => {
+  p.isActive = !p.isActive; await saveRemoteRecordingProfile(props.stream.id, p); syncRecordMode()
   emit('saved', p.isActive ? `[STATUS] Perfil "${p.name}" ATIVADO.` : `[STATUS] Perfil "${p.name}" DESATIVADO.`)
 }
-
 const handleOpenCreate = () => { selectedProfile.value = null; isModalOpen.value = true }
 const handleOpenEdit = (p: RecordingProfile) => { selectedProfile.value = p; isModalOpen.value = true }
-const handleDelete = (id: string) => {
-  profiles.value = profiles.value.filter(p => p.id !== id)
-  emit('saved', `Perfil ${id} excluido.`)
+const handleDelete = async (id: string) => {
+  await deleteRemoteRecordingProfile(props.stream.id, id); profiles.value = profiles.value.filter(p => p.id !== id); syncRecordMode()
+  emit('saved', `Perfil excluido com sucesso.`)
 }
-
-const handleSaveProfile = (profile: RecordingProfile) => {
-  const idx = profiles.value.findIndex(p => p.id === profile.id)
-  if (idx >= 0) profiles.value[idx] = profile
-  else profiles.value.push(profile)
-  emit('saved', `Perfil ${profile.name} salvo com sucesso.`)
+const handleSaveProfile = async (profile: RecordingProfile) => {
+  await saveRemoteRecordingProfile(props.stream.id, profile); await loadProfiles()
+  emit('saved', `Perfil "${profile.name}" salvo com sucesso.`)
 }
 </script>
 
@@ -89,7 +86,7 @@ const handleSaveProfile = (profile: RecordingProfile) => {
     </div>
 
     <!-- Modal for Schedule & Advanced Settings -->
-    <ScheduleRecordingModal :is-open="isModalOpen" :profile="selectedProfile" @close="isModalOpen = false" @save="handleSaveProfile" />
+    <ScheduleRecordingModal :is-open="isModalOpen" :profile="selectedProfile" :next-id="`REC_0${profiles.length + 1}`" @close="isModalOpen = false" @save="handleSaveProfile" />
   </div>
 </template>
 

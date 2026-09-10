@@ -4,7 +4,7 @@ import type { RecordingProfile, RecordingMode } from '../../../types/recordingSc
 import { createDefaultSchedule } from '../../../types/recordingSchedule'
 import WeeklyScheduleGrid from './WeeklyScheduleGrid.vue'
 
-const props = defineProps<{ isOpen: boolean; profile?: RecordingProfile | null }>()
+const props = defineProps<{ isOpen: boolean; profile?: RecordingProfile | null; nextId?: string }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', profile: RecordingProfile): void }>()
 
 const form = ref<RecordingProfile>({
@@ -14,7 +14,7 @@ const form = ref<RecordingProfile>({
 watch(() => props.isOpen, (open) => {
   if (!open) return
   if (props.profile) form.value = { ...props.profile, schedule: props.profile.schedule.map(r => [...r]) }
-  else form.value = { id: `REC_0${Math.floor(Math.random() * 90) + 10}`, name: 'Perfil de Gravacao', mode: 'continuous', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15 }
+  else form.value = { id: props.nextId || 'REC_01', name: '', mode: 'continuous', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15 }
 })
 
 watch(() => form.value, (newVal) => {
@@ -54,9 +54,9 @@ const handleSave = () => {
       <div class="vms-form-group">
         <label class="vms-label">Tipo de Gravacao</label>
         <select v-model="form.mode" class="vms-auth-input">
-          <option value="continuous">[CONTINUA] Gravacao 24/7 Ininterrupta</option>
-          <option value="motion">[MOVIMENTO] Deteccao por Movimento (VMD)</option>
-          <option value="ai_event">[EVENTO IA] Acionamento por Smart Alarme</option>
+          <option value="continuous">CONTINUA</option>
+          <option value="motion">MOVIMENTO</option>
+          <option value="ai_event">EVENTO</option>
         </select>
       </div>
 

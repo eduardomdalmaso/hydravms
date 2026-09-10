@@ -3,7 +3,7 @@ import type { FolderNode, StreamItem } from '../types/streamTree'
 import { initialFolders, initialRootStreams } from '../data/mockStreamFolders'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
-import { fetchFolders, fetchCameras, createRemoteFolder } from '../services/api'
+import { fetchFolders, fetchCameras, createRemoteFolder, createRemoteCamera, deleteRemoteCamera, deleteRemoteFolder } from '../services/api'
 import { buildStreamTree, createNewStreamItem } from '../utils/streamTreeUtils'
 
 export function useDesktopTree() {
@@ -15,10 +15,8 @@ export function useDesktopTree() {
 
   const loadData = async () => {
     const [dbF, dbC] = await Promise.all([fetchFolders('cameras'), fetchCameras()])
-    if (dbF.length > 0 || dbC.length > 0) {
-      const tree = buildStreamTree(dbF, dbC)
-      folders.value = tree.folders; rootStreams.value = tree.rootStreams
-    }
+    const tree = buildStreamTree(dbF || [], dbC || [])
+    folders.value = tree.folders; rootStreams.value = tree.rootStreams
   }
   onMounted(loadData)
 
@@ -48,41 +46,49 @@ export function useDesktopTree() {
   }
 
   const requestDeleteFolder = (id: string) => {
-    const folder = folders.value.find(f => f.id === id)
-    if (folder && folder.streams.length > 0) openDeletePrompt(folder.id, folder.name, folder.streams.length)
-    else deleteFolderById(id)
+    const f = folders.value.find(fold => fold.id === id)
+    if (f && f.streams.length > 0) openDeletePrompt(f.id, f.name, f.streams.length); else deleteFolderById(id)
   }
 
   const confirmDeleteFolder = () => {
     if (!folderToDelete.value) return
-    const folder = folders.value.find(f => f.id === folderToDelete.value!.id)
-    if (folder) {
-      rootStreams.value.push(...folder.streams)
-      folders.value = folders.value.filter(f => f.id !== folder.id)
-      if (currentFolderId.value === folder.id) currentFolderId.value = null
-      showNotification(`Pasta removida. ${folder.streams.length} fluxos movidos para a raiz.`)
+    const f = folders.value.find(fold => fold.id === folderToDelete.value!.id)
+    if (f) {
+      rootStreams.value.push(...f.streams); folders.value = folders.value.filter(item => item.id !== f.id)
+      if (currentFolderId.value === f.id) currentFolderId.value = null
+      showNotification(`Pasta removida. ${f.streams.length} fluxos movidos para a raiz.`)
     }
     closeDeletePrompt()
   }
 
-  const deleteFolderById = (id: string) => { folders.value = folders.value.filter(f => f.id !== id); if (currentFolderId.value === id) currentFolderId.value = null; showNotification('Pasta removida.') }
-  const deleteStreamById = (id: string) => {
+  const deleteFolderById = async (id: string) => {
+    if (id.includes('-')) await deleteRemoteFolder(id)
+    folders.value = folders.value.filter(f => f.id !== id); if (currentFolderId.value === id) currentFolderId.value = null; showNotification('Pasta removida.')
+  }
+  const deleteStreamById = async (id: string) => {
+    await deleteRemoteCamera(id)
     rootStreams.value = rootStreams.value.filter(s => s.id !== id); folders.value.forEach(f => { f.streams = f.streams.filter(s => s.id !== id) })
-    if (selectedStream.value?.id === id) selectedStream.value = null
-    showNotification('Fluxo removido.')
+    if (selectedStream.value?.id === id) selectedStream.value = null; showNotification('Fluxo removido.')
   }
 
   const handleSaveFolder = async (name: string) => {
     const res = await createRemoteFolder('cameras', name)
-    folders.value.push({ id: res?.id || `f_${Date.now()}`, name, isExpanded: true, streams: [] })
-    showNotification(`Pasta ${name} criada.`)
+    folders.value.push({ id: res?.id || `f_${Date.now()}`, name, isExpanded: true, streams: [] }); showNotification(`Pasta ${name} criada.`)
   }
 
-  const handleSaveStream = (stream: Partial<StreamItem>, folderId?: string) => {
+  const handleSaveStream = async (stream: Partial<StreamItem>, folderId?: string) => {
     const newStream = createNewStreamItem(stream, totalStreams.value + 1)
+    const saved = await createRemoteCamera({
+      id: newStream.id, name: newStream.name, protocol: newStream.protocol?.toLowerCase() || 'rtsp',
+      rtsp_url: newStream.url, onvif_ip: newStream.ip, onvif_port: newStream.port, location: newStream.locationName || '',
+      status: 'online', resolution: newStream.resolution || '1920x1080', fps: newStream.fps || 30.0,
+      bitrate_kbps: 4096, codec: newStream.codec || 'H.265', has_ptz: !!newStream.has_ptz,
+      folder_id: (folderId && folderId.includes('-')) ? folderId : undefined
+    })
+    if (saved) newStream.id = saved.id
     const target = folders.value.find(f => f.id === folderId)
     if (target) target.streams.push(newStream); else rootStreams.value.push(newStream)
-    selectedStream.value = newStream; showNotification('Fluxo salvo.')
+    selectedStream.value = newStream; showNotification('Fluxo salvo com sucesso.')
   }
 
   return {

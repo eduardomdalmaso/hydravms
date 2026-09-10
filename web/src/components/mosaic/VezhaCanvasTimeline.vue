@@ -7,6 +7,7 @@ const props = defineProps<{
   isExportMode?: boolean
   exportStart?: number
   exportEnd?: number
+  recordedRanges?: { start: number; end: number }[]
 }>()
 const emit = defineEmits<{
   (e: 'seek', time: number): void
@@ -29,12 +30,13 @@ const render = () => {
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
   drawCanvasTimeline(
     ctx, canvas.offsetWidth, canvas.offsetHeight, props.currentTime,
-    zoomMinutes.value, !!props.isExportMode, props.exportStart, props.exportEnd
+    zoomMinutes.value, !!props.isExportMode, props.exportStart, props.exportEnd,
+    props.recordedRanges || []
   )
 }
 
 onMounted(render)
-watch([() => props.currentTime, () => props.isExportMode, () => props.exportStart, () => props.exportEnd, zoomMinutes], render)
+watch([() => props.currentTime, () => props.isExportMode, () => props.exportStart, () => props.exportEnd, () => props.recordedRanges, zoomMinutes], render)
 
 const onMouseDown = (e: MouseEvent) => {
   if (!canvasRef.value) return

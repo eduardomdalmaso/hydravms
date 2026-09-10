@@ -17,48 +17,8 @@ type InMemoryFolderRepository struct {
 }
 
 func NewInMemoryFolderRepository() *InMemoryFolderRepository {
-	repo := &InMemoryFolderRepository{
+	return &InMemoryFolderRepository{
 		folders: make(map[uuid.UUID]*domain.Folder),
-	}
-	repo.seedInitialFolders()
-	return repo
-}
-
-func (r *InMemoryFolderRepository) seedInitialFolders() {
-	defaultTenantID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-	modules := []domain.FolderModule{
-		domain.ModuleCameras,
-		domain.ModuleLayouts,
-		domain.ModuleMaps,
-		domain.ModuleTours,
-		domain.ModuleWorkflows,
-		domain.ModuleUsers,
-	}
-
-	names := map[domain.FolderModule][]string{
-		domain.ModuleCameras:   {"PORTARIA PRINCIPAL", "GALPAO 01", "PERIMETRO EXTERNO"},
-		domain.ModuleLayouts:   {"MOSAICOS OPERACIONAIS", "GRIDS DE EMERGENCIA"},
-		domain.ModuleMaps:      {"PLANTA BAIXA CENTRAL", "MAPAS GIS ESTACIONAMENTO"},
-		domain.ModuleTours:     {"RONDA NOTURNA 24/7", "PATRULHA DE ENTRADA"},
-		domain.ModuleWorkflows: {"ALERTAS TELEGRAM CRITICOS", "NOTIFICACOES WEBSOCKET"},
-		domain.ModuleUsers:     {"OPERADORES DE TURNO", "SUPERVISORES FORENSES"},
-	}
-
-	for _, mod := range modules {
-		for idx, name := range names[mod] {
-			id := uuid.New()
-			r.folders[id] = &domain.Folder{
-				ID:        id,
-				TenantID:  defaultTenantID,
-				Module:    mod,
-				Name:      name,
-				ColorHex:  "#ff5e3a",
-				Icon:      "folder",
-				SortOrder: idx,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			}
-		}
 	}
 }
 
@@ -92,7 +52,7 @@ func (r *InMemoryFolderRepository) ListTree(ctx context.Context, tenantID uuid.U
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	var result []*domain.Folder
+	result := make([]*domain.Folder, 0)
 	for _, f := range r.folders {
 		if (f.TenantID == tenantID || f.TenantID == uuid.MustParse("00000000-0000-0000-0000-000000000001")) && f.Module == module {
 			result = append(result, f)

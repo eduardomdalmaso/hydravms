@@ -16,84 +16,8 @@ type InMemoryCameraRepository struct {
 }
 
 func NewInMemoryCameraRepository() *InMemoryCameraRepository {
-	repo := &InMemoryCameraRepository{
+	return &InMemoryCameraRepository{
 		cameras: make(map[string]*domain.Camera),
-	}
-	repo.seedInitialCameras()
-	return repo
-}
-
-func (r *InMemoryCameraRepository) seedInitialCameras() {
-	defaultTenantID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-	initial := []*domain.Camera{
-		{
-			ID:          "cam_01",
-			TenantID:    defaultTenantID,
-			Name:        "CAM 01 // PORTARIA ENTRADA",
-			Protocol:    domain.ProtocolRTSP,
-			RTSPURL:     "rtsp://192.168.1.101:554/live",
-			Status:      domain.CameraStatusOnline,
-			Resolution:  "1920x1080",
-			FPS:         30.0,
-			BitrateKbps: 4096,
-			Codec:       "H.265",
-			HasPTZ:      true,
-			IsActive:    true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			ID:          "cam_02",
-			TenantID:    defaultTenantID,
-			Name:        "CAM 02 // ESTACIONAMENTO VIP",
-			Protocol:    domain.ProtocolONVIF,
-			RTSPURL:     "rtsp://192.168.1.102:554/live",
-			Status:      domain.CameraStatusOnline,
-			Resolution:  "1920x1080",
-			FPS:         30.0,
-			BitrateKbps: 3072,
-			Codec:       "H.265",
-			HasPTZ:      false,
-			IsActive:    true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			ID:          "cam_03",
-			TenantID:    defaultTenantID,
-			Name:        "CAM 03 // DOCAS DE CARGA",
-			Protocol:    domain.ProtocolRTSP,
-			RTSPURL:     "rtsp://192.168.1.103:554/live",
-			Status:      domain.CameraStatusOnline,
-			Resolution:  "2560x1440",
-			FPS:         25.0,
-			BitrateKbps: 6144,
-			Codec:       "H.265",
-			HasPTZ:      true,
-			IsActive:    true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			ID:          "cam_04",
-			TenantID:    defaultTenantID,
-			Name:        "CAM 04 // PERIMETRO DOS FUNDOS",
-			Protocol:    domain.ProtocolRTSP,
-			RTSPURL:     "rtsp://192.168.1.104:554/live",
-			Status:      domain.CameraStatusOnline,
-			Resolution:  "1920x1080",
-			FPS:         30.0,
-			BitrateKbps: 3584,
-			Codec:       "H.265",
-			HasPTZ:      false,
-			IsActive:    true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-	}
-
-	for _, cam := range initial {
-		r.cameras[cam.ID] = cam
 	}
 }
 
@@ -122,7 +46,7 @@ func (r *InMemoryCameraRepository) List(ctx context.Context, tenantID uuid.UUID,
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	var result []*domain.Camera
+	result := make([]*domain.Camera, 0)
 	for _, cam := range r.cameras {
 		if folderID != nil {
 			if cam.FolderID != nil && *cam.FolderID == *folderID {

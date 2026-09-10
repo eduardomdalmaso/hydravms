@@ -24,8 +24,8 @@ const emit = defineEmits<{ (e: 'close'): void }>()
     <div style="width: 100%; aspect-ratio: 16 / 9; max-height: 480px; background: #07080c; border: 1px solid var(--vms-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
       <img v-if="stream.snapshotUrl" :src="stream.snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: cover;" />
       <svg v-else width="56" height="56" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
-      <div v-if="stream.snapshotUrl && stream.fps" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-green); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
-        REC // {{ stream.fps }} FPS
+      <div v-if="stream.snapshotUrl && stream.fps" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: rgba(0,0,0,0.7);" :style="{ color: stream.recordMode && stream.recordMode !== 'disabled' ? 'var(--vms-neu-accent-red)' : 'var(--vms-neu-accent-green)' }">
+        {{ stream.recordMode && stream.recordMode !== 'disabled' ? 'REC' : 'LIVE' }} // {{ stream.fps }} FPS
       </div>
     </div>
 
@@ -54,8 +54,8 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">GRAVANDO</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">
-          {{ stream.recordMode !== 'disabled' ? 'SIM (HABILITADO)' : 'NAO (DESLIGADO)' }}
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" :style="{ color: stream.recordMode && stream.recordMode !== 'disabled' ? 'var(--vms-neu-accent-green)' : 'var(--vms-text-dim)' }">
+          {{ stream.recordMode && stream.recordMode !== 'disabled' ? 'SIM' : 'NAO' }}
         </span>
       </div>
 
@@ -66,12 +66,12 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">ANALITICOS</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">2</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ stream.analyticsCount || 0 }}</span>
       </div>
 
       <div class="vms-telemetry-card">
         <span class="vms-text-dim vms-text-2xs">ALARMES & SENSORES</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">1</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ stream.alarmsCount || 0 }}</span>
       </div>
     </div>
   </div>

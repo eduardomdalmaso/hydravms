@@ -10,7 +10,7 @@ export function useDesktopMaps() {
 
   onMounted(async () => {
     const dbF = await fetchFolders('maps')
-    if (dbF.length > 0) folders.value = dbF.map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, maps: [] }))
+    folders.value = (dbF || []).map(f => ({ id: f.id, name: f.name, clientType: 'company', isExpanded: true, maps: [] }))
   })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)

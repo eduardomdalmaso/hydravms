@@ -16,6 +16,8 @@ export interface StreamItem {
   longitude?: number
   locationName?: string
   snapshotUrl?: string
+  analyticsCount?: number
+  alarmsCount?: number
 }
 
 

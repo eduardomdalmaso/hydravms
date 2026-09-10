@@ -102,7 +102,7 @@ func (r *PostgresFolderRepository) ListTree(ctx context.Context, tenantID uuid.U
 	}
 	defer rows.Close()
 
-	var results []*domain.Folder
+	results := make([]*domain.Folder, 0)
 	for rows.Next() {
 		var f domain.Folder
 		var modStr string

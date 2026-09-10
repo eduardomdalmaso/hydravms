@@ -1,9 +1,12 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"hydravms/internal/adapters/primary/http/middleware"
@@ -12,11 +15,12 @@ import (
 )
 
 type CameraHandler struct {
-	service *application.CameraService
+	service          *application.CameraService
+	recordingService *application.RecordingService
 }
 
-func NewCameraHandler(service *application.CameraService) *CameraHandler {
-	return &CameraHandler{service: service}
+func NewCameraHandler(service *application.CameraService, recordingService *application.RecordingService) *CameraHandler {
+	return &CameraHandler{service: service, recordingService: recordingService}
 }
 
 func (h *CameraHandler) HandleCameras(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +61,10 @@ func (h *CameraHandler) HandleCameras(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// Asynchronously register/sync stream with HydraStream Data Plane
+		go syncCameraWithHydraStream(created)
+
 		writeJSON(w, http.StatusCreated, created)
 
 	default:
@@ -70,15 +78,38 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		tenantID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	}
 
-	camID := strings.TrimPrefix(r.URL.Path, "/api/v1/cameras/")
-	if camID == "" {
+	rawID := strings.TrimPrefix(r.URL.Path, "/api/v1/cameras/")
+	if rawID == "" {
 		writeError(w, http.StatusBadRequest, "Camera ID is required")
+		return
+	}
+
+	if strings.HasSuffix(rawID, "/live") || strings.HasSuffix(rawID, "/mjpeg") {
+		camID := strings.TrimSuffix(strings.TrimSuffix(rawID, "/live"), "/mjpeg")
+		http.Redirect(w, r, fmt.Sprintf("http://localhost:8080/api/v1/streams/%s/mjpeg", camID), http.StatusTemporaryRedirect)
+		return
+	}
+
+	if strings.HasSuffix(rawID, "/snapshot") {
+		camID := strings.TrimSuffix(rawID, "/snapshot")
+		http.Redirect(w, r, fmt.Sprintf("http://localhost:8080/api/v1/streams/%s/snapshot.jpg", camID), http.StatusTemporaryRedirect)
+		return
+	}
+
+	if strings.Contains(rawID, "/recording-profiles") {
+		h.handleRecordingProfiles(w, r, tenantID, rawID)
+		return
+	}
+
+	if strings.HasSuffix(rawID, "/recordings") {
+		camID := strings.TrimSuffix(rawID, "/recordings")
+		h.handleListRecordings(w, r, tenantID, camID)
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		cam, err := h.service.GetCamera(r.Context(), tenantID, camID)
+		cam, err := h.service.GetCamera(r.Context(), tenantID, rawID)
 		if err != nil {
 			writeError(w, http.StatusNotFound, "Camera not found")
 			return
@@ -86,7 +117,7 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusOK, cam)
 
 	case http.MethodDelete:
-		if err := h.service.DeleteCamera(r.Context(), tenantID, camID); err != nil {
+		if err := h.service.DeleteCamera(r.Context(), tenantID, rawID); err != nil {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -96,3 +127,118 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
+
+func (h *CameraHandler) handleRecordingProfiles(w http.ResponseWriter, r *http.Request, tenantID uuid.UUID, path string) {
+	parts := strings.Split(path, "/recording-profiles")
+	camID := parts[0]
+	subPath := ""
+	if len(parts) > 1 {
+		subPath = strings.TrimPrefix(parts[1], "/")
+	}
+
+	if h.recordingService == nil {
+		writeError(w, http.StatusServiceUnavailable, "Recording service not initialized")
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		profiles, err := h.recordingService.ListProfiles(r.Context(), tenantID, camID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"profiles": profiles,
+			"total":    len(profiles),
+		})
+
+	case http.MethodPost:
+		var profile domain.CameraRecordingProfile
+		if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid recording profile payload: "+err.Error())
+			return
+		}
+		profile.TenantID = tenantID
+		profile.CameraID = camID
+		if err := h.recordingService.SaveProfile(r.Context(), &profile); err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, profile)
+
+	case http.MethodDelete:
+		if subPath == "" {
+			writeError(w, http.StatusBadRequest, "Profile ID is required")
+			return
+		}
+		if err := h.recordingService.DeleteProfile(r.Context(), tenantID, camID, subPath); err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
+	}
+}
+
+func (h *CameraHandler) handleListRecordings(w http.ResponseWriter, r *http.Request, tenantID uuid.UUID, camID string) {
+	if h.recordingService == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{"recordings": []interface{}{}, "total": 0})
+		return
+	}
+
+	startStr := r.URL.Query().Get("start")
+	endStr := r.URL.Query().Get("end")
+
+	now := time.Now()
+	startTime := now.Add(-24 * time.Hour)
+	endTime := now.Add(1 * time.Hour)
+
+	if startStr != "" {
+		if t, err := time.Parse(time.RFC3339, startStr); err == nil {
+			startTime = t
+		}
+	}
+	if endStr != "" {
+		if t, err := time.Parse(time.RFC3339, endStr); err == nil {
+			endTime = t
+		}
+	}
+
+	segments, err := h.recordingService.ListRecordings(r.Context(), tenantID, camID, startTime, endTime)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"recordings": segments,
+		"total":      len(segments),
+	})
+}
+
+// syncCameraWithHydraStream informs HydraStream Data Plane about a newly registered camera.
+func syncCameraWithHydraStream(cam *domain.Camera) {
+	if cam == nil || cam.RTSPURL == "" {
+		return
+	}
+	payload := map[string]interface{}{
+		"tenant_id":        cam.TenantID.String(),
+		"stream_id":        cam.ID,
+		"source_url":       cam.RTSPURL,
+		"decoding_engine":  "nvidia_nvdec",
+		"status":           "online",
+		"resolution":       cam.Resolution,
+		"codec":            cam.Codec,
+		"ingest_fps":       cam.FPS,
+	}
+	b, _ := json.Marshal(payload)
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Post("http://localhost:8080/api/v1/streams", "application/json", bytes.NewReader(b))
+	if err == nil && resp != nil {
+		_ = resp.Body.Close()
+	}
+}
+

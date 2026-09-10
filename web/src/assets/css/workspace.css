@@ -61,12 +61,12 @@
 .vms-asset-item.active svg { stroke: var(--vms-neu-accent-orange) !important; }
 
 /* Neon Status LEDs */
-.vms-status-led { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; transition: all 0.2s ease; }
-.vms-status-led.online { background: #00ff9d; box-shadow: 0 0 8px rgba(0, 255, 157, 0.95), 0 0 2px #00ff9d; }
-.vms-status-led.offline { background: #ff003c; box-shadow: 0 0 8px rgba(255, 0, 60, 0.95), 0 0 2px #ff003c; }
-.vms-status-led.alert, .vms-status-led.alerta, .vms-status-led.alarm, .vms-status-led.alarme { background: #ff5e3a; box-shadow: 0 0 8px rgba(255, 94, 58, 0.95), 0 0 2px #ff5e3a; }
-.vms-status-led.desarmado, .vms-status-led.disarmed, .vms-status-led.warning { background: #fcee0a; box-shadow: 0 0 8px rgba(252, 238, 10, 0.95), 0 0 2px #fcee0a; }
-.vms-status-led.recording, .vms-status-led.gravando { background: #00f0ff; box-shadow: 0 0 8px rgba(0, 240, 255, 0.95), 0 0 2px #00f0ff; animation: vms-pulse 1.5s infinite; }
+.vms-status-led { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; transition: all 0.2s ease; background: #00ff9d !important; box-shadow: 0 0 8px rgba(0, 255, 157, 0.95), 0 0 2px #00ff9d !important; }
+.vms-status-led.online { background: #00ff9d !important; box-shadow: 0 0 8px rgba(0, 255, 157, 0.95), 0 0 2px #00ff9d !important; }
+.vms-status-led.offline { background: #ff003c !important; box-shadow: 0 0 8px rgba(255, 0, 60, 0.95), 0 0 2px #ff003c !important; }
+.vms-status-led.alert, .vms-status-led.alerta, .vms-status-led.alarm, .vms-status-led.alarme { background: #ff5e3a !important; box-shadow: 0 0 8px rgba(255, 94, 58, 0.95), 0 0 2px #ff5e3a !important; }
+.vms-status-led.desarmado, .vms-status-led.disarmed, .vms-status-led.warning { background: #fcee0a !important; box-shadow: 0 0 8px rgba(252, 238, 10, 0.95), 0 0 2px #fcee0a !important; }
+.vms-status-led.recording, .vms-status-led.gravando { background: #00f0ff !important; box-shadow: 0 0 8px rgba(0, 240, 255, 0.95), 0 0 2px #00f0ff !important; animation: vms-pulse 1.5s infinite; }
 
 /* Ubuntu Style Circular Close Button */
 .vms-slot-close-btn, .vms-ubuntu-close-btn {

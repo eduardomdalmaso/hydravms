@@ -6,34 +6,24 @@ export function drawCanvasTimeline(
   zoomMinutes: number,
   isExportMode: boolean,
   exportStart?: number,
-  exportEnd?: number
+  exportEnd?: number,
+  recordedRanges: { start: number; end: number }[] = []
 ) {
   // Dark Background (Represents GAPs / No Recording)
   ctx.fillStyle = '#14171c'; ctx.fillRect(0, 0, w, h)
   const windowSpan = zoomMinutes * 60000
   const windowStart = currentTime - windowSpan / 2
-  const baseDay = new Date(currentTime); baseDay.setHours(0, 0, 0, 0)
 
-  // Continuous 1-Minute Recording Segments (Solid Orange, Gaps Only Where Explicit)
+  // Render Real Recording Segments from Database (Solid Orange)
   ctx.fillStyle = isExportMode ? 'rgba(255, 94, 58, 0.18)' : '#ff5e3a'
-  for (let offset = -1; offset <= 1; offset++) {
-    const dayStart = baseDay.getTime() + offset * 86400000
-    // Real-world continuous recording spans (Gaps only at specific times: e.g. 04:10-04:35 and 14:00-14:20)
-    const recordedRanges = [
-      { start: dayStart, end: dayStart + 15000000 },                 // 00:00 to 04:10 (Solid continuous)
-      { start: dayStart + 16500000, end: dayStart + 50400000 },      // 04:35 to 14:00 (Solid continuous)
-      { start: dayStart + 51600000, end: dayStart + 86400000 }       // 14:20 to 24:00 (Solid continuous)
-    ]
-
-    for (const r of recordedRanges) {
-      if (r.end < windowStart || r.start > windowStart + windowSpan) continue
-      const clampStart = Math.max(r.start, windowStart)
-      const clampEnd = Math.min(r.end, windowStart + windowSpan)
-      const x = ((clampStart - windowStart) / windowSpan) * w
-      const segmentWidth = ((clampEnd - clampStart) / windowSpan) * w
-      if (segmentWidth > 0) {
-        ctx.fillRect(x, 12, segmentWidth, h - 30)
-      }
+  for (const r of recordedRanges) {
+    if (r.end < windowStart || r.start > windowStart + windowSpan) continue
+    const clampStart = Math.max(r.start, windowStart)
+    const clampEnd = Math.min(r.end, windowStart + windowSpan)
+    const x = ((clampStart - windowStart) / windowSpan) * w
+    const segmentWidth = ((clampEnd - clampStart) / windowSpan) * w
+    if (segmentWidth > 0) {
+      ctx.fillRect(x, 12, segmentWidth, h - 30)
     }
   }
 

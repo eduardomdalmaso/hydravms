@@ -12,7 +12,6 @@ type Router struct {
 	cameraHandler      *CameraHandler
 	storagePoolHandler *StoragePoolHandler
 	clusterNodeHandler *ClusterNodeHandler
-	onvifHandler       *ONVIFHandler
 	wsHandler          *ws.WebSocketHandler
 }
 
@@ -21,7 +20,6 @@ func NewRouter(
 	cameraHandler *CameraHandler,
 	storagePoolHandler *StoragePoolHandler,
 	clusterNodeHandler *ClusterNodeHandler,
-	onvifHandler *ONVIFHandler,
 	wsHandler *ws.WebSocketHandler,
 ) *Router {
 	return &Router{
@@ -29,7 +27,6 @@ func NewRouter(
 		cameraHandler:      cameraHandler,
 		storagePoolHandler: storagePoolHandler,
 		clusterNodeHandler: clusterNodeHandler,
-		onvifHandler:       onvifHandler,
 		wsHandler:          wsHandler,
 	}
 }
@@ -43,12 +40,6 @@ func (rt *Router) BuildHandler() http.Handler {
 	mux.HandleFunc("/api/v1/folders/", rt.folderHandler.HandleFolderByID)
 	mux.HandleFunc("/api/v1/cameras", rt.cameraHandler.HandleCameras)
 	mux.HandleFunc("/api/v1/cameras/", rt.cameraHandler.HandleCameraByID)
-
-	// ONVIF WS-Discovery & Device Probing
-	if rt.onvifHandler != nil {
-		mux.HandleFunc("/api/v1/cameras/onvif/discovery", rt.onvifHandler.HandleDiscovery)
-		mux.HandleFunc("/api/v1/cameras/onvif/probe", rt.onvifHandler.HandleProbe)
-	}
 
 	// Cluster Nodes (HydraStream & HydraForge Instances)
 	if rt.clusterNodeHandler != nil {

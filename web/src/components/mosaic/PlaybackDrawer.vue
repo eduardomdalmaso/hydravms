@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import type { CameraStreamInfo } from '../../types/mosaic'
 import { useTimelinePlayback } from '../../composables/useTimelinePlayback'
+import { fetchRemoteRecordings } from '../../services/recordingApi'
 import VezhaCanvasTimeline from './VezhaCanvasTimeline.vue'
 import DayTemporalRuler from './DayTemporalRuler.vue'
 import TimelineFooterLeft from './TimelineFooterLeft.vue'
@@ -9,7 +10,7 @@ import TimelineFooterCenter from './TimelineFooterCenter.vue'
 import TimelineFooterRight from './TimelineFooterRight.vue'
 import ClipExportModal from './ClipExportModal.vue'
 
-defineProps<{ camera: CameraStreamInfo }>()
+const props = defineProps<{ camera: CameraStreamInfo }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'exportClip'): void }>()
 
 const {
@@ -18,9 +19,18 @@ const {
 } = useTimelinePlayback()
 
 const isExportMode = ref(false), isExportModalOpen = ref(false), isSyncActive = ref(false)
-const exportRange = ref<{ start: number; end: number }>({
-  start: currentTime.value - 300000, end: currentTime.value + 300000
-})
+const exportRange = ref<{ start: number; end: number }>({ start: currentTime.value - 300000, end: currentTime.value + 300000 })
+const realRecordedRanges = ref<{ start: number; end: number }[]>([])
+
+const loadSegments = async () => {
+  if (!props.camera?.id) return
+  const segs = await fetchRemoteRecordings(props.camera.id)
+  realRecordedRanges.value = segs.map(s => ({
+    start: new Date(s.start_time).getTime(),
+    end: new Date(s.end_time).getTime()
+  }))
+}
+onMounted(loadSegments); watch(() => props.camera.id, loadSegments)
 
 const exportDurationText = computed(() => {
   const diffSec = Math.max(0, Math.round((exportRange.value.end - exportRange.value.start) / 1000))
@@ -45,6 +55,7 @@ const notify = (msg: string) => { if (typeof window !== 'undefined') window.aler
 
     <VezhaCanvasTimeline
       :currentTime="currentTime" :isExportMode="isExportMode" :exportStart="exportRange.start" :exportEnd="exportRange.end"
+      :recordedRanges="realRecordedRanges"
       @seek="currentTime = $event" @updateExportRange="exportRange = $event"
     />
 
