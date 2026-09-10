@@ -180,7 +180,7 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 
 	// Build RTSP URL fallback if not extracted via ONVIF
 	if mainRTSP == "" || !strings.HasPrefix(mainRTSP, "rtsp://") || (cleanIP != "" && !strings.Contains(mainRTSP, cleanIP)) {
-		mainRTSP = fmt.Sprintf("rtsp://%s%s:554/live", authPart, cleanIP)
+		mainRTSP = fmt.Sprintf("rtsp://%s%s:554/stream1", authPart, cleanIP)
 	} else if authPart != "" && !strings.Contains(mainRTSP, "@") {
 		mainRTSP = strings.Replace(mainRTSP, "rtsp://", fmt.Sprintf("rtsp://%s", authPart), 1)
 	}
@@ -193,16 +193,15 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 	// 3. Probe real stream metadata and frame capture via HydraStream / FFmpeg
 	var snapshotB64 string
 
-	candidatePaths := []string{mainRTSP}
-	if !strings.HasSuffix(mainRTSP, "/stream1") {
-		candidatePaths = append(candidatePaths, fmt.Sprintf("rtsp://%s%s:554/stream1", authPart, cleanIP))
-	}
-	if !strings.HasSuffix(mainRTSP, "/live") {
-		candidatePaths = append(candidatePaths, fmt.Sprintf("rtsp://%s%s:554/live", authPart, cleanIP))
+	var candidatePaths []string
+	if mainRTSP != "" && strings.HasPrefix(mainRTSP, "rtsp://") {
+		candidatePaths = append(candidatePaths, mainRTSP)
 	}
 	candidatePaths = append(candidatePaths,
-		fmt.Sprintf("rtsp://%s%s:554/Streaming/Channels/101", authPart, cleanIP),
+		fmt.Sprintf("rtsp://%s%s:554/stream1", authPart, cleanIP),
 		fmt.Sprintf("rtsp://%s%s:554/cam/realmonitor?channel=1&subtype=0", authPart, cleanIP),
+		fmt.Sprintf("rtsp://%s%s:554/Streaming/Channels/101", authPart, cleanIP),
+		fmt.Sprintf("rtsp://%s%s:554/live", authPart, cleanIP),
 		fmt.Sprintf("rtsp://%s%s:554/profile1", authPart, cleanIP),
 		fmt.Sprintf("rtsp://%s%s:554/onvif1", authPart, cleanIP),
 	)
@@ -210,13 +209,6 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 	if isOnline {
 		for _, rtspCandidate := range candidatePaths {
 			snap, snapStatus, _ := captureAndSaveSnapshot(r.Context(), rtspCandidate, camID)
-			if snapStatus == "UNAUTHORIZED" {
-				authRequired = true
-				codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
-				resolutionDisplay = "AGUARDANDO CREDENCIAIS"
-				fpsDisplay = 0
-				break
-			}
 			if snap != "" {
 				snapshotB64 = snap
 				mainRTSP = rtspCandidate
@@ -228,6 +220,13 @@ func (h *ONVIFHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 					resolutionDisplay = "1920x1080 Full HD"
 				}
 				fpsDisplay = 30
+				break
+			}
+			if snapStatus == "UNAUTHORIZED" {
+				authRequired = true
+				codecDisplay = "AUTENTICAÇÃO NECESSÁRIA (401)"
+				resolutionDisplay = "AGUARDANDO CREDENCIAIS"
+				fpsDisplay = 0
 				break
 			}
 		}
@@ -334,7 +333,6 @@ func captureAndSaveSnapshot(ctx context.Context, rtspURL, camID string) (string,
 	cmd := exec.CommandContext(cmdCtx, "ffmpeg",
 		"-y",
 		"-rtsp_transport", "tcp",
-		"-stimeout", "3000000",
 		"-analyzeduration", "1000000",
 		"-probesize", "1000000",
 		"-i", rtspURL,
@@ -363,7 +361,6 @@ func captureAndSaveSnapshot(ctx context.Context, rtspURL, camID string) (string,
 
 		cmdFb := exec.CommandContext(cmdFbCtx, "ffmpeg",
 			"-y",
-			"-stimeout", "3000000",
 			"-i", rtspURL,
 			"-vframes", "1",
 			"-q:v", "2",
