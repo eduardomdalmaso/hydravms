@@ -142,24 +142,38 @@ Consulte o DDL completo em [`migrations/000001_initial_schema.up.sql`](file:///h
 
 ---
 
-## 10. Arquitetura de Plugins Dinâmicos & Marketplace (Estilo Vezha / Scrypted)
+## 10. Arquitetura de Plugins Dinâmicos & Marketplace Open-Core
 
-Para permitir a evolução de analíticos sem interromper o ecossistema ou re-compilar o binário principal Go:
-- **Manifesto `plugin.json`:** Define metadados, permissões, schema de configuração e telas customizadas.
-- **Isolamento de Processos (Sandboxing):** Plugins rodam como subprocessos isolados comunicando via IPC (NATS JetStream e /dev/shm para Zero-Copy frames).
+Para permitir a evolução e monetização de analíticos sem interromper o ecossistema:
+- **Ecosistema Open-Core:** O núcleo de execução (`HydraVMS` e `HydraStream`) é aberto; módulos analíticos especializados e licenças de alta capacidade são distribuídos via Marketplace.
+- **Distribuição de Modelos Open Source:** Os modelos pesados (`.engine` / `.onnx`) e manifestos são hospedados gratuitamente no **Hugging Face Hub** (`huggingface.co/hydra-vision`) e **GitHub Releases**, permitindo instalação e atualização em 1-clique pelo `catalog.json`.
+- **Manifesto `plugin.json`:** Define metadados, versão, permissões, schema de configuração da UI e URLs diretas para download do binário TensorRT.
+- **Isolamento de Processos (Sandboxing):** Plugins de terceiros rodam como subprocessos isolados comunicando via IPC (NATS JetStream e /dev/shm para Zero-Copy frames). Analíticos de alta densidade (Intrusão, Permanência, Multidão, Ausência) rodam nativamente em Go/Rust.
 - **Hot-Reload & Blue/Green Updates:** Atualizações de analíticos sobem nova versão em paralelo, transferem subscrições e finalizam a versão antiga com zero descarte de frames.
-- **Marketplace Multi-Tenant:** Catálogo de analíticos (LPR, Facial, EPI, Fogo/Fumaça) com ativação e parametrização independente por tenant.
 
 
 ---
 
-## 11. Motor de Workflows de Notificação & Integrações (Telegram, WebSockets, Webhooks)
+## 11. Motor de Workflows de Notificação & Integrações (Telegram Nativo & Webhooks)
 
 Para automação inteligente de despacho de alertas em tempo real:
-- **Pipeline Visual (Trigger ➔ Condições/Filtros ➔ Ações/Destinos):** Permite aos operadores configurar para onde cada tipo de evento de IA deve ser enviado.
-- **Canal Nativo Telegram Bot:** Disparo instantâneo com texto formatado (câmera, tipo de evento, timestamp, confiança) + foto/snapshot cropado da cena via `sendPhoto`.
-- **Canais Múltiplos Simultâneos:** Disparo em paralelo para WebSockets (operadores online), HTTP Webhooks (sistemas externos de segurança/SIEM), Email e MQTT.
+- **Canal Nativo Telegram Bot (Padrão de Fábrica):** O Telegram é o canal oficial integrado por padrão (out-of-the-box), permitindo despacho instantâneo com texto formatado (câmera, tipo de evento, timestamp, confiança) + foto/snapshot anotado da cena via `sendPhoto` sem necessidade de instalar plugins adicionais.
+- **Integrações Externas via Marketplace:** Outros destinos (Webhooks corporativos, SIEM, MQTT, WhatsApp, E-mail) são conectados como plugins modulares a partir do catálogo.
 - **Anti-Spam Cooldown & Circuit Breaker:** Janela de silenciamento configurável (ex: 30s) para evitar disparos repetidos da mesma detecção consecutiva.
+
+
+---
+
+## 11.1. Sistema de Licenciamento Comercial Offline (Ed25519 + Hardware ID)
+
+Para monetização corporativa mantendo o sistema 100% autônomo e seguro em redes isoladas:
+- **Assinatura Criptográfica Asimétrica (Ed25519):** Chave pública embutida no binário Go e chave privada mantida sob controle exclusivo do criador.
+- **Validação por Hardware Fingerprint (`machine_id`):** Licenças são vinculadas ao identificador único da máquina física/servidor, impedindo pirataria ou clonagem de instâncias.
+- **Modelo Escalonado (Tiered):**
+  - **Community (Grátis):** Até 4 ou 8 canais com analíticos essenciais e Telegram nativo.
+  - **Enterprise (Licenciada):** Pacotes de 16, 32, 64, 128+ canais e acesso a analíticos premium.
+- **Operação 100% Offline:** Verificação instantânea ($< 0.001\text{ ms}$) sem dependência de internet ou servidores de ativação remotos.
+
 
 
 ---

@@ -129,9 +129,13 @@ Se uma nova versão de plugin falhar (ex: bug no script, incompatibilidade CUDA 
 4. **Config Rollback Protection:**
    - Snapshots do `config_values` são vinculados a cada versão para evitar que parâmetros novos quebrem a versão restaurada.
 
-## 6. Estrutura do Marketplace
+## 6. Estrutura do Marketplace & Distribuição Open Source
 
 O HydraVMS possui um catálogo integrado com suporte a:
-- **Repositório Oficial Remoto:** Busca plugins assinados digitalmente (SHA256 + ECDSA).
-- **Side-loading Local:** Upload de arquivos `.hpk` (Hydra Plugin Package - tar.gz assinado) pelo painel web.
-- **Auto-Update Policy:** Atualizações automáticas de patches de segurança ou aprovação manual pelo administrador do tenant.
+- **Catálogo Central Público (`catalog.json`):** Servido via CDN/GitHub, listando plugins, versões, tags de compatibilidade e hashes SHA-256.
+- **Hospedagem de Modelos no Hugging Face Hub / GitHub Releases:** Os pesos pré-treinados (`.engine` / `.onnx`) e manifestos ficam hospedados gratuitamente na CDN pública do Hugging Face (`huggingface.co/hydra-vision`), permitindo download e atualização em 1-clique sem custos de infraestrutura.
+- **Telegram Nativo:** O canal de alertas Telegram Bot é integrado como recurso nativo de fábrica (sem necessidade de plugin). Outras integrações e analíticos de nicho são instalados como plugins pelo Marketplace.
+- **Alimentação pelo Laboratório de IA:** Modelos refinados no **HydraForge** (com dados curados no **HydraVault**) são empacotados e publicados diretamente no Marketplace.
+- **Side-loading Local:** Upload de pacotes `.hpk` (Hydra Plugin Package) diretamente pelo painel web para ambientes sem conexão à internet.
+- **Auto-Update Policy:** Notificação de nova versão na sidebar do VMS com botão `[ATUALIZAR]` e verificação de assinatura Ed25519.
+
