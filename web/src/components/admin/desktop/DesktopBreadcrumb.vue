@@ -62,7 +62,7 @@ const { t } = useI18n()
     </div>
 
     <span class="vms-text-mono vms-text-2xs vms-text-dim">
-      {{ selectedStream ? '[INSPECTOR // ATIVO]' : currentFolder ? `${currentFolderStreamsCount ?? 0} FLUXOS` : `${totalFolders} PASTAS // ${totalStreams} FLUXOS` }}
+      {{ selectedStream ? t('inspect_active') : currentFolder ? `${currentFolderStreamsCount ?? 0} ${t('streams')}` : `${totalFolders} ${t('folders')} // ${totalStreams} ${t('streams')}` }}
     </span>
   </div>
 </template>

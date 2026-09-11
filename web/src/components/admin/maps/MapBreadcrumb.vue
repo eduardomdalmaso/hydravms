@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MapFolderNode, EnterpriseMapItem } from '../../../types/mapTree'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{
   currentFolder: MapFolderNode | null
@@ -16,6 +17,8 @@ const emit = defineEmits<{
   (e: 'save'): void
   (e: 'toggleLock'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -23,11 +26,11 @@ const emit = defineEmits<{
     <div class="vms-breadcrumb-trail">
       <button v-if="selectedMap || currentFolder" class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 2px 6px; font-size: 11px;" @click="emit('back')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        <span>VOLTAR</span>
+        <span>{{ t('back') }}</span>
       </button>
 
       <span class="vms-breadcrumb-item" :class="{ 'vms-breadcrumb-active': !currentFolder && !selectedMap }" @click="emit('navigateRoot')">
-        MAPAS & PLANTAS (RAIZ)
+        {{ t('maps_root') }}
       </span>
 
       <template v-if="currentFolder">
@@ -48,19 +51,18 @@ const emit = defineEmits<{
     <div class="vms-flex-row" style="gap: 0.75rem; align-items: center;">
       <template v-if="!selectedMap">
         <span v-if="!currentFolder" class="vms-badge vms-badge-neutral" style="font-size: 10px;">
-          {{ totalFolders }} PASTAS // {{ totalMaps }} MAPAS
+          {{ totalFolders }} {{ t('folders') }} // {{ totalMaps }} {{ t('maps_label') }}
         </span>
         <span v-else class="vms-badge vms-badge-neutral" style="font-size: 10px;">
-          {{ currentFolderMapsCount || 0 }} MAPAS NESTA PASTA
+          {{ currentFolderMapsCount || 0 }} {{ t('maps_label') }}
         </span>
       </template>
 
       <template v-else>
         <span class="vms-badge" style="font-size: 10px; background: #14171d; border: 1px solid var(--vms-border); color: var(--vms-neu-accent-orange);">
-          {{ selectedMap.markers.length }} PINOS FIXADOS
+          {{ selectedMap.markers.length }} {{ t('pins_fixed') }}
         </span>
 
-        <!-- Botão Cadeado Flaticon Laranja ao lado de SALVAR -->
         <button
           type="button"
           class="vms-btn vms-btn-sm"
@@ -70,7 +72,7 @@ const emit = defineEmits<{
             background: selectedMap.is_locked ? 'rgba(255, 94, 58, 0.2)' : '#07080c',
             borderColor: selectedMap.is_locked ? '#ff5e3a' : 'var(--vms-border)'
           }"
-          :title="selectedMap.is_locked ? '[TRAVADO COM CADEADO] (Clique para destravar)' : '[DESTRAVADO] (Clique para travar)'"
+          :title="selectedMap.is_locked ? t('locked_badge') : t('unlocked_badge')"
           @click="emit('toggleLock')"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" :fill="selectedMap.is_locked ? '#ff5e3a' : 'none'" stroke="#ff5e3a" stroke-width="1.5">
@@ -79,7 +81,7 @@ const emit = defineEmits<{
         </button>
 
         <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="emit('save')">
-          SALVAR
+          {{ t('save') }}
         </button>
       </template>
     </div>

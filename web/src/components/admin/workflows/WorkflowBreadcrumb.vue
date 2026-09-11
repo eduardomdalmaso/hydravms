@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WorkflowFolderNode, EnterpriseWorkflowItem } from '../../../types/workflowTree'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{
   currentFolder: WorkflowFolderNode | null
@@ -16,6 +17,8 @@ const emit = defineEmits<{
   (e: 'save'): void
   (e: 'toggleLock'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -23,11 +26,11 @@ const emit = defineEmits<{
     <div class="vms-breadcrumb-trail">
       <button v-if="selectedWorkflow || currentFolder" class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 2px 6px; font-size: 11px;" @click="emit('back')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        <span>VOLTAR</span>
+        <span>{{ t('back') }}</span>
       </button>
 
       <span class="vms-breadcrumb-item" :class="{ 'vms-breadcrumb-active': !currentFolder && !selectedWorkflow }" @click="emit('navigateRoot')">
-        WORKFLOWS & FLUXOS (RAIZ)
+        {{ t('workflows_root') }}
       </span>
 
       <template v-if="currentFolder">
@@ -48,19 +51,18 @@ const emit = defineEmits<{
     <div class="vms-flex-row" style="gap: 0.75rem; align-items: center;">
       <template v-if="!selectedWorkflow">
         <span v-if="!currentFolder" class="vms-badge vms-badge-neutral" style="font-size: 10px;">
-          {{ totalFolders }} PASTAS // {{ totalWorkflows }} WORKFLOWS
+          {{ totalFolders }} {{ t('folders') }} // {{ totalWorkflows }} {{ t('workflows_label') }}
         </span>
         <span v-else class="vms-badge vms-badge-neutral" style="font-size: 10px;">
-          {{ currentFolderWorkflowsCount || 0 }} WORKFLOWS NESTA PASTA
+          {{ currentFolderWorkflowsCount || 0 }} {{ t('workflows_label') }} {{ t('in_folder') }}
         </span>
       </template>
 
       <template v-else>
         <span class="vms-badge" style="font-size: 10px; background: #14171d; border: 1px solid var(--vms-border); color: var(--vms-neu-accent-orange);">
-          {{ selectedWorkflow.nodes.length }} BLOCOS NO FLOW
+          {{ selectedWorkflow.nodes.length }} {{ t('blocks_flow') }}
         </span>
 
-        <!-- Botão Cadeado Flaticon Laranja ao lado de SALVAR -->
         <button
           type="button"
           class="vms-btn vms-btn-sm"
@@ -70,7 +72,7 @@ const emit = defineEmits<{
             background: selectedWorkflow.is_locked ? 'rgba(255, 94, 58, 0.2)' : '#07080c',
             borderColor: selectedWorkflow.is_locked ? '#ff5e3a' : 'var(--vms-border)'
           }"
-          :title="selectedWorkflow.is_locked ? '[TRAVADO COM CADEADO] (Clique para destravar)' : '[DESTRAVADO] (Clique para travar)'"
+          :title="selectedWorkflow.is_locked ? t('locked_badge') : t('unlocked_badge')"
           @click="emit('toggleLock')"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" :fill="selectedWorkflow.is_locked ? '#ff5e3a' : 'none'" stroke="#ff5e3a" stroke-width="1.5">
@@ -79,7 +81,7 @@ const emit = defineEmits<{
         </button>
 
         <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="emit('save')">
-          SALVAR
+          {{ t('save') }}
         </button>
       </template>
     </div>

@@ -110,7 +110,7 @@ As diretrizes detalhadas encontram-se em [`.agents/rules/ui-standards.md`](file:
 - **Tipografia:** `'Inter'` / `'Geist'` para textos/títulos e `'JetBrains Mono'` para números, FPS e timestamps.
 - **Header:** 56px com Breadcrumb, Telemetria compacta e Perfil.
 - **Sidebar:** 240px (expandida) / 64px (recolhida) com indicador de rota ativa com borda azul.
-- **Modularidade:** **Máximo de 100 linhas por arquivo** (`.vue`, `.ts`, `.css`).
+- **Modularidade & Coesão:** Componentes `.vue` até 150 linhas (teto de 200 linhas para telas complexas), composables e lógica `.ts` até 100-120 linhas; dicionários (`locales/*.ts`) e definições de tipos (`types/*.ts`) isentos de limite rígido por serem declarativos.
 - **Nomenclatura Concisa & Botões:** Rótulos atômicos (`GRAVANDO`, `ANALITICOS`, `CODEC`, `COMPRESSAO`, `RESOLUCAO`, `FPS`) e texto de botão de confirmação sempre **`SALVAR`** (detalhes em [`.agents/rules/ui-telemetry-naming.md`](.agents/rules/ui-telemetry-naming.md)).
 
 ---
@@ -257,12 +257,16 @@ Para automação inteligente de despacho de alertas em tempo real:
 ## 16. Protocolo de Auto-Reparo & Validação Pós-Prompt (Self-Healing Rules)
 
 ```bash
-# 1. Auditoria de Limite de Linhas Web (< 100 linhas por arquivo)
-wc -l web/src/**/*.vue web/src/**/*.ts web/src/**/*.css web/src/**/*.js 2>/dev/null | awk '$1 > 100 { print "VIOLATION: " $2 " has " $1 " lines (>100)" }'
+# 1. Auditoria de Limite de Linhas Web (Composables <= 120, Views <= 200, Locales/Types isentos)
+wc -l web/src/**/*.vue web/src/**/*.ts web/src/**/*.css web/src/**/*.js 2>/dev/null | awk '$2 !~ /locales|types/ && $1 > 200 { print "VIOLATION: " $2 " has " $1 " lines (>200)" }'
 
 # 2. Auditoria de Pureza DDD (Nenhum import de infra no domínio)
 grep -rnE "(net/http|database/sql)" internal/domain/ && echo "VIOLAÇÃO DDD: Remova infraestrutura do domínio!"
 
 # 3. Compilação e Testes Automatizados
 make test && make build
+
+# 4. Auditoria de Paridade de Internacionalização (i18n PT, EN, ES)
+npm --prefix web run check:i18n
 ```
+

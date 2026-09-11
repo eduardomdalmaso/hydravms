@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LayoutFolderNode, EnterpriseLayoutItem } from '../../../types/layoutTree'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{
   currentFolder?: LayoutFolderNode | null
@@ -16,15 +17,17 @@ const emit = defineEmits<{
   (e: 'save'): void
   (e: 'toggleLock'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="vms-flex-between" style="padding: 0.5rem 0.75rem; background: #16191f; border-radius: 6px; border: 1px solid var(--vms-border); align-items: center;">
     <!-- Left path breadcrumbs -->
     <div class="vms-flex-row" style="gap: 0.75rem; align-items: center; min-width: 0;">
-      <button v-if="currentFolder || selectedLayout" class="vms-btn vms-btn-secondary vms-btn-sm" title="Voltar" @click="emit('back')">
+      <button v-if="currentFolder || selectedLayout" class="vms-btn vms-btn-secondary vms-btn-sm" :title="t('back')" @click="emit('back')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
-        <span>VOLTAR</span>
+        <span>{{ t('back') }}</span>
       </button>
 
       <span
@@ -33,7 +36,7 @@ const emit = defineEmits<{
         style="cursor: pointer;"
         @click="emit('navigate-root')"
       >
-        [EMPRESAS & CLIENTES]
+        {{ t('companies_root') }}
       </span>
 
       <template v-if="currentFolder">
@@ -59,7 +62,7 @@ const emit = defineEmits<{
     <!-- Right side: Counters + Padlock & SALVAR button at far right -->
     <div class="vms-flex-row" style="gap: 0.5rem; align-items: center; flex-shrink: 0;">
       <span class="vms-text-mono vms-text-2xs vms-text-dim">
-        {{ selectedLayout ? '[INSPEÇÃO // GRADE ATIVA]' : currentFolder ? `${currentFolderLayoutsCount ?? 0} LAYOUTS` : `${totalFolders} PASTAS // ${totalLayouts} LAYOUTS` }}
+        {{ selectedLayout ? t('inspect_grid') : currentFolder ? `${currentFolderLayoutsCount ?? 0} ${t('layouts_label')}` : `${totalFolders} ${t('folders')} // ${totalLayouts} ${t('layouts_label')}` }}
       </span>
 
       <template v-if="selectedLayout">
@@ -72,7 +75,7 @@ const emit = defineEmits<{
             background: selectedLayout.is_locked ? 'rgba(255, 94, 58, 0.2)' : '#07080c',
             borderColor: selectedLayout.is_locked ? '#ff5e3a' : 'var(--vms-border)'
           }"
-          :title="selectedLayout.is_locked ? '[TRAVADO COM CADEADO] (Clique para destravar)' : '[DESTRAVADO] (Clique para travar com cadeado)'"
+          :title="selectedLayout.is_locked ? t('locked_badge') : t('unlocked_badge')"
           @click="emit('toggleLock')"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" :fill="selectedLayout.is_locked ? '#ff5e3a' : 'none'" stroke="#ff5e3a" stroke-width="1.5">
@@ -85,7 +88,7 @@ const emit = defineEmits<{
           style="padding: 4px 16px; font-weight: 700; box-shadow: 0 0 12px rgba(255, 94, 58, 0.4);"
           @click="emit('save')"
         >
-          SALVAR
+          {{ t('save') }}
         </button>
       </template>
     </div>

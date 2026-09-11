@@ -47,8 +47,11 @@ Este documento estabelece o design system oficial, hierarquia de páginas, tipog
 
 ---
 
-## 6. Regra Inviolável de Modularidade Frontend (< 100 Linhas)
-Nenhum arquivo `.vue`, `.ts`, `.js` ou `.css` em `web/` pode ultrapassar **100 linhas**. Componentes devem ser fracionados em subcomponentes atômicos.
+## 6. Padrão Arquitetural de Modularidade Frontend (Single Responsibility & Clean Components)
+Seguindo as diretrizes de *Software Architecture: The Hard Parts* e *Vue 3 Architecture Guide*, a modularidade do código evita tanto arquivos gigantescos (*God Components*) quanto fragmentação excessiva (*Anemic/Micro Components*):
+- **Componentes Visuais (`.vue` / `.jsx`):** Limite recomendado de **até 150 linhas** (com teto máximo tolerável de **200 linhas** para views e painéis complexos).
+- **Lógica de Aplicação & Composables (`.ts` / `.js`):** Limite de **até 100 a 120 linhas** por composable/serviço para manter o princípio de responsabilidade única (SRP).
+- **Dicionários de Localização & Definições de Tipos (`locales/*.ts`, `types/*.ts`):** **Isentos de limite rígido por linhas**, por se tratarem de estruturas de dados puramente declarativas sem complexidade ciclomática.
 
 ---
 

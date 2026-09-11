@@ -4,7 +4,7 @@ import type { StreamItem } from '../types/streamTree'
 import { discoverOnvifDevices } from '../services/adminApi'
 
 const discoveredDevices = ref<DiscoveredOnvifCamera[]>([])
-const lastScanTime = ref<string>('Nunca')
+const lastScanTime = ref<string>('')
 
 export function useOnvifDiscovery() {
   const isScanning = ref(false)

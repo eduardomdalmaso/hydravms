@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AnalyticFolderNode, AnalyticInstance } from '../../../types/marketplace'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{
   currentFolder: AnalyticFolderNode | null
@@ -14,6 +15,8 @@ const emit = defineEmits<{
   (e: 'navigateRoot'): void
   (e: 'save'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -25,7 +28,7 @@ const emit = defineEmits<{
         style="padding: 2px 6px; font-size: 11px;"
         @click="emit('back')"
       >
-        ◀ VOLTAR
+        ◀ {{ t('back') }}
       </button>
 
       <div class="vms-flex-row" style="gap: 0.35rem; align-items: center; font-size: 11px; font-family: var(--vms-font-jetbrains);">
@@ -33,7 +36,7 @@ const emit = defineEmits<{
           style="cursor: pointer; color: var(--vms-neu-accent-orange); font-weight: 700;"
           @click="emit('navigateRoot')"
         >
-          RAIZ
+          {{ t('root') }}
         </span>
         <template v-if="currentFolder">
           <span style="color: #64748b;">/</span>
@@ -49,10 +52,10 @@ const emit = defineEmits<{
     <div class="vms-flex-row" style="gap: 0.75rem; align-items: center;">
       <span class="vms-text-mono vms-text-2xs vms-text-dim">
         <template v-if="currentFolder">
-          {{ folderInstancesCount ?? 0 }} ANALÍTICO(S) NESTA PASTA
+          {{ folderInstancesCount ?? 0 }} {{ t('analytics_label') }} {{ t('in_folder') }}
         </template>
         <template v-else>
-          {{ totalFolders }} PASTAS // {{ totalInstances }} ANALÍTICO(S)
+          {{ totalFolders }} {{ t('folders') }} // {{ totalInstances }} {{ t('analytics_label') }}
         </template>
       </span>
       <button
@@ -61,7 +64,7 @@ const emit = defineEmits<{
         style="font-size: 10px; padding: 3px 12px; font-weight: bold;"
         @click="emit('save')"
       >
-        SALVAR
+        {{ t('save') }}
       </button>
     </div>
   </div>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { DiscoveredOnvifCamera } from '../../../types/onvifDiscovery'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{ camera: DiscoveredOnvifCamera }>()
 const emit = defineEmits<{ (e: 'import', camera: DiscoveredOnvifCamera): void }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -33,14 +35,14 @@ const emit = defineEmits<{ (e: 'import', camera: DiscoveredOnvifCamera): void }>
     <!-- Footer: Detection count and Action Button -->
     <div class="vms-flex-between" style="align-items: center; padding-top: 0.15rem;">
       <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-dim); white-space: nowrap;">
-        {{ camera.profiles.length }} {{ camera.profiles.length > 1 ? 'perfis RTSP' : 'perfil RTSP' }}
+        {{ camera.profiles.length }} {{ camera.profiles.length > 1 ? t('rtsp_profiles') : t('rtsp_profile') }}
       </span>
       <button 
         class="vms-btn vms-btn-primary vms-btn-sm" 
         style="padding: 0 12px; font-size: 10px; height: 26px; white-space: nowrap;"
         @click="emit('import', camera)"
       >
-        <span>+ IMPORTAR FLUXO</span>
+        <span>+ {{ t('import_stream') }}</span>
       </button>
     </div>
   </div>
