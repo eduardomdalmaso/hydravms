@@ -43,8 +43,8 @@ const handleToggleLock = () => {
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CADASTRO DE RONDAS & CARROSSEL</h3>
-        <span v-if="selectedRonda" class="vms-text-mono vms-text-2xs vms-text-dim">INSPECAO // {{ selectedRonda.name }}</span>
-        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZACAO EM PASTAS // EMPRESAS & CLIENTES FINAIS</span>
+        <span v-if="selectedRonda" class="vms-text-mono vms-text-2xs vms-text-dim">INSPEÇÃO // {{ selectedRonda.name }}</span>
+        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZAÇÃO EM PASTAS // EMPRESAS & CLIENTES FINAIS</span>
       </div>
       <div v-if="!selectedRonda" class="vms-flex-row" style="gap: 0.75rem;">
         <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar rondas..." />
@@ -79,7 +79,7 @@ const handleToggleLock = () => {
           </div>
         </div>
         <div v-else class="vms-desktop-grid">
-          <div v-if="displayedRondas.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// PASTA VAZIA (CLIQUE EM [+] OU BOTAO DIREITO PARA CADASTRAR RONDA)</div>
+          <div v-if="displayedRondas.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// PASTA VAZIA (CLIQUE EM [+] OU BOTÃO DIREITO PARA CADASTRAR RONDA)</div>
           <RondaAppCard v-for="r in displayedRondas" :key="r.id" :ronda="r" :is-selected="false" @dragstart="handleDragStart" @select="(ron) => selectedRonda = ron" @context="(ev, ron) => openContextMenu(ev, { type: 'stream', id: ron.id, name: ron.name, currentFolderId: currentFolderId })" />
         </div>
       </div>

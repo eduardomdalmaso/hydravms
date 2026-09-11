@@ -37,8 +37,8 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
     <!-- Top Bar -->
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
-        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CONFIGURACAO DE ALARMES & SENSORES</h3>
-        <span v-if="selectedAlarm" class="vms-text-mono vms-text-2xs vms-text-dim">INSPECAO // {{ selectedAlarm.name }}</span>
+        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CONFIGURAÇÃO DE ALARMES & SENSORES</h3>
+        <span v-if="selectedAlarm" class="vms-text-mono vms-text-2xs vms-text-dim">INSPEÇÃO // {{ selectedAlarm.name }}</span>
       </div>
       <div v-if="!selectedAlarm" class="vms-flex-row" style="gap: 0.75rem;">
         <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar sensores..." />
@@ -74,7 +74,7 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
         </div>
 
         <div v-else class="vms-desktop-grid">
-          <div v-if="displayedAlarms.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// ZONA VAZIA (CLIQUE EM [+] OU BOTAO DIREITO PARA CADASTRAR SENSOR)</div>
+          <div v-if="displayedAlarms.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// ZONA VAZIA (CLIQUE EM [+] OU BOTÃO DIREITO PARA CADASTRAR SENSOR)</div>
           <AlarmAppCard v-for="a in displayedAlarms" :key="a.id" :alarm="a" :is-selected="false" @dragstart="handleDragStart" @select="(alarm) => selectedAlarm = alarm" @context="(ev, alarm) => openContextMenu(ev, { type: 'stream', id: alarm.id, name: alarm.name, currentFolderId: currentFolderId })" />
         </div>
       </div>

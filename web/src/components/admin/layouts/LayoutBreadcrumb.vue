@@ -59,7 +59,7 @@ const emit = defineEmits<{
     <!-- Right side: Counters + Padlock & SALVAR button at far right -->
     <div class="vms-flex-row" style="gap: 0.5rem; align-items: center; flex-shrink: 0;">
       <span class="vms-text-mono vms-text-2xs vms-text-dim">
-        {{ selectedLayout ? '[INSPECAO // GRADE ATIVA]' : currentFolder ? `${currentFolderLayoutsCount ?? 0} LAYOUTS` : `${totalFolders} PASTAS // ${totalLayouts} LAYOUTS` }}
+        {{ selectedLayout ? '[INSPEÇÃO // GRADE ATIVA]' : currentFolder ? `${currentFolderLayoutsCount ?? 0} LAYOUTS` : `${totalFolders} PASTAS // ${totalLayouts} LAYOUTS` }}
       </span>
 
       <template v-if="selectedLayout">

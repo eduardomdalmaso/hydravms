@@ -31,7 +31,7 @@ const handleSave = () => {
     <div class="vms-modal-dialog">
       <div class="vms-modal-header">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">
-          {{ isRename ? 'RENOMEAR GRUPO DE USUARIOS' : 'CRIAR NOVO GRUPO // PASTA' }}
+          {{ isRename ? 'RENOMEAR GRUPO DE USUÁRIOS' : 'CRIAR NOVO GRUPO // PASTA' }}
         </h3>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

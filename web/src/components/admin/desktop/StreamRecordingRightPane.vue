@@ -21,7 +21,7 @@ const handleOpenCreate = () => { selectedProfile.value = null; isModalOpen.value
 const handleOpenEdit = (p: RecordingProfile) => { selectedProfile.value = p; isModalOpen.value = true }
 const handleDelete = async (id: string) => {
   await deleteRemoteRecordingProfile(props.stream.id, id); profiles.value = profiles.value.filter(p => p.id !== id); syncRecordMode()
-  emit('saved', `Perfil excluido com sucesso.`)
+  emit('saved', `Perfil excluído com sucesso.`)
 }
 const handleSaveProfile = async (profile: RecordingProfile) => {
   await saveRemoteRecordingProfile(props.stream.id, profile); await loadProfiles()
@@ -33,10 +33,10 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
   <div class="vms-split-pane">
     <div class="vms-split-header">
       <div class="vms-flex-col" style="gap: 2px;">
-        <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">DIRETRIZES DE GRAVACAO</span>
-        <span class="vms-text-mono vms-text-2xs vms-text-dim">// CADASTRO DE PERFIS, MODOS E HORARIOS</span>
+        <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">DIRETRIZES DE GRAVAÇÃO</span>
+        <span class="vms-text-mono vms-text-2xs vms-text-dim">// CADASTRO DE PERFIS, MODOS E HORÁRIOS</span>
       </div>
-      <button class="vms-btn vms-btn-primary" style="padding: 0.3rem 0.7rem; font-size: 16px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center;" title="Novo Perfil de Gravacao" @click="handleOpenCreate">
+      <button class="vms-btn vms-btn-primary" style="padding: 0.3rem 0.7rem; font-size: 16px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center;" title="Novo Perfil de Gravação" @click="handleOpenCreate">
         <span>+</span>
       </button>
     </div>
@@ -49,7 +49,7 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
             <th style="width: 75px; text-align: left;">ID</th>
             <th style="text-align: left;">NOME DO CADASTRO</th>
             <th style="width: 80px; text-align: center;">ATIVAR</th>
-            <th style="width: 90px; text-align: center;">ACOES</th>
+            <th style="width: 90px; text-align: center;">AÇÕES</th>
           </tr>
         </thead>
         <tbody v-if="profiles.length > 0">
@@ -65,7 +65,7 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
             </td>
             <td style="text-align: center;">
               <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <button class="vms-table-action-btn" title="Editar Grade de Horarios" @click="handleOpenEdit(p)">
+                <button class="vms-table-action-btn" title="Editar Grade de Horários" @click="handleOpenEdit(p)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 <button class="vms-table-action-btn" title="Excluir Perfil" @click="handleDelete(p.id)">

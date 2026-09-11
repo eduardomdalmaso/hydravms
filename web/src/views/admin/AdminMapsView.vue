@@ -21,7 +21,7 @@ const {
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CADASTRO DE PLANTAS BAIXAS & MAPAS</h3>
         <span v-if="selectedMap" class="vms-text-mono vms-text-2xs vms-text-dim">EDITOR // {{ selectedMap.name }}</span>
-        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZACAO EM PASTAS // MAPAS COLORIDOS OPENSOURCE & PLANTAS</span>
+        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZAÇÃO EM PASTAS // MAPAS COLORIDOS OPENSOURCE & PLANTAS</span>
       </div>
       <div v-if="!selectedMap" class="vms-flex-row" style="gap: 0.75rem;">
         <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar mapas..." />

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,3 +27,9 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserInactive       = errors.New("user account is inactive")
+)
+

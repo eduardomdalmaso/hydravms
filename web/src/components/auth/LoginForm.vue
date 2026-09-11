@@ -17,7 +17,7 @@ const handleSubmit = () => {
 <template>
   <form class="vms-flex-col" style="gap: 1.25rem;" @submit.prevent="handleSubmit">
     <div class="vms-form-group">
-      <label class="vms-label">Usuario</label>
+      <label class="vms-label">Usuário</label>
       <input v-model="username" type="text" required class="vms-auth-input" placeholder="admin" autofocus />
     </div>
     <div class="vms-form-group">
@@ -33,7 +33,7 @@ const handleSubmit = () => {
         <span class="vms-text-xs">Lembrar neste navegador</span>
       </label>
     </div>
-    <div v-if="errorMessage" class="vms-badge vms-badge-recording" style="justify-content: center; width: 100%;">
+    <div v-if="errorMessage" class="vms-badge vms-badge-offline" style="justify-content: center; width: 100%; padding: 6px 10px; font-weight: bold;">
       {{ errorMessage }}
     </div>
     <button type="submit" class="vms-auth-submit-btn vms-neu-accent-hero" :disabled="isLoading">

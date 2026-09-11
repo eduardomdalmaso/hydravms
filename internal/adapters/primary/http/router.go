@@ -5,28 +5,44 @@ import (
 
 	"hydravms/internal/adapters/primary/http/middleware"
 	"hydravms/internal/adapters/primary/ws"
+	"hydravms/internal/application"
 )
 
 type Router struct {
+	authHandler        *AuthHandler
 	folderHandler      *FolderHandler
 	cameraHandler      *CameraHandler
 	storagePoolHandler *StoragePoolHandler
 	clusterNodeHandler *ClusterNodeHandler
+	auditHandler       *AuditHandler
+	adminDataHandler   *AdminDataHandler
+	authService        *application.AuthService
+	auditService       *application.AuditService
 	wsHandler          *ws.WebSocketHandler
 }
 
 func NewRouter(
+	authHandler *AuthHandler,
 	folderHandler *FolderHandler,
 	cameraHandler *CameraHandler,
 	storagePoolHandler *StoragePoolHandler,
 	clusterNodeHandler *ClusterNodeHandler,
+	auditHandler *AuditHandler,
+	adminDataHandler *AdminDataHandler,
+	authService *application.AuthService,
+	auditService *application.AuditService,
 	wsHandler *ws.WebSocketHandler,
 ) *Router {
 	return &Router{
+		authHandler:        authHandler,
 		folderHandler:      folderHandler,
 		cameraHandler:      cameraHandler,
 		storagePoolHandler: storagePoolHandler,
 		clusterNodeHandler: clusterNodeHandler,
+		auditHandler:       auditHandler,
+		adminDataHandler:   adminDataHandler,
+		authService:        authService,
+		auditService:       auditService,
 		wsHandler:          wsHandler,
 	}
 }
@@ -35,7 +51,12 @@ func NewRouter(
 func (rt *Router) BuildHandler() http.Handler {
 	mux := http.NewServeMux()
 
-	// REST API Endpoints
+	// Authentication Endpoints (Public Login & Token Exchange)
+	if rt.authHandler != nil {
+		mux.HandleFunc("/api/v1/auth/login", rt.authHandler.HandleLogin)
+	}
+
+	// REST API Endpoints - Folders & Cameras
 	mux.HandleFunc("/api/v1/folders", rt.folderHandler.HandleFolders)
 	mux.HandleFunc("/api/v1/folders/", rt.folderHandler.HandleFolderByID)
 	mux.HandleFunc("/api/v1/cameras", rt.cameraHandler.HandleCameras)
@@ -48,6 +69,19 @@ func (rt *Router) BuildHandler() http.Handler {
 		mux.HandleFunc("/api/v1/cluster/probe", rt.clusterNodeHandler.HandleProbe)
 	}
 
+	// Forensic Audit & System Logs Endpoints
+	if rt.auditHandler != nil {
+		mux.HandleFunc("/api/v1/system/logs", rt.auditHandler.HandleLogs)
+		mux.HandleFunc("/api/v1/audit/logs", rt.auditHandler.HandleLogs)
+	}
+
+	// Admin Center: Users, Layouts, Maps, Tours
+	if rt.adminDataHandler != nil {
+		mux.HandleFunc("/api/v1/users", rt.adminDataHandler.HandleUsers)
+		mux.HandleFunc("/api/v1/layouts", rt.adminDataHandler.HandleLayouts)
+		mux.HandleFunc("/api/v1/maps", rt.adminDataHandler.HandleMaps)
+		mux.HandleFunc("/api/v1/tours", rt.adminDataHandler.HandleTours)
+	}
 
 	// Storage & MinIO S3 Endpoints
 	if rt.storagePoolHandler != nil {
@@ -76,9 +110,28 @@ func (rt *Router) BuildHandler() http.Handler {
 		w.Write([]byte(`{"status":"healthy","service":"hydravms-controlplane"}`))
 	})
 
-	// Wrap in middleware chain: CORS -> Logger -> Auth
+	// Wrap in middleware chain: CORS -> Logger -> Audit -> Auth
 	handler := middleware.CORSMiddleware(mux)
 	handler = middleware.LoggerMiddleware(handler)
+	if rt.auditService != nil {
+		handler = middleware.AuditMiddleware(rt.auditService)(handler)
+	}
+	if rt.authService != nil {
+		validator := func(tokenStr string) (*middleware.TokenClaims, error) {
+			claims, err := rt.authService.ValidateToken(tokenStr)
+			if err != nil {
+				return nil, err
+			}
+			return &middleware.TokenClaims{
+				TenantID:         claims.TenantID,
+				UserID:           claims.UserID,
+				Role:             claims.Role,
+				Scopes:           claims.Scopes,
+				RegisteredClaims: claims.RegisteredClaims,
+			}, nil
+		}
+		handler = middleware.AuthMiddleware(validator)(handler)
+	}
 
 	return handler
 }

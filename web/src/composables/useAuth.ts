@@ -21,15 +21,29 @@ export function useAuth() {
 
     try {
       if (!creds.username || !creds.password) {
-        throw new Error('Preencha o usuario e a senha.')
+        throw new Error('Preencha o usuário e a senha.')
       }
 
-      username.value = creds.username
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8083'
+      const res = await fetch(`${apiBase}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: creds.username, password: creds.password })
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || 'Usuário ou senha incorretos.')
+      }
+
+      const data = await res.json()
+      username.value = data.user?.username || creds.username
       isAuthenticated.value = true
       localStorage.setItem('hydra_auth', 'true')
-      localStorage.setItem('hydra_user', creds.username)
+      localStorage.setItem('hydra_token', data.token)
+      localStorage.setItem('hydra_user', username.value)
     } catch (err: any) {
-      errorMessage.value = err.message || 'Credenciais invalidas.'
+      errorMessage.value = err.message || 'Credenciais inválidas.'
     } finally {
       isLoading.value = false
     }
@@ -38,6 +52,7 @@ export function useAuth() {
   const handleLogout = () => {
     isAuthenticated.value = false
     localStorage.removeItem('hydra_auth')
+    localStorage.removeItem('hydra_token')
   }
 
   return {

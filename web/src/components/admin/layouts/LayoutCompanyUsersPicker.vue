@@ -25,7 +25,7 @@ const allowedInCompanyCount = computed(() =>
   <div class="vms-form-group" style="background: #07080c !important; padding: 0.65rem; border-radius: 6px; border: 1px solid var(--vms-border);">
     <div class="vms-flex-between" style="align-items: center; margin-bottom: 0.45rem;">
       <span class="vms-text-mono vms-text-2xs vms-font-bold" style="color: var(--vms-neu-accent-orange);">
-        // USUARIOS COM PERMISSAO NA EMPRESA
+        // USUÁRIOS COM PERMISSÃO NA EMPRESA
       </span>
       <span class="vms-badge" style="background: #14171d; color: #ff5e3a !important; border: 1px solid var(--vms-border); font-size: 8px;">
         {{ allowedInCompanyCount }} / {{ companyUsers.length }} LIBERADOS

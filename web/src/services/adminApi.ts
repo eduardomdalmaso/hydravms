@@ -5,13 +5,13 @@ import type { EnterpriseRondaItem } from '../types/rondaTree'
 import type { UserItem } from '../types/userTree'
 import type { ServerNodeItem } from '../types/performanceCluster'
 import type { LogEntry } from '../types/systemLogs'
-import { fetchFolders } from './api'
+import { fetchFolders, getAuthHeaders } from './api'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8083'
 
 export async function fetchLiveClusterNodes(fallback: ServerNodeItem[] = []): Promise<ServerNodeItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes`, { signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
     if (!res.ok) return fallback
     const data = await res.json()
     if (!Array.isArray(data.nodes) || data.nodes.length === 0) return fallback
@@ -38,7 +38,7 @@ export async function fetchLiveClusterNodes(fallback: ServerNodeItem[] = []): Pr
 export async function probeClusterNode(ip: string, port: number): Promise<any> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/cluster/probe`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ ip_address: ip, http_port: port }), signal: AbortSignal.timeout(3000)
     })
     return res.ok ? await res.json() : { online: false, error: 'HTTP error' }
@@ -48,7 +48,7 @@ export async function probeClusterNode(ip: string, port: number): Promise<any> {
 export async function createRemoteClusterNode(node: { node_name: string; node_role: string; ip_address: string; http_port: number; grpc_port: number; webrtc_port: number; gpu_device_info?: string }): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/cluster/nodes`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(node), signal: AbortSignal.timeout(3000)
     })
     return res.ok
@@ -57,25 +57,25 @@ export async function createRemoteClusterNode(node: { node_name: string; node_ro
 
 export async function deleteRemoteClusterNode(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes/${id}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/cluster/nodes/${id}`, { method: 'DELETE', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
     return res.ok
   } catch { return false }
 }
 
 export async function fetchLiveLayouts(f: EnterpriseLayoutItem[] = []): Promise<EnterpriseLayoutItem[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/layouts`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).layouts || f : f } catch { return f }
+  try { const r = await fetch(`${API_BASE}/api/v1/layouts`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).layouts || f : f } catch { return f }
 }
 export async function fetchLiveMaps(f: EnterpriseMapItem[] = []): Promise<EnterpriseMapItem[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/maps`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).maps || f : f } catch { return f }
+  try { const r = await fetch(`${API_BASE}/api/v1/maps`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).maps || f : f } catch { return f }
 }
 export async function fetchLiveTours(f: EnterpriseRondaItem[] = []): Promise<EnterpriseRondaItem[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/tours`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).tours || f : f } catch { return f }
+  try { const r = await fetch(`${API_BASE}/api/v1/tours`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).tours || f : f } catch { return f }
 }
 export async function fetchLiveUsers(f: UserItem[] = []): Promise<UserItem[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/users`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).users || f : f } catch { return f }
+  try { const r = await fetch(`${API_BASE}/api/v1/users`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).users || f : f } catch { return f }
 }
 export async function fetchLiveSystemLogs(f: LogEntry[] = []): Promise<LogEntry[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/system/logs`, { signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).logs || f : f } catch { return f }
+  try { const r = await fetch(`${API_BASE}/api/v1/system/logs`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).logs || f : f } catch { return f }
 }
 import { getStreamBaseUrl } from '../utils/streamUrls'
 

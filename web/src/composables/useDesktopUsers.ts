@@ -72,7 +72,7 @@ export function useDesktopUsers() {
 
   const handleSaveFolder = (name: string) => { folders.value.push({ id: `f_usr_0${folders.value.length + 1}`, name, isExpanded: true, users: [] }); showNotification(`Grupo "${name}" criado.`) }
   const handleSaveUser = (user: Partial<UserItem>, folderId?: string) => {
-    const role = user.role || 'operator', scope = user.companyScope || 'EMPRESA PADRAO'
+    const role = user.role || 'operator', scope = user.companyScope || 'EMPRESA PADRÃO'
     const newUser: UserItem = {
       id: `usr_0${totalUsers.value + 1}`, username: user.username || 'novo_usuario', fullName: user.fullName || 'Usuário Operador',
       email: user.email || `${user.username || 'user'}@hydravms.internal`, role, companyScope: scope,

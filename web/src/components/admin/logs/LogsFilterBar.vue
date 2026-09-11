@@ -27,7 +27,7 @@ const emit = defineEmits<{
         <input
           :value="searchQuery"
           class="vms-auth-input"
-          placeholder="Buscar por usuario, acao, IP ou detalhe..."
+          placeholder="Buscar por usuário, ação, IP ou detalhe..."
           @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
         />
       </div>
@@ -50,8 +50,8 @@ const emit = defineEmits<{
           }"
         >
           <option value="SUPERADMIN">[SUPERADMIN] ACESSO GLOBAL E SISTEMA</option>
-          <option value="tenant_alpha">[ADMIN] ALPHA SEGURANCA // CLIENTES</option>
-          <option value="tenant_beta">[ADMIN] BETA LOGISTICA // CLIENTES</option>
+          <option value="tenant_alpha">[ADMIN] ALPHA SEGURANÇA // CLIENTES</option>
+          <option value="tenant_beta">[ADMIN] BETA LOGÍSTICA // CLIENTES</option>
         </select>
       </div>
     </div>
@@ -67,8 +67,8 @@ const emit = defineEmits<{
           @change="emit('update:categoryFilter', ($event.target as HTMLSelectElement).value as any)"
         >
           <option value="ALL">[CATEGORIA: TODAS]</option>
-          <option value="SYSTEM">[SISTEMA] HARDWARE & SERVICOS</option>
-          <option value="AUDIT">[AUDITORIA] ACOES DE USUARIOS</option>
+          <option value="SYSTEM">[SISTEMA] HARDWARE & SERVIÇOS</option>
+          <option value="AUDIT">[AUDITORIA] AÇÕES DE USUÁRIOS</option>
         </select>
 
         <!-- Level Filter -->
@@ -78,10 +78,10 @@ const emit = defineEmits<{
           style="width: auto; padding: 4px 8px;"
           @change="emit('update:levelFilter', ($event.target as HTMLSelectElement).value as any)"
         >
-          <option value="ALL">[NIVEL: TODOS]</option>
+          <option value="ALL">[NÍVEL: TODOS]</option>
           <option value="INFO">[INFO] REGULAR</option>
-          <option value="WARNING">[ALERTA] ATENCAO</option>
-          <option value="CRITICAL">[CRITICO] GRAVE</option>
+          <option value="WARNING">[ALERTA] ATENÇÃO</option>
+          <option value="CRITICAL">[CRÍTICO] GRAVE</option>
         </select>
       </div>
 

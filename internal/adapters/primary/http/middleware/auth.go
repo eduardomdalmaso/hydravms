@@ -24,8 +24,8 @@ type TokenValidatorFunc func(tokenStr string) (*TokenClaims, error)
 func AuthMiddleware(validateToken TokenValidatorFunc) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Skip public auth login endpoint
-			if r.URL.Path == "/api/v1/auth/login" || strings.HasPrefix(r.URL.Path, "/swagger/") {
+			// Skip CORS preflight, public auth login and health check endpoints
+			if r.Method == http.MethodOptions || r.URL.Path == "/api/v1/auth/login" || strings.HasPrefix(r.URL.Path, "/swagger/") || r.URL.Path == "/healthz" {
 				next.ServeHTTP(w, r)
 				return
 			}

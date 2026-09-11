@@ -60,7 +60,7 @@ const counts = computed(() => ({
     <!-- Empty State -->
     <div v-else class="vms-card vms-flex-col vms-flex-center" style="padding: 3rem; text-align: center; gap: 0.5rem;">
       <span class="vms-text-muted vms-text-mono vms-text-sm">[NENHUM STORAGE LOCALIZADO COM OS FILTROS APLICADOS]</span>
-      <span class="vms-text-2xs vms-text-dim">Clique no icone de storage no cabecalho para registrar um disco fisico local ou servidor de rede.</span>
+      <span class="vms-text-2xs vms-text-dim">Clique no ícone de storage no cabeçalho para registrar um disco físico local ou servidor de rede.</span>
     </div>
 
     <!-- Modal de Cadastro Unificado -->

@@ -43,7 +43,28 @@ func NewClusterNodeRepository(pool *pgxpool.Pool) *PostgresClusterNodeRepository
 }
 
 func (r *PostgresClusterNodeRepository) List(ctx context.Context, tenantID uuid.UUID) ([]*ClusterNode, error) {
-	q := `SELECT id, COALESCE(tenant_id, $1), node_name, node_role, ip_address, grpc_port, webrtc_port, http_port, COALESCE(gpu_device_info, ''), cpu_usage_pct, ram_usage_pct, gpu_usage_pct, vram_used_mb, active_streams_count, status, created_at FROM cluster_nodes WHERE tenant_id IS NULL OR tenant_id = $1 ORDER BY created_at ASC`
+	q := `
+		SELECT 
+			id, 
+			COALESCE(tenant_id, $1), 
+			node_name, 
+			node_role, 
+			ip_address, 
+			grpc_port, 
+			webrtc_port, 
+			http_port, 
+			COALESCE(gpu_device_info, ''), 
+			cpu_usage_pct, 
+			ram_usage_pct, 
+			gpu_usage_pct, 
+			vram_used_mb, 
+			active_streams_count, 
+			status, 
+			created_at 
+		FROM cluster_nodes 
+		WHERE tenant_id IS NULL OR tenant_id = $1 
+		ORDER BY created_at ASC
+	`
 	rows, err := r.pool.Query(ctx, q, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query cluster nodes: %w", err)
@@ -54,7 +75,12 @@ func (r *PostgresClusterNodeRepository) List(ctx context.Context, tenantID uuid.
 	for rows.Next() {
 		var n ClusterNode
 		var vramUsedInt int64
-		if err := rows.Scan(&n.ID, &n.TenantID, &n.NodeName, &n.NodeRole, &n.IPAddress, &n.GRPCPort, &n.WebRTCPort, &n.HTTPPort, &n.GPUInfo, &n.CPUUsagePct, &n.RAMUsagePct, &n.GPUUsagePct, &vramUsedInt, &n.ActiveStreams, &n.Status, &n.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&n.ID, &n.TenantID, &n.NodeName, &n.NodeRole, &n.IPAddress,
+			&n.GRPCPort, &n.WebRTCPort, &n.HTTPPort, &n.GPUInfo,
+			&n.CPUUsagePct, &n.RAMUsagePct, &n.GPUUsagePct, &vramUsedInt,
+			&n.ActiveStreams, &n.Status, &n.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		n.VRAMUsedMB = float64(vramUsedInt)
@@ -68,8 +94,37 @@ func (r *PostgresClusterNodeRepository) Create(ctx context.Context, n *ClusterNo
 		n.ID = uuid.New()
 	}
 	n.CreatedAt = time.Now()
-	q := `INSERT INTO cluster_nodes (id, tenant_id, node_name, node_role, ip_address, grpc_port, webrtc_port, http_port, gpu_device_info, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)`
-	_, err := r.pool.Exec(ctx, q, n.ID, n.TenantID, n.NodeName, n.NodeRole, n.IPAddress, n.GRPCPort, n.WebRTCPort, n.HTTPPort, n.GPUInfo, n.Status, n.CreatedAt)
+
+	// Check if already exists by IP and HTTP port
+	var existingID uuid.UUID
+	checkQuery := `SELECT id FROM cluster_nodes WHERE (tenant_id = $1 OR tenant_id IS NULL) AND ip_address = $2 AND http_port = $3 LIMIT 1`
+	err := r.pool.QueryRow(ctx, checkQuery, n.TenantID, n.IPAddress, n.HTTPPort).Scan(&existingID)
+	if err == nil && existingID != uuid.Nil {
+		n.ID = existingID
+		updateQuery := `
+			UPDATE cluster_nodes 
+			SET node_name = $1, node_role = $2, grpc_port = $3, webrtc_port = $4, gpu_device_info = $5, status = $6, updated_at = NOW() 
+			WHERE id = $7
+		`
+		_, err = r.pool.Exec(ctx, updateQuery, n.NodeName, n.NodeRole, n.GRPCPort, n.WebRTCPort, n.GPUInfo, n.Status, existingID)
+		return err
+	}
+
+	q := `
+		INSERT INTO cluster_nodes (id, tenant_id, node_name, node_role, ip_address, grpc_port, webrtc_port, http_port, gpu_device_info, status, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
+	`
+	_, err = r.pool.Exec(ctx, q, n.ID, n.TenantID, n.NodeName, n.NodeRole, n.IPAddress, n.GRPCPort, n.WebRTCPort, n.HTTPPort, n.GPUInfo, n.Status, n.CreatedAt)
+	return err
+}
+
+func (r *PostgresClusterNodeRepository) UpdateMetrics(ctx context.Context, id uuid.UUID, status string, cpuPct, ramPct, gpuPct, vramUsedMB float64, activeStreams int) error {
+	q := `
+		UPDATE cluster_nodes 
+		SET status = $1, cpu_usage_pct = $2, ram_usage_pct = $3, gpu_usage_pct = $4, vram_used_mb = $5, active_streams_count = $6, last_heartbeat_at = NOW(), updated_at = NOW() 
+		WHERE id = $7
+	`
+	_, err := r.pool.Exec(ctx, q, status, cpuPct, ramPct, gpuPct, int64(vramUsedMB), activeStreams, id)
 	return err
 }
 

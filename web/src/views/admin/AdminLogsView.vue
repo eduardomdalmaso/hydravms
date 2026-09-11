@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSystemLogs } from '../../composables/useSystemLogs'
+import { useI18n } from '../../composables/useI18n'
 import LogsFilterBar from '../../components/admin/logs/LogsFilterBar.vue'
 import LogsTable from '../../components/admin/logs/LogsTable.vue'
 import LogsDetailModal from '../../components/admin/logs/LogsDetailModal.vue'
@@ -8,6 +9,7 @@ const {
   viewerRole, activeTenantId, categoryFilter, levelFilter, searchQuery,
   selectedLog, filteredLogs, metrics, exportAsJson
 } = useSystemLogs()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -16,23 +18,16 @@ const {
     <div class="vms-card vms-flex-between" style="padding: 1rem 1.25rem; border: 1px solid var(--vms-border); flex-wrap: wrap; gap: 1rem;">
       <div class="vms-flex-col" style="gap: 4px;">
         <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); font-weight: 700;">
-          [REGISTRO FORENSE & AUDITORIA // LOGS DE SISTEMA E CLIENTES]
+          {{ t('logs_title') }}
         </span>
         <div class="vms-flex-row" style="gap: 10px; align-items: baseline;">
           <span class="vms-h2" style="color: #ffffff; font-family: var(--vms-font-jetbrains);">
-            {{ metrics.total }} REGISTROS
+            {{ metrics.total }} {{ t('logs_records') }}
           </span>
           <span class="vms-text-mono vms-text-xs vms-text-dim">
-            ({{ metrics.system }} SISTEMA // {{ metrics.audit }} AUDITORIA // {{ metrics.critical }} CRITICOS)
+            ({{ metrics.system }} {{ t('logs_system') }} // {{ metrics.audit }} {{ t('logs_audit') }} // {{ metrics.critical }} {{ t('logs_critical') }})
           </span>
         </div>
-      </div>
-
-      <!-- Scope Indicator Badge -->
-      <div class="vms-flex-row" style="gap: 8px; align-items: center;">
-        <span class="vms-badge" :class="viewerRole === 'SUPERADMIN' ? 'vms-badge-orange' : 'vms-badge-secondary'" style="font-weight: 700;">
-          {{ viewerRole === 'SUPERADMIN' ? '[ACESSO: SUPERADMIN // GLOBAL]' : `[ACESSO: ADMIN // ${activeTenantId.toUpperCase()}]` }}
-        </span>
       </div>
     </div>
 
@@ -64,8 +59,8 @@ const {
       @selectLog="selectedLog = $event"
     />
     <div v-else class="vms-card vms-flex-col vms-flex-center" style="padding: 3rem; text-align: center; gap: 0.5rem;">
-      <span class="vms-text-muted vms-text-mono vms-text-sm">[NENHUM LOG LOCALIZADO COM OS FILTROS APLICADOS]</span>
-      <span class="vms-text-2xs vms-text-dim">Ajuste os filtros de busca, categoria, nivel ou selecione outro perfil.</span>
+      <span class="vms-text-muted vms-text-mono vms-text-sm">{{ t('no_logs') }}</span>
+      <span class="vms-text-2xs vms-text-dim">{{ t('no_logs_sub') }}</span>
     </div>
 
     <!-- Forensic Detail Modal -->

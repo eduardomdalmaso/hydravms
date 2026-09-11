@@ -1,56 +1,53 @@
-// HydraVMS - Resilient API & WebSocket Client with Graceful Fallback (< 100 lines)
+// HydraVMS - Resilient API & WebSocket Client (< 100 lines)
 import type { RegisteredCamera } from '../types/admin'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8083'
 const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8083/ws/v1/live'
 
 export interface ApiFolder {
-  id: string
-  tenant_id: string
-  module: string
-  name: string
-  parent_id?: string
-  color_hex?: string
+  id: string; tenant_id: string; module: string; name: string; parent_id?: string; color_hex?: string
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const t = localStorage.getItem('hydra_token')
+  return t ? { 'Authorization': `Bearer ${t}` } : {}
 }
 
 export async function fetchFolders(module: string, fallback: ApiFolder[] = []): Promise<ApiFolder[]> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/folders?module=${encodeURIComponent(module)}`, {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(3000)
+      headers: { 'Accept': 'application/json', ...getAuthHeaders() }, signal: AbortSignal.timeout(3000)
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     return Array.isArray(data.folders) && data.folders.length > 0 ? data.folders : fallback
-  } catch {
-    return fallback
-  }
+  } catch { return fallback }
 }
 
 export async function createRemoteFolder(module: string, name: string, parentId?: string): Promise<ApiFolder | null> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/folders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ module, name, parent_id: parentId }),
-      signal: AbortSignal.timeout(3000)
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ module, name, parent_id: parentId }), signal: AbortSignal.timeout(3000)
     })
     return res.ok ? await res.json() : null
-  } catch {
-    return null
-  }
+  } catch { return null }
 }
 
 export async function deleteRemoteFolder(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/folders/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/folders/${encodeURIComponent(id)}`, {
+      method: 'DELETE', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000)
+    })
     return res.ok
   } catch { return false }
 }
 
 export async function fetchCameras(fallback: RegisteredCamera[] = []): Promise<RegisteredCamera[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/cameras`, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/cameras`, {
+      headers: { 'Accept': 'application/json', ...getAuthHeaders() }, signal: AbortSignal.timeout(3000)
+    })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     return Array.isArray(data.cameras) && data.cameras.length > 0 ? data.cameras : fallback
@@ -60,7 +57,8 @@ export async function fetchCameras(fallback: RegisteredCamera[] = []): Promise<R
 export async function createRemoteCamera(cam: any): Promise<RegisteredCamera | null> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/cameras`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cam), signal: AbortSignal.timeout(3000)
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(cam), signal: AbortSignal.timeout(3000)
     })
     return res.ok ? await res.json() : null
   } catch { return null }
@@ -68,7 +66,9 @@ export async function createRemoteCamera(cam: any): Promise<RegisteredCamera | n
 
 export async function deleteRemoteCamera(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/cameras/${encodeURIComponent(id)}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/cameras/${encodeURIComponent(id)}`, {
+      method: 'DELETE', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000)
+    })
     return res.ok
   } catch { return false }
 }

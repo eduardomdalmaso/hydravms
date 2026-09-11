@@ -58,7 +58,7 @@ const emit = defineEmits<{
     <!-- Right side: Counters + Padlock & SALVAR button at far right -->
     <div class="vms-flex-row" style="gap: 0.5rem; align-items: center; flex-shrink: 0;">
       <span class="vms-text-mono vms-text-2xs vms-text-dim">
-        {{ selectedRonda ? '[INSPECAO // RONDA VIRTUAL]' : currentFolder ? `${currentFolderRondasCount ?? 0} RONDAS` : `${totalFolders} PASTAS // ${totalRondas} RONDAS` }}
+        {{ selectedRonda ? '[INSPEÇÃO // RONDA VIRTUAL]' : currentFolder ? `${currentFolderRondasCount ?? 0} RONDAS` : `${totalFolders} PASTAS // ${totalRondas} RONDAS` }}
       </span>
 
       <template v-if="selectedRonda">

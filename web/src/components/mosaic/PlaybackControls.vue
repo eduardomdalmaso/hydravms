@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from '../../composables/useI18n'
 import type { PlaybackSpeed } from '../../types/mosaic'
 
 defineProps<{
@@ -15,6 +16,7 @@ const emit = defineEmits<{
   (e: 'toggleLock'): void
   (e: 'exportClip'): void
 }>()
+const { t } = useI18n()
 
 const speedOptions: { speed: PlaybackSpeed; label: string }[] = [
   { speed: 0.5, label: '0.5X' },
@@ -38,7 +40,7 @@ const speedOptions: { speed: PlaybackSpeed; label: string }[] = [
       style="padding: 0.4rem 1.25rem; font-weight: 700;"
       @click="emit('togglePlay')"
     >
-      {{ isPlaying ? 'PAUSAR' : 'REPRODUZIR' }}
+      {{ isPlaying ? t('pause') : t('play') }}
     </button>
 
     <div class="vms-flex-row" style="gap: 0.25rem;">

@@ -1,61 +1,11 @@
+import { pt } from './pt'
+import { en } from './en'
+import { es } from './es'
+
 export type Lang = 'PT' | 'EN' | 'ES'
 
 export const translations: Record<Lang, Record<string, string>> = {
-  PT: {
-    'vms_panel': '[PAINEL VMS]',
-    'admin_center': '[ADMIN CENTER]',
-    'desktop_title': 'DESKTOP // GESTAO DE FLUXOS & PASTAS',
-    'desktop_sub': 'CLIQUE NO APP PARA ABRIR O PAINEL DE TELEMETRIA E GRAVACAO',
-    'back': 'VOLTAR',
-    'root_topology': 'ROOT // TOPOLOGIA',
-    'new_folder': 'NOVA PASTA',
-    'new_stream': 'NOVO FLUXO',
-    'delete_folder': 'EXCLUIR PASTA',
-    'delete_stream': 'REMOVER FLUXO',
-    'recording_rules': 'DIRETRIZES DE GRAVACAO',
-    'recording_sub': 'CADASTRO DE PERFIS, MODOS E HORARIOS',
-    'enable_recording': 'HABILITAR GRAVACAO',
-    'save_schedule': 'SALVAR HORARIOS',
-    'cancel': 'CANCELAR',
-    'schedule_title': 'CONFIGURACAO DE HORARIOS DE GRAVACAO',
-    'save': 'SALVAR'
-  },
-  EN: {
-    'vms_panel': '[VMS PANEL]',
-    'admin_center': '[ADMIN CENTER]',
-    'desktop_title': 'DESKTOP // STREAM & FOLDER MANAGEMENT',
-    'desktop_sub': 'CLICK ON APP TO OPEN TELEMETRY & RECORDING PANEL',
-    'back': 'BACK',
-    'root_topology': 'ROOT // TOPOLOGY',
-    'new_folder': 'NEW FOLDER',
-    'new_stream': 'NEW STREAM',
-    'delete_folder': 'DELETE FOLDER',
-    'delete_stream': 'REMOVE STREAM',
-    'recording_rules': 'RECORDING GUIDELINES',
-    'recording_sub': 'PROFILE, MODE & SCHEDULE CONFIG',
-    'enable_recording': 'ENABLE RECORDING',
-    'save_schedule': 'SAVE SCHEDULES',
-    'cancel': 'CANCEL',
-    'schedule_title': 'RECORDING SCHEDULE CONFIGURATION',
-    'save': 'SAVE'
-  },
-  ES: {
-    'vms_panel': '[PANEL VMS]',
-    'admin_center': '[CENTRO ADMIN]',
-    'desktop_title': 'ESCRITORIO // GESTION DE FLUJOS Y CARPETAS',
-    'desktop_sub': 'HAGA CLIC EN LA APP PARA ABRIR TELEMETRIA Y GRABACION',
-    'back': 'VOLVER',
-    'root_topology': 'ROOT // TOPOLOGIA',
-    'new_folder': 'NUEVA CARPETA',
-    'new_stream': 'NUEVO FLUJO',
-    'delete_folder': 'ELIMINAR CARPETA',
-    'delete_stream': 'ELIMINAR FLUJO',
-    'recording_rules': 'DIRECTRICES DE GRABACION',
-    'recording_sub': 'REGISTRO DE PERFILES, MODOS Y HORARIOS',
-    'enable_recording': 'HABILITAR GRABACION',
-    'save_schedule': 'GUARDAR HORARIOS',
-    'cancel': 'CANCELAR',
-    'schedule_title': 'CONFIGURACION DE HORARIOS DE GRABACION',
-    'save': 'GUARDAR'
-  }
+  PT: pt,
+  EN: en,
+  ES: es
 }

@@ -39,7 +39,7 @@ const handleMouseMove = (e: MouseEvent) => {
   const ratio = hoverX.value / rect.width
   const targetDate = new Date(windowStart.value + ratio * (windowEnd.value - windowStart.value))
   const isRecorded = visibleChunks.value.some(c => ratio * 100 >= c.left && ratio * 100 <= c.left + c.width)
-  hoverInfo.value = `${targetDate.toLocaleTimeString('pt-BR')} ${isRecorded ? '[GRAVADO // 60S]' : '[GAP // SEM GRAVACAO]'}`
+  hoverInfo.value = `${targetDate.toLocaleTimeString('pt-BR')} ${isRecorded ? '[GRAVADO // 60S]' : '[GAP // SEM GRAVAÇÃO]'}`
   isHovering.value = true
 }
 

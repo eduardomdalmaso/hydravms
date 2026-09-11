@@ -54,7 +54,7 @@ const emit = defineEmits<{
     </div>
 
     <span class="vms-text-mono vms-text-2xs vms-text-dim">
-      {{ selectedUser ? '[INSPECAO // ATIVA]' : currentFolder ? `${currentFolderUsersCount ?? 0} USUARIOS` : `${totalFolders} GRUPOS // ${totalUsers} USUARIOS` }}
+      {{ selectedUser ? '[INSPEÇÃO // ATIVA]' : currentFolder ? `${currentFolderUsersCount ?? 0} USUÁRIOS` : `${totalFolders} GRUPOS // ${totalUsers} USUÁRIOS` }}
     </span>
   </div>
 </template>

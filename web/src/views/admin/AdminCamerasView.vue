@@ -52,10 +52,10 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">{{ t('desktop_title') }}</h3>
-        <span v-if="selectedStream" class="vms-text-mono vms-text-2xs vms-text-dim">INSPECAO // {{ selectedStream.name }}</span>
+        <span v-if="selectedStream" class="vms-text-mono vms-text-2xs vms-text-dim">INSPEÇÃO // {{ selectedStream.name }}</span>
       </div>
       <div v-if="!selectedStream" class="vms-flex-row" style="gap: 0.75rem;">
-        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar..." />
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" :placeholder="t('filter_placeholder')" />
         <button class="vms-btn vms-btn-secondary" :title="t('new_folder')" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
         <button class="vms-btn vms-btn-primary" :title="t('new_stream')" @click="handleOpenNewWizard()"><span>+</span><svg width="14" height="14" viewBox="0 0 576 512" fill="#ffffff"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg></button>
       </div>
@@ -85,7 +85,7 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
           </div>
         </div>
         <div v-else class="vms-desktop-grid">
-          <div v-if="displayedStreams.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// PASTA VAZIA (CLIQUE EM [+] OU BOTAO DIREITO PARA CADASTRAR)</div>
+          <div v-if="displayedStreams.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// PASTA VAZIA (CLIQUE EM [+] OU BOTÃO DIREITO PARA CADASTRAR)</div>
           <DesktopStreamApp v-for="s in displayedStreams" :key="s.id" :stream="s" :is-selected="false" @dragstart="handleDragStart" @select="(stream) => selectedStream = stream" @context="(ev, stream) => openContextMenu(ev, { type: 'stream', id: stream.id, name: stream.name, currentFolderId: currentFolderId })" />
         </div>
       </div>

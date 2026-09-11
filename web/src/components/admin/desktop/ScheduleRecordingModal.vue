@@ -31,7 +31,7 @@ const handleIntegerInput = (field: 'preBuffer' | 'postBuffer', ev: Event) => {
 }
 
 const handleSave = () => {
-  if (!form.value.name) form.value.name = 'Perfil de Gravacao'
+  if (!form.value.name) form.value.name = 'Perfil de Gravação'
   emit('save', { ...form.value })
   emit('close')
 }
@@ -42,7 +42,7 @@ const handleSave = () => {
     <div class="vms-modal-card" style="max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
       <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.75rem;">
         <div class="vms-flex-col" style="gap: 2px;">
-          <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">CONFIGURACAO DE HORARIOS DE GRAVACAO</span>
+          <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">CONFIGURAÇÃO DE HORÁRIOS DE GRAVAÇÃO</span>
           <span class="vms-text-mono vms-text-2xs vms-text-dim">// ID: {{ form.id }} (DEFINA MODOS E MATRIZ TEMPORAL)</span>
         </div>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
@@ -52,9 +52,9 @@ const handleSave = () => {
 
       <!-- Mode Selector -->
       <div class="vms-form-group">
-        <label class="vms-label">Tipo de Gravacao</label>
+        <label class="vms-label">Tipo de Gravação</label>
         <select v-model="form.mode" class="vms-auth-input">
-          <option value="continuous">CONTINUA</option>
+          <option value="continuous">CONTÍNUA</option>
           <option value="motion">MOVIMENTO</option>
           <option value="ai_event">EVENTO</option>
         </select>
@@ -62,7 +62,7 @@ const handleSave = () => {
 
       <div class="vms-form-group">
         <label class="vms-label">Nome do Perfil</label>
-        <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Horario Noturno 22h-06h" />
+        <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Horário Noturno 22h-06h" />
       </div>
 
       <!-- Weekly Schedule Grid -->
@@ -70,14 +70,14 @@ const handleSave = () => {
 
       <!-- Advanced Settings (Pre-recording Time & Delay Time Direct Integer Inputs) -->
       <div class="vms-flex-col" style="gap: 0.5rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--vms-border); border-radius: 6px; padding: 0.75rem;">
-        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">// CONFIGURACOES AVANCADAS (BUFFERS)</span>
+        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">// CONFIGURAÇÕES AVANÇADAS (BUFFERS)</span>
         <div class="vms-flex-row" style="gap: 0.75rem;">
           <div class="vms-form-group" style="flex: 1;">
-            <label class="vms-label">Pre-recording Time (s)</label>
+            <label class="vms-label">Pré-gravação Time (s)</label>
             <input type="text" inputmode="numeric" :value="form.preBuffer" class="vms-auth-input" placeholder="Ex: 5" @input="handleIntegerInput('preBuffer', $event)" />
           </div>
           <div class="vms-form-group" style="flex: 1;">
-            <label class="vms-label">Delay Time / Pos (s)</label>
+            <label class="vms-label">Delay Time / Pós (s)</label>
             <input type="text" inputmode="numeric" :value="form.postBuffer" class="vms-auth-input" placeholder="Ex: 15" @input="handleIntegerInput('postBuffer', $event)" />
           </div>
         </div>

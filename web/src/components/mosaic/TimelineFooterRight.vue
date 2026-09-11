@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from '../../composables/useI18n'
+
 defineProps<{
   isLive: boolean
   isExportMode?: boolean
@@ -12,6 +14,7 @@ const emit = defineEmits<{
   (e: 'toggleSync'): void
   (e: 'goLive'): void
 }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -23,7 +26,7 @@ const emit = defineEmits<{
       title="Filtrar Camadas de Gravação (Contínuo, Movimento, IA)"
       @click="emit('showLayers')"
     >
-      [CAMADAS]
+      [{{ t('layers') }}]
     </button>
 
     <!-- Scissors Icon Only Button (Toggle Export Period Selection) -->
@@ -52,7 +55,7 @@ const emit = defineEmits<{
       title="Sincronizar Todas as Câmeras no Mesmo Horário"
       @click="emit('toggleSync')"
     >
-      [SYNC]
+      [{{ t('sync') }}]
     </button>
 
     <!-- Live Button -->
@@ -63,7 +66,7 @@ const emit = defineEmits<{
       title="Ir para o fluxo Ao Vivo"
       @click="emit('goLive')"
     >
-      [LIVE]
+      [{{ t('live') }}]
     </button>
   </div>
 </template>

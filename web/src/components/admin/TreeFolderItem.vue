@@ -45,7 +45,7 @@ const isExpanded = ref(props.folder.isExpanded ?? true)
     <!-- Streams within folder -->
     <div v-if="isExpanded" class="vms-flex-col" style="padding: 0.75rem 1rem; gap: 0.45rem;">
       <div v-if="folder.streams.length === 0" class="vms-text-mono vms-text-2xs vms-text-dim" style="padding: 0.5rem; text-align: center;">
-        // PASTA VAZIA (CLIQUE COM BOTAO DIREITO PARA ADICIONAR FLUXO)
+        // PASTA VAZIA (CLIQUE COM BOTÃO DIREITO PARA ADICIONAR FLUXO)
       </div>
       <TreeStreamRow
         v-for="stream in folder.streams"

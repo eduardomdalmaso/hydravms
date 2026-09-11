@@ -21,7 +21,7 @@ const {
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">WORKFLOWS & INTEGRAÇÕES</h3>
         <span v-if="selectedWorkflow" class="vms-text-mono vms-text-2xs vms-text-dim">EDITOR FLOW // {{ selectedWorkflow.name }}</span>
-        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZACAO EM PASTAS // MOTOR DE INTEGRACAO VISUAL FLOW</span>
+        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZAÇÃO EM PASTAS // MOTOR DE INTEGRAÇÃO VISUAL FLOW</span>
       </div>
       <div v-if="!selectedWorkflow" class="vms-flex-row" style="gap: 0.75rem;">
         <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar fluxos..." />

@@ -37,7 +37,7 @@ const onSelect = (loc: { lat: number; lng: number; label: string }) => {
   <div class="vms-map-search-container">
     <div class="vms-map-search-bar">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input v-model="query" class="vms-map-search-input" placeholder="Buscar endereco, local ou coordenadas..." @keydown.enter.prevent="handleSearch" />
+      <input v-model="query" class="vms-map-search-input" placeholder="Buscar endereço, local ou coordenadas..." @keydown.enter.prevent="handleSearch" />
       <button v-if="query" class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 2px 4px;" @click="query = ''; results = []; selectedLocation = null">✕</button>
     </div>
 
@@ -53,7 +53,7 @@ const onSelect = (loc: { lat: number; lng: number; label: string }) => {
     <div v-if="selectedLocation" class="vms-location-action-card">
       <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">LOCAL: {{ selectedLocation.lat.toFixed(4) }}, {{ selectedLocation.lng.toFixed(4) }}</span>
       <div class="vms-flex-row" style="gap: 4px; margin-top: 4px;">
-        <button class="vms-btn vms-btn-sm" style="font-size: 9px; padding: 2px 6px; background: rgba(255, 94, 58, 0.15); border-color: #ff5e3a; color: #fff;" @click="emit('quickAdd', 'CAMERA', selectedLocation!)">+ CAMERA AQUI</button>
+        <button class="vms-btn vms-btn-sm" style="font-size: 9px; padding: 2px 6px; background: rgba(255, 94, 58, 0.15); border-color: #ff5e3a; color: #fff;" @click="emit('quickAdd', 'CAMERA', selectedLocation!)">+ CÂMERA AQUI</button>
         <button class="vms-btn vms-btn-sm" style="font-size: 9px; padding: 2px 6px; background: #07080c; border-color: #ff5e3a; color: #ff5e3a;" @click="emit('quickAdd', 'ALARME', selectedLocation!)">+ ALARME AQUI</button>
       </div>
     </div>

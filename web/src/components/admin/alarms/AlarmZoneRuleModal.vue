@@ -41,7 +41,7 @@ const handleSave = () => {
     <div class="vms-modal-card" style="max-width: 540px; width: 95%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
       <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.75rem;">
         <div class="vms-flex-col" style="gap: 2px;">
-          <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">CADASTRO DE REGRA DE ZONA & ACOES</span>
+          <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">CADASTRO DE REGRA DE ZONA & AÇÕES</span>
           <span class="vms-text-mono vms-text-2xs vms-text-dim">// ID: {{ form.id }} (DIRETRIZES DE RESPOSTA)</span>
         </div>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
@@ -51,22 +51,22 @@ const handleSave = () => {
 
       <div class="vms-form-group">
         <label class="vms-label">Nome do Cadastro / Regra</label>
-        <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Notificacao Push + Foto de Camera" />
+        <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Notificação Push + Foto de Câmera" />
       </div>
 
       <div class="vms-form-group">
-        <label class="vms-label">Tipo de Acao ao Disparar</label>
+        <label class="vms-label">Tipo de Ação ao Disparar</label>
         <select v-model="form.actionType" class="vms-auth-input">
-          <option value="notification">[NOTIFICACAO] Push App, Telegram & Webhook</option>
-          <option value="relay">[RELAY] Acionamento de Sirene / Portao I/O</option>
-          <option value="ptz_preset">[PTZ] Mover Camera Vinculada para Preset</option>
-          <option value="recording">[GRAVACAO] Forcar Gravacao de Alta Taxa (4K)</option>
+          <option value="notification">[NOTIFICAÇÃO] Push App, Telegram & Webhook</option>
+          <option value="relay">[RELAY] Acionamento de Sirene / Portão I/O</option>
+          <option value="ptz_preset">[PTZ] Mover Câmera Vinculada para Preset</option>
+          <option value="recording">[GRAVAÇÃO] Forçar Gravação de Alta Taxa (4K)</option>
         </select>
       </div>
 
       <div class="vms-form-group">
-        <label class="vms-label">Destino / Saida Vinculada</label>
-        <input v-model="form.targetOutput" class="vms-auth-input" placeholder="Ex: RELAY_01 // BORNE GUARTIA ou APP_MOBILE" />
+        <label class="vms-label">Destino / Saída Vinculada</label>
+        <input v-model="form.targetOutput" class="vms-auth-input" placeholder="Ex: RELAY_01 // BORNE GUARITA ou APP_MOBILE" />
       </div>
 
       <div class="vms-form-group">

@@ -1,10 +1,11 @@
 import type { StoragePoolItem, NewStoragePayload } from '../types/storagePool'
+import { getAuthHeaders } from './api'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8083'
 
 export async function fetchStoragePools(fallback: StoragePoolItem[] = []): Promise<StoragePoolItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/storage/pools`, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/storage/pools`, { headers: { 'Accept': 'application/json', ...getAuthHeaders() }, signal: AbortSignal.timeout(3000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     if (!Array.isArray(data.pools) || data.pools.length === 0) return fallback
@@ -21,7 +22,7 @@ export async function fetchStoragePools(fallback: StoragePoolItem[] = []): Promi
 export async function createRemoteStoragePool(payload: NewStoragePayload): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/storage/pools`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({
         name: payload.name, source_type: payload.sourceType, role: payload.role,
         node_or_server: payload.nodeOrServer, path_or_endpoint: payload.pathOrEndpoint,
@@ -35,14 +36,14 @@ export async function createRemoteStoragePool(payload: NewStoragePayload): Promi
 
 export async function deleteRemoteStoragePool(id: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/storage/pools/${id}`, { method: 'DELETE', signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/storage/pools/${id}`, { method: 'DELETE', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
     return res.ok
   } catch { return false }
 }
 
 export async function triggerRemoteDrain(): Promise<string> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/storage/spillover/drain`, { method: 'POST', signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/storage/spillover/drain`, { method: 'POST', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
     if (!res.ok) throw new Error('Falha no drain')
     const data = await res.json()
     return data.message || 'Spillover concluido'
@@ -51,7 +52,7 @@ export async function triggerRemoteDrain(): Promise<string> {
 
 export async function fetchDetectedDisks(): Promise<any[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/storage/disks`, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${API_BASE}/api/v1/storage/disks`, { headers: { 'Accept': 'application/json', ...getAuthHeaders() }, signal: AbortSignal.timeout(3000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     return Array.isArray(data.disks) ? data.disks.map((d: any) => ({

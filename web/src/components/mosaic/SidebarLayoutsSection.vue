@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
+import { useI18n } from "../../composables/useI18n"
 import type { CustomLayout } from "../../types/mosaic"
 import GridIconPreview from "./GridIconPreview.vue"
 
@@ -10,6 +11,7 @@ const emit = defineEmits<{
   (e: "newLayout"): void
   (e: "contextMenu", payload: { event: MouseEvent; layout?: CustomLayout; isHeader?: boolean }): void
 }>()
+const { t } = useI18n()
 
 const isSearchOpen = ref(false)
 const searchQuery = ref("")
@@ -25,13 +27,13 @@ const filteredLayouts = computed(() => {
     <!-- Clickable Header Row with Orange Counter -->
     <div class="vms-accordion-header" :class="{ active: isOpen }" title="Clique na linha para expandir ou recuar" @click="emit('toggle')">
       <div class="vms-flex-row" style="gap: 0.35rem; align-items: center;">
-        <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[LAYOUTS]</span>
+        <span class="vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">[{{ t('layouts').toUpperCase() }}]</span>
         <span class="vms-badge" style="background: rgba(255, 94, 58, 0.18); color: var(--vms-neu-accent-orange); border: 1px solid rgba(255, 94, 58, 0.35); font-size: 8.5px; font-weight: 700; padding: 1px 5px;">
           {{ filteredLayouts.length }}
         </span>
       </div>
       <div class="vms-flex-row" style="gap: 0.4rem; align-items: center;">
-        <button class="vms-sidebar-icon-btn" title="Buscar layouts" @click.stop="isSearchOpen = !isSearchOpen">
+        <button class="vms-sidebar-icon-btn" :title="t('search_lay')" @click.stop="isSearchOpen = !isSearchOpen">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -46,7 +48,7 @@ const filteredLayouts = computed(() => {
 
     <!-- Search Input for Layouts -->
     <div v-if="isOpen && isSearchOpen" style="padding: 0.4rem 0.5rem; background: #11141b; border-bottom: 1px solid var(--vms-border);">
-      <input v-model="searchQuery" class="vms-auth-input" style="padding: 0.25rem 0.5rem; font-size: 11px; height: 26px;" placeholder="Buscar layout..." autofocus />
+      <input v-model="searchQuery" class="vms-auth-input" style="padding: 0.25rem 0.5rem; font-size: 11px; height: 26px;" :placeholder="t('search_lay')" autofocus />
     </div>
 
     <!-- Scrollable Layout List with Clean Grid Icon and Name -->

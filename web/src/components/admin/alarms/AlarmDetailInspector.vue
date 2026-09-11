@@ -15,7 +15,7 @@ const emit = defineEmits<{
     <!-- Header -->
     <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.75rem;">
       <div class="vms-flex-col" style="gap: 2px;">
-        <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">INSPECAO DE SENSOR // HUD</span>
+        <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">INSPEÇÃO DE SENSOR // HUD</span>
         <span class="vms-text-mono vms-text-2xs vms-text-dim">ID: {{ alarm.id }}</span>
       </div>
       <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
@@ -49,8 +49,8 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">SENSIBILIDADE</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-neu-accent-orange);">{{ alarm.sensitivity }}%</span></div>
-      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CAMERA VINCULADA</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">{{ alarm.linkedCameraName || 'NENHUMA' }}</span></div>
-      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ULTIMO DISPARO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-main);">{{ alarm.lastTrigger || 'N/A' }}</span></div>
+      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CÂMERA VINCULADA</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">{{ alarm.linkedCameraName || 'NENHUMA' }}</span></div>
+      <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">ÚLTIMO DISPARO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-main);">{{ alarm.lastTrigger || 'N/A' }}</span></div>
     </div>
 
     <!-- Actions -->

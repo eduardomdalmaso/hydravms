@@ -26,7 +26,7 @@ watch(() => props.isOpen, (open) => {
     fullName.value = ''
     email.value = ''
     role.value = 'operator'
-    companyScope.value = 'EMPRESA MATRIZ // CLIENTE PADRAO'
+    companyScope.value = 'EMPRESA MATRIZ // CLIENTE PADRÃO'
     selectedFolderId.value = props.targetFolderId || ''
   }
 })
@@ -48,7 +48,7 @@ const handleSave = () => {
   <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
     <div class="vms-modal-card" style="max-width: 520px; width: 95%;">
       <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.75rem;">
-        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CADASTRAR NOVO USUARIO</h3>
+        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CADASTRAR NOVO USUÁRIO</h3>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -56,7 +56,7 @@ const handleSave = () => {
 
       <div class="vms-flex-col" style="gap: 0.85rem; padding: 0.5rem 0;">
         <div class="vms-form-group">
-          <label class="vms-label">Nome de Usuario (Login)</label>
+          <label class="vms-label">Nome de Usuário (Login)</label>
           <input v-model="username" class="vms-auth-input" placeholder="Ex: gestor_filial_01" autofocus />
         </div>
 
@@ -74,7 +74,7 @@ const handleSave = () => {
 
         <div class="vms-form-group">
           <label class="vms-label">Empresa / Clientes Vinculados</label>
-          <input v-model="companyScope" class="vms-auth-input" placeholder="Ex: EMPRESA ALPHA // CLIENTE CONDOMINIO" />
+          <input v-model="companyScope" class="vms-auth-input" placeholder="Ex: EMPRESA ALPHA // CLIENTE CONDOMÍNIO" />
         </div>
 
         <div class="vms-form-group">

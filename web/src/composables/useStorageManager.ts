@@ -39,7 +39,7 @@ export function useStorageManager() {
     await createRemoteStoragePool(payload)
     await loadPools()
     showNotification(payload.role === 'WARM_ARCHIVE'
-      ? `[ALERTA] Gravacao ativada em "${payload.name}". Requer disco NVMe de Buffer dedicado.`
+      ? `[ALERTA] Gravação ativada em "${payload.name}". Requer disco NVMe de Buffer dedicado.`
       : `[STORAGE] Pool "${payload.name}" ativado com sucesso`)
   }
 

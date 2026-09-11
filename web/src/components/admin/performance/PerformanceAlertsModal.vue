@@ -31,7 +31,7 @@ const handleSave = () => {
   if (cpuLimit.value < 1 || cpuLimit.value > 99 ||
       vramMinPercent.value < 1 || vramMinPercent.value > 99 ||
       ramLimit.value < 1 || ramLimit.value > 99) {
-    errorMsg.value = 'Os valores devem ser porcentagens validas entre 1% e 99%.'
+    errorMsg.value = 'Os valores devem ser porcentagens válidas entre 1% e 99%.'
     return
   }
   emit('save', {
@@ -46,7 +46,7 @@ const handleSave = () => {
   <div class="vms-modal-backdrop" @click.self="emit('close')">
     <div class="vms-modal-dialog" style="max-width: 460px;">
       <div class="vms-modal-header">
-        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CONFIGURACAO DE ALERTAS DE PERFORMANCE</h3>
+        <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">CONFIGURAÇÃO DE ALERTAS DE PERFORMANCE</h3>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">✕</button>
       </div>
 
@@ -56,7 +56,7 @@ const handleSave = () => {
         </div>
 
         <div class="vms-form-group">
-          <label class="vms-label">LIMITE CRITICO DE CPU // ALERTA QUANDO EXCEDER (1% A 99%)</label>
+          <label class="vms-label">LIMITE CRÍTICO DE CPU // ALERTA QUANDO EXCEDER (1% A 99%)</label>
           <input :value="cpuLimit" type="number" min="1" max="99" class="vms-auth-input" @input="onInput('cpu', $event)" />
         </div>
 
@@ -66,7 +66,7 @@ const handleSave = () => {
         </div>
 
         <div class="vms-form-group">
-          <label class="vms-label">LIMITE DE MEMORIA RAM // ALERTA QUANDO EXCEDER (1% A 99%)</label>
+          <label class="vms-label">LIMITE DE MEMÓRIA RAM // ALERTA QUANDO EXCEDER (1% A 99%)</label>
           <input :value="ramLimit" type="number" min="1" max="99" class="vms-auth-input" @input="onInput('ram', $event)" />
         </div>
       </div>

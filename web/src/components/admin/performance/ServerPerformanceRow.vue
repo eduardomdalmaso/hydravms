@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ServerNodeItem } from '../../../types/performanceCluster'
+import { useI18n } from '../../../composables/useI18n'
 
 defineProps<{ node: ServerNodeItem }>()
+const { t } = useI18n()
 const ramPercent = (used: number, total: number) => Math.round((used / total) * 100)
 const vramPercent = (used: number, total: number) => Math.round((used / total) * 100)
 
@@ -17,19 +19,22 @@ const roleShort = (role: string) => {
     <!-- Coluna 1: Identificacao do Servidor -->
     <div class="vms-flex-col" style="min-width: 220px; flex: 1.2; gap: 2px;">
       <div class="vms-flex-row" style="gap: 6px; align-items: center;">
-        <span class="vms-status-led online" style="margin-right: 2px;"></span>
+        <span :class="['vms-status-led', node.status === 'ONLINE' ? 'online' : 'offline']" style="margin-right: 2px;"></span>
         <span class="vms-font-bold vms-text-sm" style="color: #ffffff;">{{ node.hostname }}</span>
         <span class="vms-badge vms-badge-orange" style="font-size: 9px; padding: 1px 5px;">
           [{{ roleShort(node.role) }}]
         </span>
+        <span :class="['vms-badge', node.status === 'ONLINE' ? 'vms-badge-online' : 'vms-badge-offline']" style="font-size: 8px; padding: 1px 4px;">
+          [{{ node.status }}]
+        </span>
       </div>
-      <span class="vms-text-mono vms-text-2xs vms-text-dim">IP: {{ node.ip }} // {{ node.uptime }}</span>
+      <span class="vms-text-mono vms-text-2xs vms-text-dim">IP: {{ node.ip }} // {{ node.status === 'ONLINE' ? t('connected') : t('disconnected') }}</span>
     </div>
 
     <!-- Coluna 2: CPU em Porcentagem -->
     <div class="vms-flex-col" style="min-width: 140px; flex: 1; gap: 3px;">
       <div class="vms-flex-between vms-text-mono vms-text-2xs">
-        <span class="vms-text-dim">CPU:</span>
+        <span class="vms-text-dim">{{ t('cpu_used') }}</span>
         <span class="vms-font-bold" style="color: #ffffff;">{{ node.cpuPercent }}%</span>
       </div>
       <div class="vms-neu-track" style="height: 5px;">
@@ -40,7 +45,7 @@ const roleShort = (role: string) => {
     <!-- Coluna 3: RAM Usada -->
     <div class="vms-flex-col" style="min-width: 170px; flex: 1.2; gap: 3px;">
       <div class="vms-flex-between vms-text-mono vms-text-2xs">
-        <span class="vms-text-dim">RAM USADA:</span>
+        <span class="vms-text-dim">{{ t('ram_used') }}</span>
         <span class="vms-font-bold" style="color: #ffffff;">
           {{ node.ramUsedGb.toFixed(1) }} / {{ node.ramTotalGb }} GB ({{ ramPercent(node.ramUsedGb, node.ramTotalGb) }}%)
         </span>
@@ -68,7 +73,7 @@ const roleShort = (role: string) => {
         </div>
       </div>
       <div v-else class="vms-text-mono vms-text-2xs vms-text-dim" style="padding: 4px 0;">
-        [SEM GPU // PROCESSAMENTO CPU]
+        {{ t('no_gpu') }}
       </div>
     </div>
   </div>

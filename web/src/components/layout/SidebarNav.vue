@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from '../../composables/useI18n'
+
 const props = defineProps<{
   activeTab: string
   username: string
@@ -9,11 +11,13 @@ const emit = defineEmits<{
   (e: 'logout'): void
 }>()
 
+const { t } = useI18n()
+
 const navItems = [
-  { id: 'mosaic', label: '[MOSAICO AO VIVO]' },
-  { id: 'layout_designer', label: '[CRIAR LAYOUTS]' },
-  { id: 'workflows', label: '[WORKFLOWS & ALARMES]' },
-  { id: 'storage', label: '[STORAGE & DISCOS]' }
+  { id: 'mosaic', key: 'mosaic_live' },
+  { id: 'layout_designer', key: 'create_layouts' },
+  { id: 'workflows', key: 'workflows_alarms' },
+  { id: 'storage', key: 'storage_disks' }
 ]
 </script>
 
@@ -43,16 +47,16 @@ const navItems = [
         }"
         @click="emit('navigate', item.id)"
       >
-        {{ item.label }}
+        {{ t(item.key) }}
       </button>
     </nav>
     <div class="vms-sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--vms-border); gap: 0.75rem;">
       <div class="vms-flex-col" style="gap: 0.125rem;">
-        <span class="vms-text-2xs vms-text-muted" style="font-family: var(--vms-font-roboto);">USUARIO ATIVO</span>
+        <span class="vms-text-2xs vms-text-muted" style="font-family: var(--vms-font-roboto);">{{ t('active_user') }}</span>
         <span class="vms-text-xs" style="color: #ffffff; font-family: var(--vms-font-roboto); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ username }}</span>
       </div>
       <button class="vms-btn vms-btn-secondary vms-btn-sm" style="width: 100%; font-family: var(--vms-font-roboto);" @click="emit('logout')">
-        [DESCONECTAR]
+        {{ t('disconnect') }}
       </button>
     </div>
   </aside>

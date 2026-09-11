@@ -12,16 +12,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	httpAdapter "hydravms/internal/adapters/primary/http"
 	"hydravms/internal/adapters/primary/ws"
-	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
 	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	s3Adapter "hydravms/internal/adapters/secondary/s3"
+	"hydravms/internal/adapters/secondary/memory"
 	"hydravms/internal/application"
+	"hydravms/internal/domain"
 	"hydravms/internal/ports"
 )
 
 func main() {
-	log.Println("[HydraVMS] Starting Control Plane & Event Orchestrator Backend...")
+	log.Println("[HydraVMS] Starting Control Plane (PostgreSQL, RBAC, StorageGuard, JetStream)...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -30,6 +31,8 @@ func main() {
 	var folderRepo ports.FolderRepository
 	var cameraRepo ports.CameraRepository
 	var storagePoolRepo ports.StoragePoolRepository
+	var auditRepo ports.AuditLogRepository
+	var userRepo ports.UserRepository
 	var pgPool *pgxpool.Pool
 
 	dbURL := os.Getenv("DATABASE_URL")
@@ -43,6 +46,8 @@ func main() {
 		log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to In-Memory repository)\n", err)
 		folderRepo = memory.NewInMemoryFolderRepository()
 		cameraRepo = memory.NewInMemoryCameraRepository()
+		auditRepo = memory.NewInMemoryAuditLogRepository()
+		userRepo = memory.NewInMemoryUserRepository()
 	} else {
 		log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
 		pgPool = pool
@@ -50,6 +55,8 @@ func main() {
 		folderRepo = postgresAdapter.NewFolderRepository(pool)
 		cameraRepo = postgresAdapter.NewCameraRepository(pool)
 		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
+		auditRepo = postgresAdapter.NewAuditLogRepository(pool)
+		userRepo = postgresAdapter.NewUserRepository(pool)
 	}
 
 	// Initialize Event Repository
@@ -63,6 +70,22 @@ func main() {
 	// 2. Initialize Application Core Services (Hexagonal Architecture)
 	folderService := application.NewFolderService(folderRepo)
 	cameraService := application.NewCameraService(cameraRepo)
+	auditService := application.NewAuditService(auditRepo)
+
+	// Record initial system boot audit record
+	_ = auditService.RecordAction(
+		ctx,
+		"00000000-0000-0000-0000-000000000001",
+		"system",
+		"127.0.0.1",
+		"SYSTEM_BOOT",
+		"system",
+		"core",
+		"HydraVMS Control Plane inicializado com sucesso",
+		domain.AuditCategorySystem,
+		domain.AuditLevelInfo,
+		map[string]interface{}{"version": "1.0.0", "status": "online"},
+	)
 
 	// 3. Connect to S3 / MinIO Object Storage for Video Recordings & Snapshots
 	s3Cfg := s3Adapter.DefaultConfig()
@@ -134,8 +157,12 @@ func main() {
 	watchdog.Start(ctx)
 
 	// 8. Initialize HTTP Handlers & Router
+	authService := application.NewAuthService(userRepo, auditService)
+	authHandler := httpAdapter.NewAuthHandler(authService)
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService, recordingService)
+	auditHandler := httpAdapter.NewAuditHandler(auditService)
+	adminDataHandler := httpAdapter.NewAdminDataHandler(pgPool)
 
 	var storagePoolHandler *httpAdapter.StoragePoolHandler
 	if storagePoolService != nil {
@@ -148,7 +175,18 @@ func main() {
 	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
-	router := httpAdapter.NewRouter(folderHandler, cameraHandler, storagePoolHandler, clusterNodeHandler, wsHandler)
+	router := httpAdapter.NewRouter(
+		authHandler,
+		folderHandler,
+		cameraHandler,
+		storagePoolHandler,
+		clusterNodeHandler,
+		auditHandler,
+		adminDataHandler,
+		authService,
+		auditService,
+		wsHandler,
+	)
 	handler := router.BuildHandler()
 
 	port := os.Getenv("PORT")
@@ -156,7 +194,7 @@ func main() {
 		port = "8083"
 	}
 
-	// 6. Production-Ready HTTP Server with Strict Timeouts (Uber Go Style Guide & Slowloris Guard)
+	// Production-Ready HTTP Server with Strict Timeouts
 	server := &http.Server{
 		Addr:              ":" + port,
 		Handler:           handler,
@@ -174,7 +212,7 @@ func main() {
 		}
 	}()
 
-	// 7. Graceful Shutdown & Drain Connections
+	// Graceful Shutdown & Drain Connections
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
