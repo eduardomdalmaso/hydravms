@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import type { AnalyticInstance } from '../../../types/marketplace'
 import { fetchCameras } from '../../../services/api'
+import { formatPluginId } from '../../../utils/idFormatter'
 
 const props = defineProps<{ instance: AnalyticInstance }>()
 const emit = defineEmits<{
@@ -44,7 +45,7 @@ const handleSave = () => {
     <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.5rem;">
       <div class="vms-flex-col" style="gap: 2px;">
         <span class="vms-text-sm vms-font-semibold" style="color: var(--vms-neu-accent-orange);">INSPEÇÃO // {{ formName }}</span>
-        <span class="vms-text-mono vms-text-2xs vms-text-dim">ID: {{ instance.id }} // {{ instance.plugin_name }}</span>
+        <span class="vms-text-mono vms-text-2xs vms-text-dim">{{ formatPluginId(instance.id) }} // {{ instance.plugin_name }}</span>
       </div>
       <div class="vms-flex-row" style="gap: 0.5rem;">
         <button class="vms-btn vms-btn-danger vms-btn-sm" @click="emit('delete', instance.id)">EXCLUIR</button>

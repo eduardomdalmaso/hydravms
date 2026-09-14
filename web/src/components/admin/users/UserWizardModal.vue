@@ -66,9 +66,9 @@ const handleSave = () => {
         </div>
 
         <div class="vms-form-group">
-          <label class="vms-label">Nível Hierárquico RBAC</label>
+          <label class="vms-label">Função / Perfil de Acesso</label>
           <div class="vms-flex-row" style="gap: 0.4rem; flex-wrap: wrap;">
-            <button v-for="r in ([{ id: 'admin_master', label: 'MASTER' }, { id: 'company_admin', label: 'EMPRESA' }, { id: 'operator', label: 'OPERADOR' }, { id: 'client_viewer', label: 'CLIENTE' }] as const)" :key="r.id" class="vms-btn vms-btn-sm" :class="role === r.id ? 'vms-btn-primary' : 'vms-btn-secondary'" style="font-size: 10px;" @click="role = r.id">{{ r.label }}</button>
+            <button v-for="r in ([{ id: 'company_admin', label: 'GESTOR EMPRESA' }, { id: 'operator', label: 'OPERADOR' }, { id: 'client_viewer', label: 'VISUALIZADOR' }] as const)" :key="r.id" class="vms-btn vms-btn-sm" :class="role === r.id ? 'vms-btn-primary' : 'vms-btn-secondary'" style="font-size: 10px;" @click="role = r.id">{{ r.label }}</button>
           </div>
         </div>
 

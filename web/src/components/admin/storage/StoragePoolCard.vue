@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { StoragePoolItem } from '../../../types/storagePool'
+import { formatPoolId } from '../../../utils/idFormatter'
 
 const props = defineProps<{ pool: StoragePoolItem }>()
 const emit = defineEmits<{ (e: 'remove', id: string): void }>()
@@ -14,7 +15,7 @@ const percent = (used: number, total: number) => Math.round((used / total) * 100
     <div class="vms-flex-between" style="align-items: flex-start; gap: 8px;">
       <div class="vms-flex-col" style="gap: 2px;">
         <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); font-weight: 700;">
-          [{{ pool.role }}] // {{ pool.sourceType }}
+          {{ formatPoolId(pool.id) }} // [{{ pool.role }}] // {{ pool.sourceType }}
         </span>
         <h4 class="vms-font-bold vms-text-sm" style="color: #ffffff; margin: 0;">{{ pool.name }}</h4>
         <span class="vms-text-mono vms-text-2xs vms-text-dim">{{ pool.nodeOrServer }}</span>

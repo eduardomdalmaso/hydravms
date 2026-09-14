@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { UserItem } from '../../../types/userTree'
+import { formatUserId } from '../../../utils/idFormatter'
 
 defineProps<{
   user: UserItem
@@ -33,7 +34,7 @@ const emit = defineEmits<{
       {{ user.username }}
     </span>
     <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); font-size: 9px;">
-      [{{ user.role.replace('_', ' ').toUpperCase() }}]
+      {{ formatUserId(user.id) }} // {{ user.role.replace('_', ' ').toUpperCase() }}
     </span>
   </div>
 </template>

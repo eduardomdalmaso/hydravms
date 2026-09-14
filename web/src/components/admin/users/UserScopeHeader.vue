@@ -14,43 +14,56 @@ const handleRoleSelect = (role: UserRole) => {
 
 <template>
   <div class="vms-flex-col" style="gap: 0.65rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--vms-border); border-radius: 8px; padding: 0.75rem 0.85rem;">
+    <!-- Profile & Role Selector -->
     <div class="vms-flex-between">
       <div class="vms-flex-col" style="gap: 2px;">
-        <span class="vms-text-dim vms-text-2xs">NIVEL HIERARQUICO GLOBAL // RBAC RAIZ</span>
+        <span class="vms-text-dim vms-text-2xs">PERFIL & DADOS DE CONTATO</span>
         <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">
-          {{ user.role === 'admin_master' ? 'ADMIN MASTER // PLATAFORMA TOTAL' : (user.role === 'company_admin' ? 'GESTOR DE EMPRESA // TENANT' : (user.role === 'operator' ? 'OPERADOR DE MONITORAMENTO' : 'CLIENTE FINAL // APENAS VISUALIZACAO')) }}
+          {{ user.fullName || user.username }}
         </span>
       </div>
-      <span class="vms-badge" :class="user.role === 'admin_master' ? 'vms-badge-online' : (user.role === 'company_admin' ? 'vms-badge-warning' : 'vms-badge-neutral')" style="font-size: 9px;">
-        {{ user.role === 'admin_master' ? '[ADMIN CENTER: TOTAL]' : (user.role === 'company_admin' ? '[ADMIN CENTER: EMPRESA]' : '[ADMIN CENTER: BLOQUEADO]') }}
-      </span>
+      <div class="vms-flex-row" style="gap: 0.35rem;">
+        <button
+          v-for="r in ([
+            { id: 'company_admin' as UserRole, label: 'GESTOR' },
+            { id: 'operator' as UserRole, label: 'OPERADOR' },
+            { id: 'client_viewer' as UserRole, label: 'VISUALIZADOR' }
+          ])"
+          :key="r.id"
+          class="vms-btn vms-btn-sm"
+          :class="user.role === r.id ? 'vms-btn-primary' : 'vms-btn-secondary'"
+          style="font-size: 9px; padding: 2px 7px;"
+          @click="handleRoleSelect(r.id)"
+        >
+          {{ r.label }}
+        </button>
+      </div>
     </div>
 
-    <!-- Role Switcher Pills -->
-    <div class="vms-flex-row" style="gap: 0.4rem; flex-wrap: wrap;">
-      <button
-        v-for="r in ([
-          { id: 'admin_master' as UserRole, label: 'ADMIN MASTER' },
-          { id: 'company_admin' as UserRole, label: 'EMPRESA / TENANT' },
-          { id: 'operator' as UserRole, label: 'OPERADOR' },
-          { id: 'client_viewer' as UserRole, label: 'CLIENTE FINAL' }
-        ])"
-        :key="r.id"
-        class="vms-btn vms-btn-sm"
-        :class="user.role === r.id ? 'vms-btn-primary' : 'vms-btn-secondary'"
-        style="font-size: 10px; padding: 3px 8px;"
-        @click="handleRoleSelect(r.id)"
-      >
-        {{ r.label }}
-      </button>
-    </div>
+    <!-- Useful Contact & Localization Grid -->
+    <div class="vms-flex-col" style="gap: 0.45rem; border-top: 1px dashed var(--vms-border); padding-top: 0.5rem;">
+      <div class="vms-flex-row" style="gap: 0.5rem;">
+        <div class="vms-form-group" style="flex: 1.2;">
+          <label class="vms-label" style="font-size: 9px;">E-mail</label>
+          <input v-model="user.email" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;" placeholder="email@empresa.com" />
+        </div>
+        <div class="vms-form-group" style="flex: 1;">
+          <label class="vms-label" style="font-size: 9px;">Fuso Horário</label>
+          <input v-model="user.timezone" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;" placeholder="America/Sao_Paulo (UTC-03)" />
+        </div>
+      </div>
 
-    <!-- Company / Tenant Scope Bar -->
-    <div class="vms-flex-between" style="border-top: 1px dashed var(--vms-border); padding-top: 0.5rem;">
-      <span class="vms-text-dim vms-text-2xs">ESCOPO DE EMPRESA / CLIENTE VINCULADO:</span>
-      <span class="vms-text-mono vms-text-2xs vms-font-semibold" style="color: var(--vms-text-regular);">
-        {{ user.companyScope }}
-      </span>
+      <div class="vms-flex-row" style="gap: 0.5rem;">
+        <div class="vms-form-group" style="flex: 1;">
+          <label class="vms-label" style="font-size: 9px;">Telefone 1 (Principal)</label>
+          <input v-model="user.phonePrimary" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;" placeholder="(00) 00000-0000" />
+        </div>
+        <div class="vms-form-group" style="flex: 1;">
+          <label class="vms-label" style="font-size: 9px;">Telefone 2 (Opcional)</label>
+          <input v-model="user.phoneSecondary" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;" placeholder="(00) 0000-0000" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
+

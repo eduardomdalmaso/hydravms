@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { UserItem } from '../../../types/userTree'
+import { formatUserId } from '../../../utils/idFormatter'
 
 defineProps<{ user: UserItem }>()
 </script>
@@ -16,7 +17,7 @@ defineProps<{ user: UserItem }>()
           </svg>
         </div>
         <div class="vms-flex-col" style="gap: 2px;">
-          <span class="vms-font-bold" style="color: #fff; font-size: 13px;">{{ user.id.toUpperCase() }} // {{ user.username }}</span>
+          <span class="vms-font-bold" style="color: #fff; font-size: 13px;">{{ formatUserId(user.id) }} // {{ user.username }}</span>
           <span class="vms-text-mono vms-text-2xs vms-text-dim">DEPARTAMENTO // {{ user.groupName.toUpperCase() }}</span>
         </div>
       </div>
@@ -58,6 +59,16 @@ defineProps<{ user: UserItem }>()
         <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">
           {{ user.isActive ? 'ATIVO (AUTORIZADO)' : 'BLOQUEADO' }}
         </span>
+      </div>
+
+      <div class="vms-telemetry-card">
+        <span class="vms-text-dim vms-text-2xs">FUSO HORARIO</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ user.timezone || 'UTC-03:00' }}</span>
+      </div>
+
+      <div class="vms-telemetry-card">
+        <span class="vms-text-dim vms-text-2xs">TELEFONE PRINCIPAL</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ user.phonePrimary || 'NAO INFORMADO' }}</span>
       </div>
 
       <div class="vms-telemetry-card">

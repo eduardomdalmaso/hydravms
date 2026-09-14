@@ -35,6 +35,9 @@ export interface UserItem {
   createdAt: string
   lastLogin: string
   twoFactorEnabled: boolean
+  timezone?: string
+  phonePrimary?: string
+  phoneSecondary?: string
   modules?: UserModulePermission[]
 }
 

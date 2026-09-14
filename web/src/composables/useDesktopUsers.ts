@@ -25,6 +25,7 @@ export function useDesktopUsers() {
         id: raw.id || `usr_${Date.now()}`, username: raw.username || raw.email || 'usuario', fullName: raw.fullName || raw.name || raw.username || 'Usuário',
         email: raw.email || `${raw.username || 'user'}@hydravms.io`, role: role as any, companyScope: scope, groupName: raw.groupName || 'Raiz (Sem Grupo)',
         isActive: raw.isActive !== false, createdAt: raw.createdAt || '2026-09-10', lastLogin: raw.lastLogin || 'Recentemente', twoFactorEnabled: raw.twoFactorEnabled !== false,
+        timezone: raw.timezone || 'America/Sao_Paulo (UTC-03:00)', phonePrimary: raw.phonePrimary || '+55 (11) 98765-4321', phoneSecondary: raw.phoneSecondary || '',
         modules: raw.modules || createDefaultUserModules(role as any, scope)
       }
       const target = folderList.find(f => f.name.toLowerCase() === (uItem.groupName || '').toLowerCase())

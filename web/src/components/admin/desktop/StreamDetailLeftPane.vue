@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
 import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
+import { formatChannelId } from '../../../utils/idFormatter'
 
 const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -27,7 +28,7 @@ const refreshSnapshot = async () => {
           <svg width="18" height="18" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
         </div>
         <div class="vms-flex-col" style="gap: 2px;">
-          <span class="vms-font-bold" style="color: #fff; font-size: 13px;">{{ stream.id.toUpperCase() }} // {{ stream.name }}</span>
+          <span class="vms-font-bold" style="color: #fff; font-size: 13px;">{{ formatChannelId(stream.id) }} // {{ stream.name }}</span>
           <span class="vms-text-mono vms-text-2xs vms-text-dim">{{ stream.url }}</span>
         </div>
       </div>

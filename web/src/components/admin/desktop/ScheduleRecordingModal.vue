@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import type { RecordingProfile, RecordingMode } from '../../../types/recordingSchedule'
 import { createDefaultSchedule } from '../../../types/recordingSchedule'
+import { formatProfileId } from '../../../utils/idFormatter'
 import WeeklyScheduleGrid from './WeeklyScheduleGrid.vue'
 
 const props = defineProps<{ isOpen: boolean; profile?: RecordingProfile | null; nextId?: string }>()
@@ -43,7 +44,7 @@ const handleSave = () => {
       <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.75rem;">
         <div class="vms-flex-col" style="gap: 2px;">
           <span class="vms-font-bold" style="color: var(--vms-neu-accent-orange); font-size: 13px;">CONFIGURAÇÃO DE HORÁRIOS DE GRAVAÇÃO</span>
-          <span class="vms-text-mono vms-text-2xs vms-text-dim">// ID: {{ form.id }} (DEFINA MODOS E MATRIZ TEMPORAL)</span>
+          <span class="vms-text-mono vms-text-2xs vms-text-dim">// ID: {{ formatProfileId(form.id) }} (DEFINA MODOS E MATRIZ TEMPORAL)</span>
         </div>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" title="Fechar" @click="emit('close')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

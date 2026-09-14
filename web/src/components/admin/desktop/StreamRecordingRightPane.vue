@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
 import type { RecordingProfile } from '../../../types/recordingSchedule'
 import { fetchRemoteRecordingProfiles, saveRemoteRecordingProfile, deleteRemoteRecordingProfile } from '../../../services/recordingApi'
+import { formatProfileId } from '../../../utils/idFormatter'
 import ScheduleRecordingModal from './ScheduleRecordingModal.vue'
 
 const props = defineProps<{ stream: StreamItem }>()
@@ -53,8 +54,8 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
           </tr>
         </thead>
         <tbody v-if="profiles.length > 0">
-          <tr v-for="p in profiles" :key="p.id">
-            <td class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); text-align: left;">{{ p.id }}</td>
+          <tr v-for="(p, idx) in profiles" :key="p.id">
+            <td class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); text-align: left;">{{ formatProfileId(idx + 1) }}</td>
             <td style="text-align: left;">
               <span class="vms-font-semibold" style="color: #fff;">{{ p.name }}</span>
             </td>

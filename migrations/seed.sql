@@ -22,7 +22,7 @@ INSERT INTO users (id, tenant_id, name, email, password_hash, role, is_active)
 VALUES (
     '00000000-0000-0000-0000-000000000002',
     '00000000-0000-0000-0000-000000000001',
-    'Cyber Admin',
+    'Admin',
     'admin@hydravms.io',
     '$2a$10$7EqJtq98hPqEX7fNZaFWoOZh9g.iI0g.pX6QyHkLq0/3rYxZ/hD8W',
     'super_admin',

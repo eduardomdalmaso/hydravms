@@ -49,8 +49,8 @@ export const initialUserFolders: UserFolderNode[] = [
 export const initialRootUsers: UserItem[] = [
   {
     id: '00000000-0000-0000-0000-000000000002',
-    username: 'admin@hydravms.io',
-    fullName: 'Cyber Admin',
+    username: 'admin',
+    fullName: 'Admin',
     email: 'admin@hydravms.io',
     role: 'admin_master',
     companyScope: 'HYDRA MASTER OPERATIONS',

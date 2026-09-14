@@ -48,9 +48,9 @@ func (r *PostgresUserRepository) EnsureAdminUser(ctx context.Context) error {
 	// Insert or update default superadmin
 	upsertQuery := `
 		INSERT INTO users (id, tenant_id, name, email, password_hash, role, is_active, created_at, updated_at)
-		VALUES ($1, $2, 'Super Admin', 'admin@hydravms.io', $3, 'admin', true, NOW(), NOW())
+		VALUES ($1, $2, 'Admin', 'admin@hydravms.io', $3, 'admin', true, NOW(), NOW())
 		ON CONFLICT (id) DO UPDATE 
-		SET password_hash = $3, is_active = true, role = 'admin', updated_at = NOW()
+		SET password_hash = $3, is_active = true, role = 'admin', name = 'Admin', updated_at = NOW()
 	`
 	_, err = r.pool.Exec(ctx, upsertQuery, adminID, defaultTenantID, string(hashedPassword))
 	return err
