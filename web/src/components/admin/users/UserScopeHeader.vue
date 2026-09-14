@@ -1,9 +1,20 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import type { UserItem, UserRole } from '../../../types/userTree'
 import { createDefaultUserModules } from '../../../data/defaultUserModules'
+import { getAvailableTimezones, detectLocalTimezone } from '../../../utils/timezones'
 
 const props = defineProps<{ user: UserItem }>()
 const emit = defineEmits<{ (e: 'roleChange', newRole: UserRole): void }>()
+
+const availableTimezones = ref<string[]>([])
+
+onMounted(() => {
+  availableTimezones.value = getAvailableTimezones()
+  if (!props.user.timezone) {
+    props.user.timezone = detectLocalTimezone()
+  }
+})
 
 const handleRoleSelect = (role: UserRole) => {
   props.user.role = role
@@ -49,7 +60,9 @@ const handleRoleSelect = (role: UserRole) => {
         </div>
         <div class="vms-form-group" style="flex: 1;">
           <label class="vms-label" style="font-size: 9px;">Fuso Horário</label>
-          <input v-model="user.timezone" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;" placeholder="America/Sao_Paulo (UTC-03)" />
+          <select v-model="user.timezone" class="vms-auth-input" style="padding: 4px 8px; font-size: 11px;">
+            <option v-for="tz in availableTimezones" :key="tz" :value="tz">{{ tz }}</option>
+          </select>
         </div>
       </div>
 
