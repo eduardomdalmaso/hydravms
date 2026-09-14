@@ -42,3 +42,11 @@ func GetUserID(ctx context.Context) (uuid.UUID, error) {
 	}
 	return val, nil
 }
+
+// GetUserRole extracts the user role string from context.
+func GetUserRole(ctx context.Context) string {
+	if val, ok := ctx.Value(RoleContextKey).(string); ok {
+		return val
+	}
+	return ""
+}

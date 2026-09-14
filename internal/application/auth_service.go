@@ -2,7 +2,10 @@ package application
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -28,8 +31,18 @@ type AuthService struct {
 
 func NewAuthService(userRepo ports.UserRepository, auditService *AuditService) *AuthService {
 	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "hydravms-super-secret-production-key-2026-auth-token-guard"
+	if len(secret) < 32 {
+		if secret != "" {
+			log.Println("⚠️ [SECURITY WARNING] JWT_SECRET is shorter than 32 characters; generating secure ephemeral 256-bit key")
+		} else {
+			log.Println("⚠️ [SECURITY WARNING] JWT_SECRET not configured in environment; generating secure ephemeral 256-bit key for session safety")
+		}
+		randomBytes := make([]byte, 32)
+		if _, err := rand.Read(randomBytes); err == nil {
+			secret = hex.EncodeToString(randomBytes)
+		} else {
+			log.Fatalf("❌ [FATAL] Failed to initialize secure cryptographic RNG for JWT: %v", err)
+		}
 	}
 	return &AuthService{
 		userRepo:     userRepo,

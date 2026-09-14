@@ -11,6 +11,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'popout', layout: CustomLayout): void
+  (e: 'dispatch', layout: CustomLayout): void
   (e: 'rename', layout: CustomLayout): void
   (e: 'duplicate', layout: CustomLayout): void
   (e: 'delete', layout: CustomLayout): void
@@ -42,6 +44,12 @@ const menuPos = computed(() => {
           <span v-else class="vms-badge vms-badge-online" style="font-size: 8px;">[OPERADOR]</span>
         </div>
 
+        <button class="vms-context-item" @click="emit('popout', layout)">
+          <span>[ ↗ ABRIR EM NOVA JANELA / MONITOR ]</span>
+        </button>
+        <button v-if="layout.target_monitor && layout.target_monitor > 0" class="vms-context-item" @click="emit('dispatch', layout)">
+          <span>[ 📺 LANÇAR NO MONITOR {{ layout.target_monitor }} ]</span>
+        </button>
         <button v-if="!layout.is_system" class="vms-context-item" @click="emit('rename', layout)">
           <span>[RENOMEAR LAYOUT]</span>
         </button>

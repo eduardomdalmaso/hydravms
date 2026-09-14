@@ -78,12 +78,45 @@ func AuthMiddleware(validateToken TokenValidatorFunc) func(http.Handler) http.Ha
 	}
 }
 
+// RequireRole enforces that the authenticated user has one of the required roles.
+func RequireRole(allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodOptions {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			userRole := GetUserRole(r.Context())
+			if userRole == "" {
+				renderError(w, http.StatusForbidden, "access denied: role identity missing")
+				return
+			}
+
+			isAllowed := false
+			for _, allowed := range allowedRoles {
+				if strings.EqualFold(userRole, allowed) || userRole == "superadmin" {
+					isAllowed = true
+					break
+				}
+			}
+
+			if !isAllowed {
+				renderError(w, http.StatusForbidden, "access denied: insufficient privileges for this resource")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func renderError(w http.ResponseWriter, status int, detail string) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"type":   "https://hydravms.domain.com/errors/unauthorized",
-		"title":  "Authentication Error",
+		"type":   "https://hydravms.domain.com/errors/access-denied",
+		"title":  "Authorization Error",
 		"status": status,
 		"detail": detail,
 	})

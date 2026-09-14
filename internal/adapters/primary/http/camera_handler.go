@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -299,12 +300,28 @@ func (h *CameraHandler) handleRecordingStream(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	cleanKey := filepath.Clean(chosen.S3Key)
+	absPath, err := filepath.Abs(cleanKey)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid recording file path")
+		return
+	}
+
+	// Strictly prohibit traversal into sensitive system directories
+	forbiddenRoots := []string{"/etc", "/proc", "/sys", "/root", "/var/log", "/usr", "/bin", "/sbin"}
+	for _, root := range forbiddenRoots {
+		if strings.HasPrefix(absPath, root) {
+			writeError(w, http.StatusForbidden, "Access to requested path is forbidden")
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("X-Segment-Start", chosen.StartTime.Format(time.RFC3339))
 	w.Header().Set("X-Segment-End", chosen.EndTime.Format(time.RFC3339))
 	w.Header().Set("X-Segment-ID", chosen.ID.String())
-	http.ServeFile(w, r, chosen.S3Key)
+	http.ServeFile(w, r, absPath)
 }
 
 // syncCameraWithHydraStream informs HydraStream Data Plane about a newly registered camera.

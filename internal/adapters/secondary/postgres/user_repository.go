@@ -45,14 +45,13 @@ func (r *PostgresUserRepository) EnsureAdminUser(ctx context.Context) error {
 		return err
 	}
 
-	// Insert or update default superadmin
-	upsertQuery := `
+	// Insert default superadmin only if not present (preserve changed password across boots)
+	insertQuery := `
 		INSERT INTO users (id, tenant_id, name, email, password_hash, role, is_active, created_at, updated_at)
 		VALUES ($1, $2, 'Admin', 'admin@hydravms.io', $3, 'admin', true, NOW(), NOW())
-		ON CONFLICT (id) DO UPDATE 
-		SET password_hash = $3, is_active = true, role = 'admin', name = 'Admin', updated_at = NOW()
+		ON CONFLICT (id) DO NOTHING
 	`
-	_, err = r.pool.Exec(ctx, upsertQuery, adminID, defaultTenantID, string(hashedPassword))
+	_, err = r.pool.Exec(ctx, insertQuery, adminID, defaultTenantID, string(hashedPassword))
 	return err
 }
 

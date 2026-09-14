@@ -63,7 +63,7 @@ func (r *PostgresCameraRepository) GetByID(ctx context.Context, tenantID uuid.UU
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
 		FROM cameras
-		WHERE id = $1 AND (tenant_id = $2 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $1 AND tenant_id = $2
 	`
 	row := r.pool.QueryRow(ctx, query, cameraID, tenantID)
 
@@ -99,8 +99,7 @@ func (r *PostgresCameraRepository) List(ctx context.Context, tenantID uuid.UUID,
 				COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 				COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
 			FROM cameras
-			WHERE (tenant_id = $1 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
-			  AND folder_id = $2
+			WHERE tenant_id = $1 AND folder_id = $2
 			ORDER BY id ASC
 		`
 		args = []any{tenantID, folderID}
@@ -112,7 +111,7 @@ func (r *PostgresCameraRepository) List(ctx context.Context, tenantID uuid.UUID,
 				COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 				COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
 			FROM cameras
-			WHERE (tenant_id = $1 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+			WHERE tenant_id = $1
 			ORDER BY id ASC
 		`
 		args = []any{tenantID}
@@ -157,7 +156,7 @@ func (r *PostgresCameraRepository) Update(ctx context.Context, c *domain.Camera)
 			name = $1, protocol = $2, rtsp_url = $3, sub_stream_url = $4,
 			location = $5, resolution = $6, fps = $7, bitrate_kbps = $8,
 			codec = $9, folder_id = $10, assigned_node_id = $11, status = $12, updated_at = $13
-		WHERE id = $14 AND (tenant_id = $15 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $14 AND tenant_id = $15
 	`
 	cmdTag, err := r.pool.Exec(ctx, query,
 		c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
@@ -177,7 +176,7 @@ func (r *PostgresCameraRepository) Update(ctx context.Context, c *domain.Camera)
 func (r *PostgresCameraRepository) Delete(ctx context.Context, tenantID uuid.UUID, cameraID string) error {
 	query := `
 		DELETE FROM cameras
-		WHERE id = $1 AND (tenant_id = $2 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $1 AND tenant_id = $2
 	`
 	cmdTag, err := r.pool.Exec(ctx, query, cameraID, tenantID)
 	if err != nil {

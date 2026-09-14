@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"hydravms/internal/adapters/primary/http/middleware"
 )
 
 type AdminDataHandler struct {
@@ -26,22 +27,51 @@ func (h *AdminDataHandler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `
-		SELECT 
-			u.id::text, 
-			u.email, 
-			COALESCE(u.name, 'Administrador'), 
-			u.role, 
-			u.is_active, 
-			COALESCE(t.name, 'Empresa Alfa'), 
-			u.created_at, 
-			COALESCE(u.last_login_at, u.created_at)
-		FROM users u
-		LEFT JOIN tenants t ON t.id = u.tenant_id
-		ORDER BY u.created_at DESC
-	`
+	tenantID, err := middleware.GetTenantID(r.Context())
+	if err != nil {
+		http.Error(w, `{"error":"unauthorized","message":"missing tenant context"}`, http.StatusUnauthorized)
+		return
+	}
 
-	rows, err := h.pool.Query(r.Context(), query)
+	userRole := middleware.GetUserRole(r.Context())
+	var query string
+	var args []interface{}
+
+	if userRole == "superadmin" && tenantID.String() == "00000000-0000-0000-0000-000000000001" {
+		query = `
+			SELECT 
+				u.id::text, 
+				u.email, 
+				COALESCE(u.name, 'Administrador'), 
+				u.role, 
+				u.is_active, 
+				COALESCE(t.name, 'Empresa Alfa'), 
+				u.created_at, 
+				COALESCE(u.last_login_at, u.created_at)
+			FROM users u
+			LEFT JOIN tenants t ON t.id = u.tenant_id
+			ORDER BY u.created_at DESC
+		`
+	} else {
+		query = `
+			SELECT 
+				u.id::text, 
+				u.email, 
+				COALESCE(u.name, 'Administrador'), 
+				u.role, 
+				u.is_active, 
+				COALESCE(t.name, 'Empresa Alfa'), 
+				u.created_at, 
+				COALESCE(u.last_login_at, u.created_at)
+			FROM users u
+			LEFT JOIN tenants t ON t.id = u.tenant_id
+			WHERE u.tenant_id = $1
+			ORDER BY u.created_at DESC
+		`
+		args = append(args, tenantID)
+	}
+
+	rows, err := h.pool.Query(r.Context(), query, args...)
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"users": []interface{}{}})
 		return

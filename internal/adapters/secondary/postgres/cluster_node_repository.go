@@ -128,8 +128,8 @@ func (r *PostgresClusterNodeRepository) UpdateMetrics(ctx context.Context, id uu
 	return err
 }
 
-func (r *PostgresClusterNodeRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	q := `DELETE FROM cluster_nodes WHERE id = $1`
-	_, err := r.pool.Exec(ctx, q, id)
+func (r *PostgresClusterNodeRepository) Delete(ctx context.Context, id uuid.UUID, tenantID uuid.UUID) error {
+	q := `DELETE FROM cluster_nodes WHERE id = $1 AND (tenant_id = $2 OR tenant_id IS NULL)`
+	_, err := r.pool.Exec(ctx, q, id, tenantID)
 	return err
 }

@@ -47,7 +47,7 @@ func (r *PostgresFolderRepository) GetByID(ctx context.Context, tenantID, folder
 	query := `
 		SELECT id, tenant_id, module, parent_id, name, color_hex, icon, sort_order, created_at, updated_at
 		FROM folders
-		WHERE id = $1 AND (tenant_id = $2 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $1 AND tenant_id = $2
 	`
 	row := r.pool.QueryRow(ctx, query, folderID, tenantID)
 
@@ -74,7 +74,7 @@ func (r *PostgresFolderRepository) ListTree(ctx context.Context, tenantID uuid.U
 				0 AS depth,
 				ARRAY[name::text] AS path
 			FROM folders
-			WHERE (tenant_id = $1 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+			WHERE tenant_id = $1
 			  AND module = $2
 			  AND parent_id IS NULL
 
@@ -86,7 +86,7 @@ func (r *PostgresFolderRepository) ListTree(ctx context.Context, tenantID uuid.U
 				ft.path || f.name::text AS path
 			FROM folders f
 			JOIN folder_tree ft ON f.parent_id = ft.id
-			WHERE (f.tenant_id = $1 OR f.tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+			WHERE f.tenant_id = $1
 			  AND f.module = $2
 		)
 		CYCLE id SET is_cycle USING path_cycle
@@ -130,7 +130,7 @@ func (r *PostgresFolderRepository) Update(ctx context.Context, f *domain.Folder)
 	query := `
 		UPDATE folders
 		SET name = $1, color_hex = $2, icon = $3, parent_id = $4, sort_order = $5, updated_at = $6
-		WHERE id = $7 AND (tenant_id = $8 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $7 AND tenant_id = $8
 	`
 	cmdTag, err := r.pool.Exec(ctx, query, f.Name, f.ColorHex, f.Icon, f.ParentID, f.SortOrder, f.UpdatedAt, f.ID, f.TenantID)
 	if err != nil {
@@ -145,7 +145,7 @@ func (r *PostgresFolderRepository) Update(ctx context.Context, f *domain.Folder)
 func (r *PostgresFolderRepository) Delete(ctx context.Context, tenantID, folderID uuid.UUID) error {
 	query := `
 		DELETE FROM folders
-		WHERE id = $1 AND (tenant_id = $2 OR tenant_id = '00000000-0000-0000-0000-000000000001'::uuid)
+		WHERE id = $1 AND tenant_id = $2
 	`
 	cmdTag, err := r.pool.Exec(ctx, query, folderID, tenantID)
 	if err != nil {

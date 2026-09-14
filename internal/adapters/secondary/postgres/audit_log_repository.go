@@ -86,7 +86,7 @@ func (r *AuditLogRepository) List(ctx context.Context, tenantID string, category
 	args := []interface{}{}
 	argIdx := 1
 
-	if tenantID != "" && tenantID != "00000000-0000-0000-0000-000000000001" && tenantID != "tenant_alpha" {
+	if tenantID != "" && tenantID != "ALL" {
 		whereClauses = append(whereClauses, fmt.Sprintf("a.tenant_id = $%d", argIdx))
 		args = append(args, tenantID)
 		argIdx++

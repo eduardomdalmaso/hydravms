@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"hydravms/internal/adapters/primary/http/middleware"
 	"hydravms/internal/adapters/secondary/gpu"
 	"hydravms/internal/adapters/secondary/postgres"
 )
@@ -215,7 +216,10 @@ func probeNodeMetrics(ctx context.Context, n *postgres.ClusterNode, sys gpu.Syst
 
 func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	tenantID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	tenantID, err := middleware.GetTenantID(r.Context())
+	if err != nil || tenantID == uuid.Nil {
+		tenantID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	}
 
 	if r.Method == http.MethodGet {
 		nodes, err := h.repo.List(r.Context(), tenantID)
@@ -304,6 +308,11 @@ func (h *ClusterNodeHandler) HandleNodes(w http.ResponseWriter, r *http.Request)
 
 func (h *ClusterNodeHandler) HandleNodeByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	tenantID, err := middleware.GetTenantID(r.Context())
+	if err != nil || tenantID == uuid.Nil {
+		tenantID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	}
+
 	if r.Method == http.MethodDelete {
 		idStr := strings.TrimPrefix(r.URL.Path, "/api/v1/cluster/nodes/")
 		id, err := uuid.Parse(idStr)
@@ -311,7 +320,7 @@ func (h *ClusterNodeHandler) HandleNodeByID(w http.ResponseWriter, r *http.Reque
 			http.Error(w, `{"error":"invalid node id"}`, http.StatusBadRequest)
 			return
 		}
-		if err := h.repo.Delete(r.Context(), id); err != nil {
+		if err := h.repo.Delete(r.Context(), id, tenantID); err != nil {
 			http.Error(w, `{"error":"failed to delete node"}`, http.StatusInternalServerError)
 			return
 		}
@@ -324,7 +333,11 @@ func (h *ClusterNodeHandler) HandleNodeByID(w http.ResponseWriter, r *http.Reque
 
 func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	tenantID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	tenantID, err := middleware.GetTenantID(r.Context())
+	if err != nil || tenantID == uuid.Nil {
+		tenantID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
 		return
@@ -340,6 +353,19 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 	}
 	if req.IPAddress == "" { req.IPAddress = "127.0.0.1" }
 	if req.HTTPPort == 0 { req.HTTPPort = 8080 }
+
+	// Mitigate SSRF against Cloud Metadata and invalid ports
+	if req.HTTPPort <= 0 || req.HTTPPort > 65535 {
+		http.Error(w, `{"error":"invalid port range"}`, http.StatusBadRequest)
+		return
+	}
+	blockedTargets := []string{"169.254.169.254", "0.0.0.0", "255.255.255.255"}
+	for _, blocked := range blockedTargets {
+		if strings.EqualFold(req.IPAddress, blocked) {
+			http.Error(w, `{"error":"target address is restricted"}`, http.StatusForbidden)
+			return
+		}
+	}
 
 	existing, _ := h.repo.List(r.Context(), tenantID)
 	streamCount, forgeCount, vmsCount := 0, 0, 0

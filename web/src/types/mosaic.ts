@@ -43,6 +43,7 @@ export interface CustomLayout {
   grid: GridLayout
   is_system: boolean
   created_by: string
+  target_monitor?: number
   slots?: WorkspaceSlot[]
 }
 
@@ -54,6 +55,7 @@ export interface WorkspaceTab {
   is_temporary?: boolean
   is_saved?: boolean
   created_by: string
+  target_monitor?: number
   slots: WorkspaceSlot[]
 }
 

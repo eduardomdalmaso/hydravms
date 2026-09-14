@@ -11,9 +11,12 @@ const localName = ref(props.layout.name)
 const localGrid = ref<GridLayout>(props.layout.grid)
 const localScope = ref(props.layout.companyScope)
 const localLocked = ref(props.layout.is_locked)
+const localTargetMonitor = ref<number>(props.layout.target_monitor || 0)
 const localUsers = ref<string[]>([...props.layout.allowedUserIds])
 watch(() => props.layout.is_locked, (v) => localLocked.value = v)
 watch(localLocked, (v) => props.layout.is_locked = v)
+watch(() => props.layout.target_monitor, (v) => localTargetMonitor.value = v || 0)
+watch(localTargetMonitor, (v) => props.layout.target_monitor = v)
 
 const isCompany = computed(() => localScope.value.toUpperCase().startsWith('EMPRESA'))
 
@@ -36,6 +39,7 @@ const handleSave = () => {
   props.layout.grid = localGrid.value
   props.layout.companyScope = localScope.value
   props.layout.is_locked = localLocked.value
+  props.layout.target_monitor = localTargetMonitor.value
   props.layout.allowedUserIds = [...localUsers.value]
   emit('saved', `[LAYOUT] "${props.layout.name}" atualizado`)
 }
@@ -75,6 +79,18 @@ const toggleLock = () => {
       <label class="vms-label">SELECAO DE EMPRESA OU CLIENTE</label>
       <select v-model="localScope" class="vms-auth-input" style="font-size: 11px; padding: 4px 6px;">
         <option v-for="opt in scopeOptions" :key="opt" :value="opt">[{{ opt }}]</option>
+      </select>
+    </div>
+
+    <!-- Monitor Alvo / Destino Multi-Tela -->
+    <div class="vms-form-group">
+      <label class="vms-label">MONITOR ALVO (MULTI-TELA / VIDEO WALL)</label>
+      <select v-model="localTargetMonitor" class="vms-auth-input" style="font-size: 11px; padding: 4px 6px;">
+        <option :value="0">[LIVRE] - Qualquer Monitor / Aba Ativa</option>
+        <option :value="1">[MONITOR 01] - Tela Principal de Operação</option>
+        <option :value="2">[MONITOR 02] - Monitor Secundário (Pop-out)</option>
+        <option :value="3">[MONITOR 03] - Video Wall Perimetral</option>
+        <option :value="4">[MONITOR 04] - Video Wall Alarmes</option>
       </select>
     </div>
 

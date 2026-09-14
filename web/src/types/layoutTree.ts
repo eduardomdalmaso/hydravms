@@ -16,6 +16,7 @@ export interface EnterpriseLayoutItem {
   is_locked: boolean
   created_by: string
   createdAt: string
+  target_monitor?: number
   targetScope: 'all_company' | 'specific_users'
   allowedUserIds: string[]
   slots: LayoutSlotItem[]

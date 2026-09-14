@@ -15,6 +15,8 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'closeContextMenu'): void
+  (e: 'popoutLayout', layout: CustomLayout): void
+  (e: 'dispatchLayout', layout: CustomLayout): void
   (e: 'renameLayout', layout: CustomLayout): void
   (e: 'saveRename', newName: string): void
   (e: 'cancelRename'): void
@@ -37,6 +39,8 @@ const emit = defineEmits<{
       :layout="contextMenu.layout"
       :isHeaderMenu="contextMenu.isHeader"
       @close="emit('closeContextMenu')"
+      @popout="emit('popoutLayout', $event)"
+      @dispatch="emit('dispatchLayout', $event)"
       @rename="emit('renameLayout', $event)"
       @duplicate="emit('duplicateLayout', $event)"
       @delete="emit('deleteLayout', $event.id)"

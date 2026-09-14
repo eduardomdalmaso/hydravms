@@ -2,11 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
+	"hydravms/internal/adapters/primary/http/middleware"
 	"hydravms/internal/application"
 	"hydravms/internal/domain"
 )
@@ -26,8 +27,21 @@ func (h *AuditHandler) HandleLogs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		tenantUUID, err := middleware.GetTenantID(r.Context())
+		if err != nil || tenantUUID == uuid.Nil {
+			tenantUUID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		}
+
+		userRole := middleware.GetUserRole(r.Context())
+		tenantID := tenantUUID.String()
+		// Only superadmins on master tenant can filter by other tenants
+		if userRole == "superadmin" && tenantUUID.String() == "00000000-0000-0000-0000-000000000001" {
+			if qTenant := r.URL.Query().Get("tenant_id"); qTenant != "" {
+				tenantID = qTenant
+			}
+		}
+
 		q := r.URL.Query()
-		tenantID := q.Get("tenant_id")
 		category := q.Get("category")
 		level := q.Get("level")
 
@@ -46,7 +60,7 @@ func (h *AuditHandler) HandleLogs(w http.ResponseWriter, r *http.Request) {
 
 		logs, total, err := h.auditService.ListLogs(r.Context(), tenantID, category, level, limit, offset)
 		if err != nil {
-			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
+			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -123,7 +137,16 @@ func (h *AuditHandler) HandleLogs(w http.ResponseWriter, r *http.Request) {
 			ip = r.RemoteAddr
 		}
 
-		err := h.auditService.RecordAction(
+		tenantUUID, err := middleware.GetTenantID(r.Context())
+		if err != nil || tenantUUID == uuid.Nil {
+			tenantUUID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		}
+
+		if req.TenantID == "" || req.TenantID != tenantUUID.String() {
+			req.TenantID = tenantUUID.String()
+		}
+
+		err = h.auditService.RecordAction(
 			r.Context(),
 			req.TenantID,
 			req.Actor,
@@ -138,7 +161,7 @@ func (h *AuditHandler) HandleLogs(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
+			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -146,6 +169,6 @@ func (h *AuditHandler) HandleLogs(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"status":"created"}`))
 
 	default:
-		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
