@@ -18,7 +18,7 @@ type MapPin struct {
 	TenantID       uuid.UUID `json:"tenant_id"`
 	MapID          uuid.UUID `json:"map_id"`
 	CameraID       string    `json:"camera_id,omitempty"`
-	PinType        string    `json:"pin_type"` // 'camera', 'sensor', 'alarm_zone'
+	PinType        string    `json:"pin_type"` // 'camera', 'sensor'
 	PositionXPct   float64   `json:"position_x_pct"`
 	PositionYPct   float64   `json:"position_y_pct"`
 	GPSLat         *float64  `json:"gps_lat,omitempty"`

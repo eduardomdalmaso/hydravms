@@ -54,7 +54,6 @@ const handleSave = () => {
           <option value="cameras">[CAMERAS] Visualizacao ao Vivo de Streams</option>
           <option value="ptz">[PTZ] Controle de Joystick e Presets</option>
           <option value="export">[EXPORTACAO] Download de Gravacoes e Evidencias MP4</option>
-          <option value="alarms">[ALARMES] Reconhecimento e Desarme de Sensores</option>
           <option value="system">[SISTEMA] Acesso ao Painel Administrativo</option>
         </select>
       </div>

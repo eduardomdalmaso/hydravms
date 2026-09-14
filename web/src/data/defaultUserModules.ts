@@ -55,18 +55,6 @@ export function createDefaultUserModules(role: UserRole, scopeTarget: string = '
       ]
     },
     {
-      id: 'alarms_sensors',
-      name: 'ALARMES & SENSORES // DISPAROS & ZONAS',
-      isEnabled: isOperator,
-      description: 'Arme/desarme, sirenes, regras de zona e eventos',
-      scopeTarget: isMaster ? 'TODAS AS ZONAS' : scopeTarget,
-      permissions: [
-        { id: 'p_alm_view', name: 'Visualizar Alertas e Detecção', isEnabled: true },
-        { id: 'p_alm_ack', name: 'Reconhecer e Finalizar Incidentes', isEnabled: isOperator },
-        { id: 'p_alm_config', name: 'Configurar Regras de Zona e Relays', isEnabled: isCompany }
-      ]
-    },
-    {
       id: 'layouts_rounds',
       name: 'LAYOUTS & RONDAS // CARROSSEIS',
       isEnabled: true,

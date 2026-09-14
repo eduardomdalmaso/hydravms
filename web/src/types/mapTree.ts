@@ -1,5 +1,5 @@
 export type MapKind = 'MAP_OPENSOURCE' | 'PLANTA_BAIXA'
-export type DeviceType = 'CAMERA' | 'ALARME'
+export type DeviceType = 'CAMERA'
 
 export interface MapMarkerItem {
   id: string
@@ -9,7 +9,7 @@ export interface MapMarkerItem {
   lat: number
   lng: number
   angle?: number
-  status: 'ONLINE' | 'OFFLINE' | 'DISPARADO'
+  status: 'ONLINE' | 'OFFLINE'
 }
 
 export interface EnterpriseMapItem {

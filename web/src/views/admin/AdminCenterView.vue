@@ -2,7 +2,6 @@
 import { ref, computed } from "vue"
 import AdminSidebar, { type AdminPageId } from "./AdminSidebar.vue"
 import AdminCamerasView from "./AdminCamerasView.vue"
-import AdminAlarmsView from "./AdminAlarmsView.vue"
 import AdminUsersView from "./AdminUsersView.vue"
 import AdminLayoutsView from "./AdminLayoutsView.vue"
 import AdminCarouselsView from "./AdminCarouselsView.vue"
@@ -38,7 +37,6 @@ const parsedPlugin = computed(() => {
         <AnalyticPluginCrudView v-if="parsedPlugin.type === 'instances'" :plugin-id="parsedPlugin.pluginId" />
         <AnalyticPluginEventsView v-else-if="parsedPlugin.type === 'events'" :plugin-id="parsedPlugin.pluginId" />
       </template>
-      <AdminAlarmsView v-else-if="activePage === 'alarms'" />
       <AdminUsersView v-else-if="activePage === 'users'" />
       <AdminLayoutsView v-else-if="activePage === 'layouts'" />
       <AdminCarouselsView v-else-if="activePage === 'carousels'" />

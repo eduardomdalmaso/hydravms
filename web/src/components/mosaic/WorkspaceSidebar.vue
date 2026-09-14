@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import type { MapResource, CarouselConfig, CameraStreamInfo, CustomLayout, AlarmItemInfo } from "../../types/mosaic"
+import type { MapResource, CarouselConfig, CameraStreamInfo, CustomLayout } from "../../types/mosaic"
 import { fetchCameras } from "../../services/api"
 import { useEventBus } from "../../services/eventSocket"
 import SidebarCamerasSection from "./SidebarCamerasSection.vue"
-import SidebarAlarmsSection from "./SidebarAlarmsSection.vue"
 import SidebarLayoutsSection from "./SidebarLayoutsSection.vue"
 import SidebarMapsSection from "./SidebarMapsSection.vue"
 import SidebarCarouselsSection from "./SidebarCarouselsSection.vue"
@@ -12,7 +11,6 @@ import SidebarCarouselsSection from "./SidebarCarouselsSection.vue"
 defineProps<{ layouts: CustomLayout[]; activeLayoutId: string }>()
 const emit = defineEmits<{
   (e: "selectCamera", camera: CameraStreamInfo): void
-  (e: "selectAlarm", alarm: AlarmItemInfo): void
   (e: "selectMap", map: MapResource): void
   (e: "selectCarousel", carousel: CarouselConfig): void
   (e: "openCarouselModal"): void
@@ -21,10 +19,9 @@ const emit = defineEmits<{
 }>()
 
 const isCollapsed = ref(false), cameras = ref<CameraStreamInfo[]>([])
-const openSections = ref({ cameras: true, alarms: true, layouts: true, maps: false, carousel: false })
-const toggleSection = (s: "cameras" | "alarms" | "layouts" | "maps" | "carousel") => { openSections.value[s] = !openSections.value[s] }
+const openSections = ref({ cameras: true, layouts: true, maps: false, carousel: false })
+const toggleSection = (s: "cameras" | "layouts" | "maps" | "carousel") => { openSections.value[s] = !openSections.value[s] }
 
-const liveAlarms = ref<AlarmItemInfo[]>([])
 const liveMaps = ref<MapResource[]>([])
 const liveCarousels = ref<CarouselConfig[]>([])
 
@@ -57,7 +54,6 @@ onMounted(async () => {
     </div>
     <div v-show="!isCollapsed" style="display: flex; flex-direction: column; height: 100%; width: 250px; overflow-y: auto;">
       <SidebarCamerasSection :cameras="cameras" :isOpen="openSections.cameras" @toggle="toggleSection('cameras')" @selectCamera="emit('selectCamera', $event)" />
-      <SidebarAlarmsSection :alarms="liveAlarms" :isOpen="openSections.alarms" @toggle="toggleSection('alarms')" @selectAlarm="emit('selectAlarm', $event)" />
       <SidebarLayoutsSection :layouts="layouts" :activeLayoutId="activeLayoutId" :isOpen="openSections.layouts" @toggle="toggleSection('layouts')" @selectLayout="emit('selectLayout', $event)" @contextMenu="emit('layoutContextMenu', $event)" />
       <SidebarMapsSection :maps="liveMaps" :isOpen="openSections.maps" @toggle="toggleSection('maps')" @selectMap="emit('selectMap', $event)" />
       <SidebarCarouselsSection :carousels="liveCarousels" :isOpen="openSections.carousel" @toggle="toggleSection('carousel')" @selectCarousel="emit('selectCarousel', $event)" @openModal="emit('openCarouselModal')" />

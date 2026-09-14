@@ -6,10 +6,17 @@ export function useAuth() {
   const isLoading = ref(false)
   const errorMessage = ref<string | null>(null)
   const username = ref(localStorage.getItem('hydra_user') || 'admin')
+  const storedRole = ref(localStorage.getItem('hydra_role') || '')
 
   const userRole = computed<'admin' | 'supervisor' | 'operator'>(() => {
-    if (username.value.toLowerCase() === 'admin') return 'admin'
-    if (username.value.toLowerCase().includes('super')) return 'supervisor'
+    const roleLower = storedRole.value.toLowerCase()
+    if (roleLower === 'admin' || roleLower === 'superadmin' || roleLower === 'administrator') return 'admin'
+    if (roleLower.includes('super')) return 'supervisor'
+    if (roleLower === 'operator') return 'operator'
+
+    const userLower = username.value.toLowerCase()
+    if (userLower.includes('admin')) return 'admin'
+    if (userLower.includes('super')) return 'supervisor'
     return 'operator'
   })
 
@@ -38,10 +45,13 @@ export function useAuth() {
 
       const data = await res.json()
       username.value = data.user?.username || creds.username
+      const role = data.user?.role || (username.value.toLowerCase().includes('admin') ? 'admin' : 'operator')
+      storedRole.value = role
       isAuthenticated.value = true
       localStorage.setItem('hydra_auth', 'true')
       localStorage.setItem('hydra_token', data.token)
       localStorage.setItem('hydra_user', username.value)
+      localStorage.setItem('hydra_role', role)
     } catch (err: any) {
       errorMessage.value = err.message || 'Credenciais inválidas.'
     } finally {
@@ -53,6 +63,8 @@ export function useAuth() {
     isAuthenticated.value = false
     localStorage.removeItem('hydra_auth')
     localStorage.removeItem('hydra_token')
+    localStorage.removeItem('hydra_user')
+    localStorage.removeItem('hydra_role')
   }
 
   return {

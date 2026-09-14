@@ -27,15 +27,19 @@ onUnmounted(() => { if (timer) clearInterval(timer); window.removeEventListener(
 
 const handleSelectMode = (mode: "vms" | "admin") => {
   if (mode === "admin" && !props.isAdmin) return
-  if (mode === "admin" && props.currentMode === "vms") window.open(window.location.origin + window.location.pathname + "#admin", "hydravms_admin_center")
-  else if (mode === "vms" && props.currentMode === "admin") window.open(window.location.origin + window.location.pathname + "#vms", "hydravms_main_vms")
-  else emit("switchMode", mode)
+  if (mode === "admin" && props.currentMode === "vms") {
+    window.open(window.location.origin + window.location.pathname + "#admin", "hydravms_admin_center")
+  } else if (mode === "vms" && props.currentMode === "admin") {
+    window.open(window.location.origin + window.location.pathname + "#vms", "hydravms_main_vms")
+  } else {
+    emit("switchMode", mode)
+  }
   isUserMenuOpen.value = false
 }
 </script>
 
 <template>
-  <header class="vms-header" style="background: #15181d; border-bottom: 1px solid var(--vms-border); height: 44px; padding: 0 1rem;">
+  <header class="vms-header" style="background: #15181d; border-bottom: 1px solid var(--vms-border); height: 44px; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center;">
     <div class="vms-flex-row" style="align-items: center; gap: 0.55rem;">
       <img src="/hydra.svg" alt="Hydra" style="width: 22px; height: 22px; object-fit: contain;" />
       <span style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 15px; font-weight: 800; letter-spacing: 0.8px;">

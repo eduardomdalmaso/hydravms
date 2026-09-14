@@ -12,7 +12,7 @@ const emit = defineEmits<{ (e: 'notify', msg: string): void }>()
 
 const flyTarget = ref<{ lat: number; lng: number } | null>(null)
 const {
-  activeTab, draggedDevice, camerasList, alarmsList, currentTabDevices,
+  activeTab, draggedDevice, camerasList, currentTabDevices,
   toggleTab, handleDeviceDragStart, addMarkerAt, applySavedCoords, removeMarker
 } = useMapEditorState(props.mapItem, (m) => emit('notify', m))
 
@@ -28,8 +28,8 @@ const handleSelectLocation = (loc: { lat: number; lng: number; label: string }) 
   emit('notify', `[GEOCODER] Centralizado em: ${loc.label.slice(0, 45)}...`)
 }
 
-const handleQuickAdd = (type: 'CAMERA' | 'ALARME', loc: { lat: number; lng: number; label: string }) => {
-  const pool = type === 'CAMERA' ? camerasList.value : alarmsList.value
+const handleQuickAdd = (type: 'CAMERA', loc: { lat: number; lng: number; label: string }) => {
+  const pool = camerasList.value
   const candidate = pool.find(d => !props.mapItem.markers.some(m => m.deviceId === d.id)) || pool[0]
   if (candidate) addMarkerAt(candidate, loc.lat, loc.lng)
 }
@@ -54,11 +54,10 @@ const handleQuickAdd = (type: 'CAMERA' | 'ALARME', loc: { lat: number; lng: numb
       @quick-add="handleQuickAdd"
     />
 
-    <!-- Abas Superiores Direitas [CAMERAS] e [ALARMES] -->
+    <!-- Aba Superior Direita [CAMERAS] -->
     <MapTopRightTabs
       :active-tab="activeTab"
       :cameras-count="camerasList.length"
-      :alarms-count="alarmsList.length"
       @toggle="toggleTab"
     />
 

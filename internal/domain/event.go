@@ -31,7 +31,7 @@ type BoundingBox struct {
 	Height  float64 `json:"height"`
 }
 
-// Event represents a processed AI detection, smart alarm, or security incident (Gold Layer).
+// Event represents a processed AI detection or security incident (Gold Layer).
 type Event struct {
 	ID               uuid.UUID     `json:"id"`
 	TenantID         uuid.UUID     `json:"tenant_id"`

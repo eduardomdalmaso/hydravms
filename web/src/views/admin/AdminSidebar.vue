@@ -15,7 +15,6 @@ const makeIcon = (d: string) => () => h("svg", { width: 12, height: 12, viewBox:
 
 const configItems = [
   { id: "video_streams", icon: makeIcon("M23 7l-7 5 7 5V7z M1 5h15v14H1z") },
-  { id: "alarms", icon: makeIcon("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0") },
   { id: "workflows", icon: makeIcon("M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3") },
   { id: "users", icon: makeIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z") },
   { id: "layouts", icon: makeIcon("M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z") },

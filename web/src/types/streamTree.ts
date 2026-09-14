@@ -17,7 +17,7 @@ export interface StreamItem {
   locationName?: string
   snapshotUrl?: string
   analyticsCount?: number
-  alarmsCount?: number
+  eventsCount?: number
 }
 
 

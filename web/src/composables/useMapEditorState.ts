@@ -3,17 +3,16 @@ import type { EnterpriseMapItem, DeployableDevice, MapMarkerItem } from '../type
 import { initialDeployableDevices } from '../data/mockMapFolders'
 
 export function useMapEditorState(mapItem: EnterpriseMapItem, onNotify: (msg: string) => void) {
-  const devices = ref<DeployableDevice[]>([...initialDeployableDevices])
-  const activeTab = ref<'CAMERAS' | 'ALARMES' | null>(null)
+  const devices = ref<DeployableDevice[]>([...initialDeployableDevices.filter(d => d.type === 'CAMERA')])
+  const activeTab = ref<'CAMERAS' | null>(null)
   const draggedDevice = ref<DeployableDevice | null>(null)
   const mapCenter = ref<[number, number]>([...mapItem.initialCenter])
   const mapZoom = ref<number>(mapItem.initialZoom)
 
   const camerasList = computed(() => devices.value.filter(d => d.type === 'CAMERA'))
-  const alarmsList = computed(() => devices.value.filter(d => d.type === 'ALARME'))
-  const currentTabDevices = computed(() => activeTab.value === 'CAMERAS' ? camerasList.value : (activeTab.value === 'ALARMES' ? alarmsList.value : []))
+  const currentTabDevices = computed(() => activeTab.value === 'CAMERAS' ? camerasList.value : [])
 
-  const toggleTab = (tab: 'CAMERAS' | 'ALARMES') => {
+  const toggleTab = (tab: 'CAMERAS') => {
     activeTab.value = activeTab.value === tab ? null : tab
   }
 
@@ -36,7 +35,7 @@ export function useMapEditorState(mapItem: EnterpriseMapItem, onNotify: (msg: st
         type: dev.type,
         lat,
         lng,
-        angle: dev.type === 'CAMERA' ? 45 : undefined,
+        angle: 45,
         status: 'ONLINE'
       }
       mapItem.markers.push(newMarker)
@@ -65,7 +64,7 @@ export function useMapEditorState(mapItem: EnterpriseMapItem, onNotify: (msg: st
   }
 
   return {
-    devices, activeTab, draggedDevice, mapCenter, mapZoom, camerasList, alarmsList,
+    devices, activeTab, draggedDevice, mapCenter, mapZoom, camerasList,
     currentTabDevices, toggleTab, handleDeviceDragStart, addMarkerAt, applySavedCoords, removeMarker
   }
 }

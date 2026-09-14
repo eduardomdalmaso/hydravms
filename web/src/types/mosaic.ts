@@ -64,13 +64,3 @@ export interface TimelineSegment {
   type: 'continuous' | 'motion' | 'ai_alert'
   label?: string
 }
-
-export type AlarmStatus = 'online' | 'alert' | 'offline'
-
-export interface AlarmItemInfo {
-  id: string
-  name: string
-  zone: string
-  status: AlarmStatus
-  type?: string
-}

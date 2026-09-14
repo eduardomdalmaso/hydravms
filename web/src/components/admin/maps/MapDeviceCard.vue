@@ -15,13 +15,10 @@ const emit = defineEmits<{
     @dragstart="emit('dragStart', device)"
   >
     <div class="vms-flex-row" style="gap: 8px; align-items: center;">
-      <!-- Ícone Câmera ou Alarme -->
+      <!-- Ícone Câmera -->
       <div class="vms-device-icon" style="color: #ff5e3a;">
-        <svg v-if="device.type === 'CAMERA'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-        </svg>
-        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
       </div>
 

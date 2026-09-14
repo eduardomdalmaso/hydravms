@@ -4,7 +4,7 @@ import { initialUserFolders, initialRootUsers } from '../data/mockUserFolders'
 import { createDefaultUserModules } from '../data/defaultUserModules'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
-import { fetchFolders } from '../services/api'
+import { fetchFolders, fetchUsers } from '../services/api'
 
 export function useDesktopUsers() {
   const searchQuery = ref(''), folders = ref<UserFolderNode[]>(initialUserFolders), rootUsers = ref<UserItem[]>(initialRootUsers)
@@ -14,8 +14,23 @@ export function useDesktopUsers() {
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
 
   onMounted(async () => {
-    const dbF = await fetchFolders('users')
-    folders.value = (dbF || []).map(f => ({ id: f.id, name: f.name, isExpanded: true, users: [] }))
+    const [dbF, dbU] = await Promise.all([fetchFolders('users'), fetchUsers(initialRootUsers)])
+    const folderList: UserFolderNode[] = (dbF && dbF.length > 0) ? dbF.map(f => ({ id: f.id, name: f.name, isExpanded: true, users: [] })) : [...initialUserFolders]
+    const unassigned: UserItem[] = [], rawList = (dbU && dbU.length > 0) ? dbU : initialRootUsers
+
+    rawList.forEach((raw: any) => {
+      const role = (raw.role === 'admin' || raw.role === 'super_admin' || raw.role === 'admin_master') ? 'admin_master' : (raw.role || 'operator')
+      const scope = raw.companyScope || 'HYDRA MASTER OPERATIONS'
+      const uItem: UserItem = {
+        id: raw.id || `usr_${Date.now()}`, username: raw.username || raw.email || 'usuario', fullName: raw.fullName || raw.name || raw.username || 'Usuário',
+        email: raw.email || `${raw.username || 'user'}@hydravms.io`, role: role as any, companyScope: scope, groupName: raw.groupName || 'Raiz (Sem Grupo)',
+        isActive: raw.isActive !== false, createdAt: raw.createdAt || '2026-09-10', lastLogin: raw.lastLogin || 'Recentemente', twoFactorEnabled: raw.twoFactorEnabled !== false,
+        modules: raw.modules || createDefaultUserModules(role as any, scope)
+      }
+      const target = folderList.find(f => f.name.toLowerCase() === (uItem.groupName || '').toLowerCase())
+      if (target) target.users.push(uItem); else unassigned.push(uItem)
+    })
+    folders.value = folderList; rootUsers.value = unassigned
   })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
@@ -35,39 +50,25 @@ export function useDesktopUsers() {
     let user: UserItem | undefined = rootUsers.value.find(u => u.id === userId)
     if (!user) { for (const f of folders.value) { user = f.users.find(u => u.id === userId); if (user) break } }
     if (!user) return
-    rootUsers.value = rootUsers.value.filter(u => u.id !== userId)
-    folders.value.forEach(f => { f.users = f.users.filter(u => u.id !== userId) })
+    rootUsers.value = rootUsers.value.filter(u => u.id !== userId); folders.value.forEach(f => { f.users = f.users.filter(u => u.id !== userId) })
     if (targetFolderId) {
       const target = folders.value.find(f => f.id === targetFolderId)
       if (target) { user.groupName = target.name; target.users.push(user); showNotification(`Usuário "${user.username}" movido para "${target.name}".`) }
-    } else {
-      user.groupName = 'Raiz (Sem Grupo)'; rootUsers.value.push(user); showNotification(`Usuário "${user.username}" movido para a Raiz.`)
-    }
+    } else { user.groupName = 'Raiz (Sem Grupo)'; rootUsers.value.push(user); showNotification(`Usuário "${user.username}" movido para a Raiz.`) }
   }
 
-  const requestDeleteFolder = (id: string) => {
-    const folder = folders.value.find(f => f.id === id)
-    if (folder && folder.users.length > 0) openDeletePrompt(folder.id, folder.name, folder.users.length)
-    else deleteFolderById(id)
-  }
-
+  const requestDeleteFolder = (id: string) => { const f = folders.value.find(item => item.id === id); if (f && f.users.length > 0) openDeletePrompt(f.id, f.name, f.users.length); else deleteFolderById(id) }
   const confirmDeleteFolder = () => {
     if (!folderToDelete.value) return
-    const folder = folders.value.find(f => f.id === folderToDelete.value!.id)
-    if (folder) {
-      folder.users.forEach(u => { u.groupName = 'Raiz (Sem Grupo)' }); rootUsers.value.push(...folder.users)
-      folders.value = folders.value.filter(f => f.id !== folder.id)
-      if (currentFolderId.value === folder.id) currentFolderId.value = null
-      showNotification(`Grupo removido. ${folder.users.length} usuários movidos para a raiz.`)
-    }
+    const f = folders.value.find(item => item.id === folderToDelete.value!.id)
+    if (f) { f.users.forEach(u => { u.groupName = 'Raiz (Sem Grupo)' }); rootUsers.value.push(...f.users); folders.value = folders.value.filter(item => item.id !== f.id); if (currentFolderId.value === f.id) currentFolderId.value = null; showNotification(`Grupo removido. ${f.users.length} usuários movidos para a raiz.`) }
     closeDeletePrompt()
   }
 
   const deleteFolderById = (id: string) => { folders.value = folders.value.filter(f => f.id !== id); if (currentFolderId.value === id) currentFolderId.value = null; showNotification('Grupo removido.') }
   const deleteUserById = (id: string) => {
     rootUsers.value = rootUsers.value.filter(u => u.id !== id); folders.value.forEach(f => { f.users = f.users.filter(u => u.id !== id) })
-    if (selectedUser.value?.id === id) selectedUser.value = null
-    showNotification('Usuário removido.')
+    if (selectedUser.value?.id === id) selectedUser.value = null; showNotification('Usuário removido.')
   }
 
   const handleSaveFolder = (name: string) => { folders.value.push({ id: `f_usr_0${folders.value.length + 1}`, name, isExpanded: true, users: [] }); showNotification(`Grupo "${name}" criado.`) }
@@ -75,9 +76,8 @@ export function useDesktopUsers() {
     const role = user.role || 'operator', scope = user.companyScope || 'EMPRESA PADRÃO'
     const newUser: UserItem = {
       id: `usr_0${totalUsers.value + 1}`, username: user.username || 'novo_usuario', fullName: user.fullName || 'Usuário Operador',
-      email: user.email || `${user.username || 'user'}@hydravms.internal`, role, companyScope: scope,
-      groupName: 'Raiz (Sem Grupo)', isActive: true, createdAt: '2026-09-05', lastLogin: 'Nunca', twoFactorEnabled: false,
-      modules: createDefaultUserModules(role, scope)
+      email: user.email || `${user.username || 'user'}@hydravms.internal`, role, companyScope: scope, groupName: 'Raiz (Sem Grupo)',
+      isActive: true, createdAt: '2026-09-05', lastLogin: 'Nunca', twoFactorEnabled: false, modules: createDefaultUserModules(role, scope)
     }
     const target = folders.value.find(f => f.id === folderId)
     if (target) { newUser.groupName = target.name; target.users.push(newUser) } else rootUsers.value.push(newUser)

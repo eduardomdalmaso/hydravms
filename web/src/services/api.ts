@@ -54,6 +54,17 @@ export async function fetchCameras(fallback: RegisteredCamera[] = []): Promise<R
   } catch { return fallback }
 }
 
+export async function fetchUsers(fallback: any[] = []): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/users`, {
+      headers: { 'Accept': 'application/json', ...getAuthHeaders() }, signal: AbortSignal.timeout(3000)
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    return Array.isArray(data.users) && data.users.length > 0 ? data.users : fallback
+  } catch { return fallback }
+}
+
 export async function createRemoteCamera(cam: any): Promise<RegisteredCamera | null> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/cameras`, {

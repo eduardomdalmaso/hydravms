@@ -290,9 +290,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  total_alarms:
+                  total_events:
                     type: integer
-                  unresolved_alarms:
+                  unresolved_events:
                     type: integer
                   avg_mtta_seconds:
                     type: number

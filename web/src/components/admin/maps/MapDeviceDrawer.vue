@@ -4,7 +4,7 @@ import type { DeployableDevice } from '../../../types/mapTree'
 import MapDeviceCard from './MapDeviceCard.vue'
 
 const props = defineProps<{
-  activeTab: 'CAMERAS' | 'ALARMES'
+  activeTab: 'CAMERAS'
   devices: DeployableDevice[]
   isLocked?: boolean
 }>()
@@ -27,7 +27,7 @@ const filteredDevices = computed(() => {
     <div class="vms-drawer-header">
       <div class="vms-flex-col" style="gap: 2px;">
         <span class="vms-font-bold vms-text-xs" style="color: var(--vms-neu-accent-orange);">
-          {{ activeTab === 'CAMERAS' ? 'CAMERAS DISPONIVEIS' : 'SENSORES & ALARMES' }}
+          CAMERAS DISPONIVEIS
         </span>
         <span class="vms-text-mono vms-text-2xs vms-text-dim">ARRASTE E SOLTE NO MAPA</span>
       </div>

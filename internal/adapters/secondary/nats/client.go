@@ -67,8 +67,8 @@ func (c *NATSClient) initStreamsAndBuckets(ctx context.Context) error {
 	// 1. Persistent Events Stream (File Storage, 7-Day Retention)
 	eventsStreamCfg := jetstream.StreamConfig{
 		Name:        "HYDRA_EVENTS",
-		Description: "Gold Layer AI Events, Alarms and Forensic Detections",
-		Subjects:    []string{"hydra.v1.*.cameras.*.events", "hydra.v1.*.alarms.>"},
+		Description: "Gold Layer AI Events and Forensic Detections",
+		Subjects:    []string{"hydra.v1.*.cameras.*.events"},
 		Retention:   jetstream.LimitsPolicy,
 		Storage:     jetstream.FileStorage,
 		MaxAge:      7 * 24 * time.Hour,

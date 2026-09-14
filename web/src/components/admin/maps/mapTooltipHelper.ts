@@ -14,29 +14,3 @@ export function getCameraTooltipHtml(name: string, lat: number, lng: number): st
     </div>
   `
 }
-
-export function getAlarmTooltipHtml(name: string, lat: number, lng: number): string {
-  return `
-    <div class="vms-map-hover-card alarm-card">
-      <div class="vms-hover-alarm-header">
-        <div class="vms-hover-title">${name}</div>
-        <div class="vms-hover-alarm-badge">[3 DISPAROS RECENTES]</div>
-      </div>
-      <div class="vms-hover-trigger-list">
-        <div class="vms-trigger-item">
-          <span class="vms-trigger-time">14:32:10</span>
-          <span class="vms-trigger-desc">VIOLACAO DE PERIMETRO</span>
-        </div>
-        <div class="vms-trigger-item">
-          <span class="vms-trigger-time">12:15:04</span>
-          <span class="vms-trigger-desc">DETECCAO DE MOVIMENTO</span>
-        </div>
-        <div class="vms-trigger-item">
-          <span class="vms-trigger-time">09:40:22</span>
-          <span class="vms-trigger-desc">TESTE DE ZONA MANUAL</span>
-        </div>
-      </div>
-      <div class="vms-hover-mono">GEO: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
-    </div>
-  `
-}

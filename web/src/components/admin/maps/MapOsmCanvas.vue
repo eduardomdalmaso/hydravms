@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import L from 'leaflet'
 import type { MapMarkerItem } from '../../../types/mapTree'
-import { getCameraTooltipHtml, getAlarmTooltipHtml } from './mapTooltipHelper'
+import { getCameraTooltipHtml } from './mapTooltipHelper'
 
 const props = defineProps<{
   initialCenter: [number, number]
@@ -21,16 +21,11 @@ const mapContainer = ref<HTMLElement | null>(null)
 let map: L.Map | null = null
 const leafletMarkers = new Map<string, L.Marker>()
 
-const createIcon = (type: 'CAMERA' | 'ALARME') => {
-  const isCam = type === 'CAMERA'
-  const bg = isCam ? '#ff5e3a' : '#07080c'
-  const border = isCam ? '#ffffff' : '#ff5e3a'
-  const svg = isCam
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+const createIcon = () => {
+  const svg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>'
   return L.divIcon({
     className: 'vms-custom-pin',
-    html: `<div style="background: ${bg}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(255, 94, 58, 0.5); border: 2px solid ${border};">${svg}</div>`,
+    html: `<div style="background: #ff5e3a; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(255, 94, 58, 0.5); border: 2px solid #ffffff;">${svg}</div>`,
     iconSize: [28, 28], iconAnchor: [14, 14]
   })
 }
@@ -39,8 +34,8 @@ const syncMarkers = () => {
   if (!map) return
   leafletMarkers.forEach(m => m.remove()); leafletMarkers.clear()
   props.markers.forEach(mk => {
-    const marker = L.marker([mk.lat, mk.lng], { icon: createIcon(mk.type), draggable: !props.isLocked })
-    const tipHtml = mk.type === 'CAMERA' ? getCameraTooltipHtml(mk.name, mk.lat, mk.lng) : getAlarmTooltipHtml(mk.name, mk.lat, mk.lng)
+    const marker = L.marker([mk.lat, mk.lng], { icon: createIcon(), draggable: !props.isLocked })
+    const tipHtml = getCameraTooltipHtml(mk.name, mk.lat, mk.lng)
     marker.bindTooltip(tipHtml, { direction: 'top', className: 'vms-map-tooltip', opacity: 1, offset: L.point(0, -16) })
     marker.addTo(map!)
     leafletMarkers.set(mk.id, marker)

@@ -48,7 +48,7 @@ const handleSubmit = () => {
           <select v-model="role" class="vms-auth-input">
             <option value="HOT_BUFFER">[HOT_BUFFER] DISCO DE BUFFER NVMe (ESCRITA RAPIDA)</option>
             <option value="WARM_ARCHIVE">[WARM_ARCHIVE] ARMAZENAMENTO DE GRAVACOES (LONGO PRAZO)</option>
-            <option value="SNAPSHOTS">[SNAPSHOTS] ARMAZENAMENTO DE FOTOS/ALARMES</option>
+            <option value="SNAPSHOTS">[SNAPSHOTS] ARMAZENAMENTO DE FOTOS/EVENTOS</option>
             <option value="DATABASE">[DATABASE] BANCO DE DADOS & METADADOS</option>
           </select>
         </div>

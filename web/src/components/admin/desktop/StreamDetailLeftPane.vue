@@ -85,8 +85,8 @@ const refreshSnapshot = async () => {
       </div>
 
       <div class="vms-telemetry-card">
-        <span class="vms-text-dim vms-text-2xs">ALARMES & SENSORES</span>
-        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ stream.alarmsCount || 0 }}</span>
+        <span class="vms-text-dim vms-text-2xs">EVENTOS DE IA</span>
+        <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: #fff;">{{ stream.eventsCount || 0 }}</span>
       </div>
     </div>
   </div>

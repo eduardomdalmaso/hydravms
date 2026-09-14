@@ -4,7 +4,6 @@ import type { WorkspaceSlot, CameraStreamInfo } from "../../types/mosaic"
 import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
 import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
 import { getCameraMjpegUrl } from "../../utils/streamUrls"
-import SlotLinkedAlarm from "./SlotLinkedAlarm.vue"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
@@ -78,7 +77,6 @@ onMounted(handleSeekOrSwitch)
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-muted);">PROTOCOLO: {{ ((slot.data as CameraStreamInfo).protocol || 'RTSP').toUpperCase() }}</span>
             </div>
           </div>
-          <SlotLinkedAlarm :cameraId="(slot.data as CameraStreamInfo).id" />
           <button class="vms-decoder-pill-btn" title="Alternar decodificador" @click.stop="decoderMode = decoderMode === 'MSE' ? 'H264' : 'MSE'">[{{ decoderMode }}]</button>
         </div>
       </div>

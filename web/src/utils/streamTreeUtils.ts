@@ -27,7 +27,7 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
       has_ptz: c.has_ptz,
       snapshotUrl: (c as any).snapshot_url || `http://localhost:8083/api/v1/cameras/${c.id}/snapshot`,
       analyticsCount: 0,
-      alarmsCount: 0
+      eventsCount: 0
     }
     if (c.folder_id && folderMap.has(c.folder_id)) {
       folderMap.get(c.folder_id)!.streams.push(item)
@@ -57,7 +57,7 @@ export function createNewStreamItem(stream: Partial<StreamItem>, index: number):
     has_ptz: !!stream.has_ptz,
     snapshotUrl: stream.snapshotUrl || `http://localhost:8083/api/v1/cameras/${id}/snapshot`,
     analyticsCount: stream.analyticsCount || 0,
-    alarmsCount: stream.alarmsCount || 0
+    eventsCount: stream.eventsCount || 0
   }
 }
 

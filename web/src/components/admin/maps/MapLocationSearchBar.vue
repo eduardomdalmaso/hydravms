@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 const emit = defineEmits<{
   (e: 'selectLocation', loc: { lat: number; lng: number; label: string }): void
-  (e: 'quickAdd', type: 'CAMERA' | 'ALARME', loc: { lat: number; lng: number; label: string }): void
+  (e: 'quickAdd', type: 'CAMERA', loc: { lat: number; lng: number; label: string }): void
 }>()
 
 const query = ref('')
@@ -54,7 +54,6 @@ const onSelect = (loc: { lat: number; lng: number; label: string }) => {
       <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">LOCAL: {{ selectedLocation.lat.toFixed(4) }}, {{ selectedLocation.lng.toFixed(4) }}</span>
       <div class="vms-flex-row" style="gap: 4px; margin-top: 4px;">
         <button class="vms-btn vms-btn-sm" style="font-size: 9px; padding: 2px 6px; background: rgba(255, 94, 58, 0.15); border-color: #ff5e3a; color: #fff;" @click="emit('quickAdd', 'CAMERA', selectedLocation!)">+ CÂMERA AQUI</button>
-        <button class="vms-btn vms-btn-sm" style="font-size: 9px; padding: 2px 6px; background: #07080c; border-color: #ff5e3a; color: #ff5e3a;" @click="emit('quickAdd', 'ALARME', selectedLocation!)">+ ALARME AQUI</button>
       </div>
     </div>
   </div>

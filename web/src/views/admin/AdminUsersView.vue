@@ -41,6 +41,7 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
       <div class="vms-flex-col" style="gap: 2px;">
         <h3 class="vms-h3" style="color: var(--vms-neu-accent-orange);">{{ t('users_title') }}</h3>
         <span v-if="selectedUser" class="vms-text-mono vms-text-2xs vms-text-dim">INSPEÇÃO // {{ selectedUser.username }}</span>
+        <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">{{ t('users_sub') }}</span>
       </div>
       <div v-if="!selectedUser" class="vms-flex-row" style="gap: 0.75rem;">
         <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" :placeholder="t('filter_users')" />
