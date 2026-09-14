@@ -14,8 +14,15 @@ import StorageDisksView from "../storage/StorageDisksView.vue"
 import AdminPerformanceView from "./AdminPerformanceView.vue"
 import AdminLogsView from "./AdminLogsView.vue"
 import AdminBrandingView from "./AdminBrandingView.vue"
+import { useHelpContext } from "../../composables/useHelpContext"
+import { watch } from "vue"
 
 const activePage = ref<AdminPageId>("video_streams")
+const { setHelpPageId } = useHelpContext()
+
+watch(activePage, (page) => {
+  setHelpPageId(page)
+}, { immediate: true })
 
 const parsedPlugin = computed(() => {
   if (!activePage.value.startsWith('plugin_')) return null
