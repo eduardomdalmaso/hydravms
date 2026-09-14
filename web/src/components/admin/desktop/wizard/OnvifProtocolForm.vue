@@ -15,23 +15,23 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="vms-flex-col" style="min-height: 180px; gap: 0.55rem; justify-content: space-between;">
-    <div class="vms-flex-row" style="gap: 0.5rem;">
-      <div class="vms-form-group" style="flex: 1;">
+  <div class="vms-flex-col" style="min-height: 180px; gap: 0.55rem; justify-content: space-between; box-sizing: border-box;">
+    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
+      <div class="vms-form-group" style="flex: 1 1 180px; min-width: 140px;">
         <label class="vms-label">IP da Câmera (ONVIF Device)</label>
         <input :value="ip" class="vms-auth-input" placeholder="192.168.1.145" @input="emit('update:ip', ($event.target as HTMLInputElement).value)" />
       </div>
-      <div class="vms-form-group" style="width: 100px;">
+      <div class="vms-form-group" style="width: 100px; flex-shrink: 0;">
         <label class="vms-label">Porta ONVIF</label>
         <input :value="port" type="number" class="vms-auth-input" @input="emit('update:port', parseInt(($event.target as HTMLInputElement).value) || 80)" />
       </div>
     </div>
-    <div class="vms-flex-row" style="gap: 0.5rem;">
-      <div class="vms-form-group" style="flex: 1;">
+    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
+      <div class="vms-form-group" style="flex: 1 1 130px; min-width: 110px;">
         <label class="vms-label">Usuário ONVIF</label>
         <input :value="user" class="vms-auth-input" placeholder="admin" @input="emit('update:user', ($event.target as HTMLInputElement).value)" />
       </div>
-      <div class="vms-form-group" style="flex: 1;">
+      <div class="vms-form-group" style="flex: 1 1 130px; min-width: 110px;">
         <label class="vms-label">Senha ONVIF (Digest Auth)</label>
         <input :value="pass" type="password" class="vms-auth-input" placeholder="••••••••" @input="emit('update:pass', ($event.target as HTMLInputElement).value)" />
       </div>

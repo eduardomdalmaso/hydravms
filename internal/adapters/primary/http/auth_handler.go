@@ -19,9 +19,10 @@ func NewAuthHandler(authService *application.AuthService) *AuthHandler {
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	Identifier string `json:"identifier"`
+	Password   string `json:"password"`
 }
 
 type LoginResponse struct {
@@ -65,6 +66,9 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	identifier := strings.TrimSpace(req.Username)
 	if identifier == "" {
 		identifier = strings.TrimSpace(req.Email)
+	}
+	if identifier == "" {
+		identifier = strings.TrimSpace(req.Identifier)
 	}
 
 	clientIP := r.Header.Get("X-Forwarded-For")

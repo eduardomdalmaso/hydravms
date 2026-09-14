@@ -72,18 +72,18 @@ const finish = () => {
 </script>
 <template>
   <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
-    <div class="vms-modal-dialog" style="max-width: 1060px; width: 1060px;">
+    <div class="vms-modal-dialog" style="max-width: 980px; width: 95vw; box-sizing: border-box;">
       <div class="vms-modal-header">
         <h3 class="vms-h3">NOVO FLUXO // ETAPA {{ step }} DE 4</h3>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="padding: 4px;" @click="emit('close')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="vms-flex-between" style="padding: 0.5rem 1.25rem; background: #0c0f14; border-bottom: 1px solid var(--vms-border);">
+      <div class="vms-flex-between" style="padding: 0.5rem 1.25rem; background: #0c0f14; border-bottom: 1px solid var(--vms-border); flex-wrap: wrap; gap: 0.4rem;">
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 1 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">1. REDE & SNAPSHOT</span>
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 2 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">2. CANAIS</span>
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 3 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">3. DISPOSITIVO</span>
         <span class="vms-text-mono vms-text-2xs" :style="{ color: step >= 4 ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">4. GEOLOCALIZACAO</span>
       </div>
-      <div class="vms-modal-body" style="padding: 1.25rem; min-height: 420px; overflow-x: hidden; box-sizing: border-box;">
+      <div class="vms-modal-body" style="padding: 1.15rem; min-height: 400px; max-height: calc(85vh - 120px); overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
         <StreamWizardNetworkPane v-if="step === 1" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :snapshot-url="snapshotUrl" :auth-required="authRequired" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined; authRequired = false" />
         <StreamWizardChannelsPane v-else-if="step === 2" v-model:channels="channels" :base-path="form.path" :is-onvif="form.protocol === 'ONVIF'" />
         <StreamWizardDevicePane v-else-if="step === 3" v-model:brand="form.brand" v-model:model="form.model" v-model:serial-number="form.serialNumber" v-model:firmware="form.firmware" v-model:mac-address="form.macAddress" />

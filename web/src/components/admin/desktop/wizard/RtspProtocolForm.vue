@@ -45,40 +45,40 @@ const onPass = (e: Event) => { const v = (e.target as HTMLInputElement).value; e
 </script>
 
 <template>
-  <div class="vms-flex-col" style="min-height: 180px; gap: 0.45rem;">
-    <div class="vms-flex-row" style="gap: 0.5rem;">
-      <div class="vms-form-group" style="flex: 1.1;">
+  <div class="vms-flex-col" style="min-height: 180px; gap: 0.45rem; box-sizing: border-box;">
+    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
+      <div class="vms-form-group" style="flex: 1 1 180px; min-width: 140px;">
         <label class="vms-label">Fabricante / Template RTSP</label>
         <select v-model="selectedPresetLabel" class="vms-auth-input" @change="onPresetChange">
           <option value="">[AUTO / SELECIONAR FABRICANTE]</option>
           <option v-for="p in RTSP_PRESETS" :key="p.label" :value="p.label">{{ p.label }}</option>
         </select>
       </div>
-      <div class="vms-form-group" style="flex: 1.2;">
+      <div class="vms-form-group" style="flex: 1.2 1 200px; min-width: 160px;">
         <label class="vms-label">URL RTSP Principal</label>
         <input :value="url" class="vms-auth-input vms-text-mono" placeholder="rtsp://admin:pass@192.168.1.100:554/live" @input="onUrlInput" />
       </div>
     </div>
-    <div class="vms-flex-row" style="gap: 0.5rem;">
-      <div class="vms-form-group" style="flex: 1.1;">
+    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
+      <div class="vms-form-group" style="flex: 1.1 1 130px; min-width: 110px;">
         <label class="vms-label">IP da Câmera</label>
         <input :value="ip" class="vms-auth-input" placeholder="192.168.1.100" @input="onIp" />
       </div>
-      <div class="vms-form-group" style="flex: 1.2;">
+      <div class="vms-form-group" style="flex: 1.2 1 130px; min-width: 110px;">
         <label class="vms-label">Path do Streaming</label>
         <input :value="path" class="vms-auth-input vms-text-mono" placeholder="/live" @input="onPath" />
       </div>
-      <div class="vms-form-group" style="width: 85px;">
+      <div class="vms-form-group" style="width: 80px; flex-shrink: 0;">
         <label class="vms-label">Porta</label>
         <input :value="port" type="number" class="vms-auth-input" @input="onPort" />
       </div>
     </div>
-    <div class="vms-flex-row" style="gap: 0.5rem;">
-      <div class="vms-form-group" style="flex: 1;">
+    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
+      <div class="vms-form-group" style="flex: 1 1 130px; min-width: 110px;">
         <label class="vms-label">Usuário</label>
         <input :value="user" class="vms-auth-input" placeholder="admin" @input="onUser" />
       </div>
-      <div class="vms-form-group" style="flex: 1;">
+      <div class="vms-form-group" style="flex: 1 1 130px; min-width: 110px;">
         <label class="vms-label">Senha</label>
         <input :value="pass" type="password" class="vms-auth-input" placeholder="••••••••" @input="onPass" />
       </div>

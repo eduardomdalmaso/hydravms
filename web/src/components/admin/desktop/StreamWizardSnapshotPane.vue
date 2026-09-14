@@ -12,9 +12,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="vms-flex-col" style="width: 490px; flex-shrink: 0; height: 380px; background: #07090e; border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 4px; padding: 0.85rem; justify-content: space-between; box-sizing: border-box;">
+  <div class="vms-flex-col" style="flex: 1 1 360px; min-width: 280px; max-width: 100%; min-height: 380px; background: #07090e; border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 4px; padding: 0.85rem; justify-content: space-between; box-sizing: border-box;">
     <!-- Header with guaranteed no-wrap title -->
-    <div class="vms-flex-between" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.4rem; gap: 0.75rem; align-items: center;">
+    <div class="vms-flex-between" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.4rem; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
       <span class="vms-text-mono" style="color: var(--vms-neu-accent-cyan); font-size: 11px; font-weight: 700; white-space: nowrap; letter-spacing: 0.5px;">
         // PROBE & SNAPSHOT LIVE
       </span>

@@ -17,17 +17,22 @@ VALUES (
     TRUE
 ) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
--- 2. Default Super Admin User (password: admin123 -> bcrypt hash)
+-- 2. Default Super Admin User (password: admin -> bcrypt hash)
 INSERT INTO users (id, tenant_id, name, email, password_hash, role, is_active)
 VALUES (
     '00000000-0000-0000-0000-000000000002',
     '00000000-0000-0000-0000-000000000001',
-    'Admin',
+    'Administrador',
     'admin@hydravms.io',
-    '$2a$10$7EqJtq98hPqEX7fNZaFWoOZh9g.iI0g.pX6QyHkLq0/3rYxZ/hD8W',
+    '$2a$10$F9RxhwcZzsUt39eT.MBv8e1MxOz443FrZQMwYRRSVNsZEjvxaKhoa',
     'super_admin',
     TRUE
-) ON CONFLICT (id) DO NOTHING;
+) ON CONFLICT (id) DO UPDATE SET 
+    name = EXCLUDED.name,
+    email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    role = EXCLUDED.role,
+    is_active = TRUE;
 
 -- 3. Default Control Plane Cluster Node
 INSERT INTO cluster_nodes (id, tenant_id, node_name, node_role, ip_address, grpc_port, webrtc_port, http_port, status)

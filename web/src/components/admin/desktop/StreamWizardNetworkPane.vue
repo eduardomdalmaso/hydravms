@@ -28,11 +28,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: row; gap: 1.5rem; width: 100%; height: 380px; align-items: stretch;">
-    <div class="vms-flex-col" style="flex: 1; min-width: 0; justify-content: space-between; height: 380px; gap: 0.65rem;">
+  <div style="display: flex; flex-direction: row; gap: 1.25rem; width: 100%; min-height: 380px; align-items: stretch; box-sizing: border-box; flex-wrap: wrap;">
+    <div class="vms-flex-col" style="flex: 1 1 360px; min-width: 280px; justify-content: space-between; gap: 0.65rem; box-sizing: border-box;">
       <div class="vms-flex-col" style="gap: 0.65rem;">
         <div class="vms-flex-row" style="gap: 0.5rem;">
-          <div class="vms-form-group" style="width: 120px;">
+          <div class="vms-form-group" style="width: 110px; flex-shrink: 0;">
             <label class="vms-label">Protocolo</label>
             <select v-model="form.protocol" class="vms-auth-input" @change="emit('resetSnapshot')">
               <option value="RTSP">RTSP</option>
@@ -40,7 +40,7 @@ const emit = defineEmits<{
               <option value="RTMP">RTMP</option>
             </select>
           </div>
-          <div class="vms-form-group" style="flex: 1;">
+          <div class="vms-form-group" style="flex: 1; min-width: 140px;">
             <label class="vms-label">Nome da Camera</label>
             <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Portaria Leste" autofocus />
           </div>
@@ -51,14 +51,14 @@ const emit = defineEmits<{
         <RtmpProtocolForm v-else-if="form.protocol === 'RTMP'" v-model:stream-key="form.streamKey" />
 
         <div class="vms-flex-row" style="gap: 0.5rem; align-items: flex-end;">
-          <div class="vms-form-group" style="flex: 1; margin-bottom: 0;">
+          <div class="vms-form-group" style="flex: 1; min-width: 140px; margin-bottom: 0;">
             <label class="vms-label">Pasta Destino</label>
             <select v-model="form.folderId" class="vms-auth-input" style="height: 38px; box-sizing: border-box;">
               <option value="">[RAIZ] Sem Pasta (Área Principal)</option>
               <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
             </select>
           </div>
-          <button class="vms-btn vms-btn-primary" style="height: 38px; padding: 0 1.5rem; white-space: nowrap; margin-bottom: 0; box-sizing: border-box;" :disabled="isTesting" @click="emit('test')">
+          <button class="vms-btn vms-btn-primary" style="height: 38px; padding: 0 1.25rem; white-space: nowrap; margin-bottom: 0; box-sizing: border-box; flex-shrink: 0;" :disabled="isTesting" @click="emit('test')">
             <span v-if="isTesting">TESTANDO...</span>
             <span v-else>TESTAR</span>
           </button>

@@ -16,12 +16,12 @@ const makeIcon = (d: string) => () => h("svg", { width: 12, height: 12, viewBox:
 const configItems = [
   { id: "video_streams", icon: makeIcon("M23 7l-7 5 7 5V7z M1 5h15v14H1z") },
   { id: "workflows", icon: makeIcon("M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3") },
-  { id: "users", icon: makeIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z") },
   { id: "layouts", icon: makeIcon("M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z") },
   { id: "carousels", icon: makeIcon("M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15") },
   { id: "maps", icon: makeIcon("M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z M8 2v16 M16 6v16") }
 ]
 const storageItems = [
+  { id: "users", icon: makeIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z") },
   { id: "storage", icon: makeIcon("M4 6h16M4 12h16M4 18h16") },
   { id: "performance", icon: makeIcon("M13 2L3 14h9l-1 8 10-12h-9l1-8z") },
   { id: "logs", icon: makeIcon("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8") }
@@ -87,7 +87,7 @@ const isPluginOpen = (id: string) => openPlugins.value[id] !== false
         </div>
         <div v-if="isMarketOpen" style="padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; background: #0c0e14;">
           <div class="vms-asset-item" :class="{ active: activePage === 'marketplace' }" style="padding: 0.4rem 0.55rem;" @click="emit('selectPage', 'marketplace')">
-            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconMarket" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ t('marketplace') }}</span></div>
+            <div class="vms-flex-row" style="gap: 0.45rem; align-items: center;"><component :is="iconMarket" /><span class="vms-text-xs" style="color: #fff; font-family: var(--vms-font-roboto); font-weight: 500;">{{ t('marketplace_item') }}</span></div>
           </div>
         </div>
       </div>
