@@ -1,55 +1,37 @@
-# 🔒 Regras Estritas de Segurança (HydraVMS)
+# 🔒 Diretrizes Invioláveis de Segurança & Hardening (Hydra Ecosystem)
 
-Este documento estabelece as diretrizes invioláveis de segurança, autenticação obrigatória via token, autorização multi-tenant e proteção de mídia para o HydraVMS.
-
----
-
-## 1. Acesso à API Exclusivamente via Token (Token-Only Enforcement)
-
-- **Proibição de Rotas Públicas Anônimas:** Todos os endpoints REST (`/api/v1/*`), feeds WebRTC e conexões WebSocket (`/ws/v1/*`) EXIGEM autenticação obrigatória via Token.
-- **Única Exceção:** A rota `POST /api/v1/auth/login` (utilizada para emissão do primeiro token).
-- **Tipos de Tokens Suportados:**
-  1. **User JWT Bearer Token:** Utilizado por operadores e usuários da interface web (`Authorization: Bearer <jwt_token>`).
-  2. **API Keys / Service Tokens (PAT):** Utilizados para integrações M2M (Machine-to-Machine), workers Python de IA e automações externas (`Authorization: Bearer vms_live_...` ou header `X-API-Key: vms_live_...`).
-- **Bloqueio Automático (401 Unauthorized):** Qualquer requisição sem token válido ou com token expirado/revogado é rejeitada imediatamente no middleware HTTP antes de atingir qualquer controller ou camada de aplicação.
+Este documento estabelece as diretrizes invioláveis de segurança, autenticação obrigatória, isolamento multi-tenant, autorização no backend (RBAC), prevenção a IDOR, saneamento de segredos e imunidade a injeções para o ecossistema Hydra.
 
 ---
 
-## 2. Isolamento Multi-Tenant Estrito (Data Leak Prevention)
-
-- **Princípio de Tenant Scoping:** Toda e qualquer consulta (SELECT), mutação (INSERT, UPDATE, DELETE) e busca no banco de dados DEVE ser escopada pelo `tenant_id` injetado pelo middleware de autenticação a partir das claims seguras do Token.
-- **Proibição de Queries sem Tenant:** Nenhuma rota acessível por usuário comum pode executar queries sem a cláusula `WHERE tenant_id = $1`.
-- **Validação de Pertinência de Recursos:** Antes de alterar ou deletar câmeras, regras, zonas ou eventos, o backend deve verificar se o ID do recurso pertence estritamente ao `tenant_id` da sessão ativa.
-
----
-
-## 3. Proteção de Mídia e Armazenamento (MinIO S3)
-
-- **Bucket Não Público:** Os buckets do MinIO (`hydravms-events` e `hydravms-recordings`) NUNCA devem ter políticas de acesso público anônimo habilitadas.
-- **Presigned URLs Exclusivas:** O acesso a vídeos contínuos (`.mp4`), clipes de eventos e snapshots (`.jpg`) é concedido unicamente via **Presigned URLs com TTL curto (15 a 30 minutos)** geradas sob demanda pelo backend após autenticação do usuário.
-- **Hierarquia com Prefixo de Tenant:** Todo objeto gravado no MinIO deve obrigatoriamente possuir a chave prefixada com `{tenant_id}/` (ex: `tenant_123/2026/09/03/...`).
+## 1. Banco com Tranca (Isolamento Multi-Tenant Estrito)
+- **Tenant Scoping Obrigatório:** Toda e qualquer consulta (`SELECT`), mutação (`INSERT`, `UPDATE`, `DELETE`) e agregação no banco de dados DEVE ser filtrada pelo `tenant_id` autenticado via `middleware.GetTenantID(r.Context())`.
+- **Proibição de Bypass de Tenant:** Nunca utilize cláusulas permissivas como `OR tenant_id = '00000000-0000-0000-0000-000000000001'` em consultas de operadores ou inquilinos regulares.
+- **Consultas Globais Protegidas:** Rotas que listam dados de múltiplos inquilinos (ex: superadmin) devem validar explicitamente se o usuário possui `role == 'superadmin'` e pertence ao tenant raiz.
 
 ---
 
-## 4. Autenticação, Tokens e RBAC
-
-- **Algoritmo de Criptografia:** Senhas devem ser hasheadas com `bcrypt` (custo mínimo 12) ou `Argon2id`.
-- **Tokens JWT:** Assinados com `HMAC-SHA256` ou `Ed25519` com expiração de curta duração (15 a 60 minutos) e suporte a rotação de refresh tokens.
-- **Perfis de Acesso (RBAC):**
-  - `admin`: Controle total do tenant (câmeras, usuários, regras de IA, retenção e discos).
-  - `operator`: Monitoramento ao vivo, visualização de eventos, reconhecimento de alarmes e exportação de clipes.
-  - `viewer`: Apenas visualização de live view e playback básico (sem permissão de exportar ou alterar regras).
+## 2. Permissão no Servidor (Backend RBAC Enforcement)
+- **Nunca Confiar Apenas na UI:** Ocultar elementos no frontend (`v-if="isAdmin"`) é apenas conveniência visual. Toda operação administrativa de escrita ou consulta sensível DEVE ser validada no backend com `middleware.RequireRole("admin", "superadmin")`.
+- **Rejeição Automática (403 Forbidden):** Requisições com tokens de `operator` ou `viewer` que tentem acessar endpoints de configuração, gestão de usuários, storage, nós ou auditoria devem ser bloqueadas no gateway HTTP.
 
 ---
 
-## 5. Proteção de Rede & Prevenção de Ataques (SSRF / Injeção)
-
-- **Sanitização de URLs RTSP (Anti-SSRF):** Antes de conectar a um stream RTSP fornecido pelo usuário, validar o formato da URI e bloquear endereços locais perigosos.
-- **Prepared Statements Obrigatórios:** Todas as operações no PostgreSQL devem utilizar placeholders parametrizados (`$1, $2...` via `pgx`) para mitigar 100% de risco de SQL Injection.
-- **Rate Limiting:** Rotas de login e conexões de WebSocket protegidas contra ataques de força bruta.
+## 3. Prevenção a IDOR (Insecure Direct Object Reference)
+- **Validação de Posse em Recursos por ID:** Ao buscar, alterar ou deletar qualquer recurso por ID na URL (`/api/v1/{resource}/{id}`), a consulta SQL DEVE incluir `WHERE id = $1 AND tenant_id = $2`.
+- **Presigned URLs Seguras:** Presigned URLs para S3/MinIO devem validar permissão e escopo de tenant antes de assinar links de download.
 
 ---
 
-## 6. Auditoria de Segurança Imutável
+## 4. Chaves & Segredos (Zero Hardcoded Secrets)
+- **Proibição de Fallbacks Estáticos:** Nunca utilize strings estáticas em código para `JWT_SECRET`, senhas de banco ou chaves de API.
+- **Validação de Startup:** Se `JWT_SECRET` não for configurado no ambiente, o sistema deve gerar dinamicamente uma chave criptográfica forte aleatória via `crypto/rand` com alerta explícito de segurança.
+- **Preservação de Senhas:** Rotinas de inicialização (`EnsureAdminUser`) NUNCA devem sobrescrever a senha do administrador se a conta já existir no banco (`ON CONFLICT (id) DO NOTHING`).
 
-- Toda ação administrativa e consultas críticas geram registros imediatos na tabela `audit_logs` com IP de origem, timestamp, `user_id` e payload.
+---
+
+## 5. Sanitização de Inputs, LFI & Mitigação de SSRF
+- **Prevenção a Arbitrary File Read (Path Traversal):** Antes de usar `http.ServeFile` ou abrir caminhos de disco fornecidos por usuários, sanitize o caminho com `filepath.Clean(path)` e valide que o caminho canônico esteja estritamente restrito ao diretório permitido de gravações (`storage/`). Bloqueie qualquer acesso a `/etc`, `/proc`, `/sys`, `/root`, etc., com `403 Forbidden`.
+- **Prevenção a SSRF:** Endpoints de probing ou conexão de rede devem rejeitar endereços de metadados em nuvem (`169.254.169.254`, `0.0.0.0`, `255.255.255.255`) e validar faixas de portas permitidas.
+- **Prepared Statements:** 100% das operações SQL devem utilizar placeholders parametrizados (`$1, $2...`) mitigando SQL Injection.
+- **XSS Protegido:** Nunca utilize `v-html`, `innerHTML` ou concatenação de HTML com entradas de usuários.
