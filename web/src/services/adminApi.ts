@@ -88,12 +88,22 @@ export async function discoverOnvifDevices(): Promise<any[]> {
 
 export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?: string; password?: string; url?: string; protocol?: string }): Promise<any> {
   try {
-    const payload = { ip_address: p.ip, port: p.port || 80, username: p.user || '', password: p.password || '' }
-    const r = await fetch(`${getStreamBaseUrl()}/api/v1/onvif/probe`, {
+    const payload = { url: p.url, ip_address: p.ip, port: p.port, username: p.user || '', password: p.password || '', protocol: p.protocol || 'RTSP' }
+    const r = await fetch(`${getStreamBaseUrl()}/api/v1/streams/probe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload), signal: AbortSignal.timeout(10000)
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(8000)
     })
-    return r.ok ? await r.json() : { online: false, latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' }
-  } catch { return { online: false, latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' } }
+    if (r.ok) return await r.json()
+    const errJson = await r.json().catch(() => ({}))
+    return { online: false, error: errJson.error || `Erro de conexão HTTP ${r.status}`, latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' }
+  } catch (e: any) {
+    return { online: false, error: e?.message || 'Servidor de stream inacessível ou tempo esgotado', latency_ms: 0, codec: '--', resolution: '--', fps: 0, snapshot_url: '' }
+  }
+}
+export async function fetchSampleVideos(): Promise<{ name: string; path: string }[]> {
+  try {
+    const r = await fetch(`${getStreamBaseUrl()}/api/v1/streams/samples`, { signal: AbortSignal.timeout(4000) })
+    return r.ok ? (await r.json()).samples || [] : []
+  } catch { return [] }
 }
 export { fetchFolders }

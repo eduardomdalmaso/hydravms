@@ -1,7 +1,7 @@
 export interface StreamItem {
   id: string
   name: string
-  protocol: 'RTSP' | 'RTMP' | 'ONVIF'
+  protocol: 'RTSP' | 'RTMP' | 'ONVIF' | 'LOOP'
   url: string
   ip: string
   port: number

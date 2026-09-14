@@ -4,6 +4,7 @@ defineProps<{
   hasSnapshot: boolean
   snapshotUrl?: string
   authRequired?: boolean
+  testError?: string | null
   detectedCodec: string
   detectedResolution: string
   detectedFps: number
@@ -18,11 +19,17 @@ defineProps<{
       <span class="vms-text-mono" style="color: var(--vms-neu-accent-cyan); font-size: 11px; font-weight: 700; white-space: nowrap; letter-spacing: 0.5px;">
         // PROBE & SNAPSHOT LIVE
       </span>
-      <span v-if="authRequired" class="vms-badge" style="background: rgba(255, 94, 58, 0.15); color: var(--vms-neu-accent-orange); border: 1px solid rgba(255, 94, 58, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
+      <span v-if="isTesting" class="vms-badge" style="background: rgba(0, 240, 255, 0.15); color: var(--vms-neu-accent-cyan); border: 1px solid rgba(0, 240, 255, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
+        TESTANDO CONEXÃO...
+      </span>
+      <span v-else-if="authRequired" class="vms-badge" style="background: rgba(255, 94, 58, 0.15); color: var(--vms-neu-accent-orange); border: 1px solid rgba(255, 94, 58, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
         AUTENTICAÇÃO NECESSÁRIA (401)
       </span>
-      <span v-else-if="hasSnapshot && snapshotUrl" class="vms-badge" style="background: rgba(0, 255, 157, 0.15); color: var(--vms-neu-accent-green); border: 1px solid rgba(0, 255, 157, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
+      <span v-else-if="hasSnapshot" class="vms-badge" style="background: rgba(0, 255, 157, 0.15); color: var(--vms-neu-accent-green); border: 1px solid rgba(0, 255, 157, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
         FLUXO ESTABELECIDO
+      </span>
+      <span v-else-if="testError" class="vms-badge" style="background: rgba(255, 0, 60, 0.15); color: #ff003c; border: 1px solid rgba(255, 0, 60, 0.4); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
+        [OFFLINE] FALHA DE CONEXÃO
       </span>
       <span v-else class="vms-badge" style="background: rgba(255, 255, 255, 0.06); color: var(--vms-text-dim); font-size: 9px; white-space: nowrap; flex-shrink: 0;">
         AGUARDANDO TESTE
@@ -30,23 +37,39 @@ defineProps<{
     </div>
 
     <!-- Snapshot Screen / Canvas with enlarged 16:9 frame -->
-    <div style="width: 100%; height: 245px; background: #020305; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 3px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-      <div v-if="isTesting" class="loader"></div>
+    <div style="width: 100%; height: 245px; background: #020305; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 3px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 1rem; box-sizing: border-box;">
+      <div v-if="isTesting" class="vms-flex-col" style="align-items: center; gap: 0.75rem;">
+        <div class="loader"></div>
+        <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-cyan);">VERIFICANDO FLUXO TCP / RTSP...</span>
+      </div>
 
       <img v-else-if="hasSnapshot && snapshotUrl" :src="snapshotUrl" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain;" />
       
-      <div v-else class="vms-flex-col" style="align-items: center; justify-content: center;">
-        <svg width="52" height="52" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
+      <div v-else-if="hasSnapshot" class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span class="vms-text-mono vms-text-xs" style="color: #00ff9d; font-weight: 600;">SINAL ONLINE DETECTADO</span>
+        <span class="vms-text-dim vms-text-2xs">Stream pronto para roteamento e gravação</span>
       </div>
 
-      <div v-if="hasSnapshot && snapshotUrl && detectedFps > 0 && !isTesting" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-green); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
+      <div v-else-if="testError" class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.45rem; text-align: center; max-width: 90%;">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ff003c" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="vms-text-mono vms-text-xs" style="color: #ff003c; font-weight: 700;">FALHA DE COMUNICAÇÃO COM O FLUXO</span>
+        <span class="vms-text-mono vms-text-2xs" style="color: #ff8899; word-break: break-word;">{{ testError }}</span>
+        <span class="vms-text-dim vms-text-2xs" style="margin-top: 0.25rem;">Corrija o IP, porta ou credenciais e clique em TESTAR novamente.</span>
+      </div>
+
+      <div v-else class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
+        <svg width="48" height="48" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
+        <span class="vms-text-dim vms-text-2xs">CLIQUE EM "TESTAR" PARA VALIDAR A CONEXÃO</span>
+      </div>
+
+      <div v-if="hasSnapshot && detectedFps > 0 && !isTesting" style="position: absolute; top: 6px; left: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-green); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
         LIVE // {{ detectedFps }} FPS
       </div>
       <div v-if="latencyMs > 0 && !isTesting" style="position: absolute; bottom: 6px; right: 6px; font-family: var(--vms-font-jetbrains); font-size: 10px; color: var(--vms-neu-accent-cyan); background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 2px;">
         LATENCIA: {{ latencyMs }}ms
       </div>
     </div>
-
 
     <!-- Auto-Detected Telemetry Box -->
     <div class="vms-flex-col" style="gap: 3px; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.15); padding: 0.45rem 0.65rem; border-radius: 3px; font-family: var(--vms-font-jetbrains); font-size: 10px;">

@@ -4,10 +4,11 @@ import StreamWizardSnapshotPane from './StreamWizardSnapshotPane.vue'
 import RtspProtocolForm from './wizard/RtspProtocolForm.vue'
 import OnvifProtocolForm from './wizard/OnvifProtocolForm.vue'
 import RtmpProtocolForm from './wizard/RtmpProtocolForm.vue'
+import LoopProtocolForm from './wizard/LoopProtocolForm.vue'
 
 defineProps<{
   form: {
-    name: string; protocol: 'RTSP' | 'RTMP' | 'ONVIF'; url: string; path: string;
+    name: string; protocol: 'RTSP' | 'RTMP' | 'ONVIF' | 'LOOP'; url: string; path: string;
     ip: string; port: number; user: string; pass: string; streamKey: string; folderId: string;
   }
   folders: FolderNode[]
@@ -15,6 +16,7 @@ defineProps<{
   hasSnapshot: boolean
   snapshotUrl?: string
   authRequired?: boolean
+  testError?: string | null
   detectedCodec: string
   detectedResolution: string
   detectedFps: number
@@ -32,12 +34,13 @@ const emit = defineEmits<{
     <div class="vms-flex-col" style="flex: 1 1 360px; min-width: 280px; justify-content: space-between; gap: 0.65rem; box-sizing: border-box;">
       <div class="vms-flex-col" style="gap: 0.65rem;">
         <div class="vms-flex-row" style="gap: 0.5rem;">
-          <div class="vms-form-group" style="width: 110px; flex-shrink: 0;">
+          <div class="vms-form-group" style="width: 125px; flex-shrink: 0;">
             <label class="vms-label">Protocolo</label>
             <select v-model="form.protocol" class="vms-auth-input" @change="emit('resetSnapshot')">
               <option value="RTSP">RTSP</option>
               <option value="ONVIF">ONVIF</option>
               <option value="RTMP">RTMP</option>
+              <option value="LOOP">LOOP (Arquivo)</option>
             </select>
           </div>
           <div class="vms-form-group" style="flex: 1; min-width: 140px;">
@@ -49,6 +52,7 @@ const emit = defineEmits<{
         <RtspProtocolForm v-if="form.protocol === 'RTSP'" v-model:url="form.url" v-model:ip="form.ip" v-model:port="form.port" v-model:path="form.path" v-model:user="form.user" v-model:pass="form.pass" />
         <OnvifProtocolForm v-else-if="form.protocol === 'ONVIF'" v-model:ip="form.ip" v-model:port="form.port" v-model:user="form.user" v-model:pass="form.pass" />
         <RtmpProtocolForm v-else-if="form.protocol === 'RTMP'" v-model:stream-key="form.streamKey" />
+        <LoopProtocolForm v-else-if="form.protocol === 'LOOP'" v-model:url="form.url" />
 
         <div class="vms-flex-row" style="gap: 0.5rem; align-items: flex-end;">
           <div class="vms-form-group" style="flex: 1; min-width: 140px; margin-bottom: 0;">
@@ -71,6 +75,7 @@ const emit = defineEmits<{
       :has-snapshot="hasSnapshot" 
       :snapshot-url="snapshotUrl"
       :auth-required="authRequired"
+      :test-error="testError"
       :detected-codec="detectedCodec" 
       :detected-resolution="detectedResolution" 
       :detected-fps="detectedFps" 
