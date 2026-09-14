@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import type { GridLayout, WorkspaceSlot, CameraStreamInfo } from '../../types/mosaic'
 import DynamicMosaicSlot from './DynamicMosaicSlot.vue'
+import { useBranding } from '../../composables/useBranding'
 
 const props = defineProps<{
   layout: GridLayout
@@ -16,6 +17,7 @@ const emit = defineEmits<{
   (e: 'swapSlots', fromIndex: number, toIndex: number): void
 }>()
 
+const { branding } = useBranding()
 const draggedSlotIndex = ref<number | null>(null)
 
 const effectiveGridClass = computed(() => {
@@ -43,8 +45,16 @@ const onDrop = (targetIndex: number) => {
 </script>
 
 <template>
-  <div v-if="maxSlots === 0" class="vms-empty-mosaic-canvas">
-    <span class="vms-text-mono vms-text-sm vms-text-dim" style="user-select: none;">[ + ]</span>
+  <div v-if="maxSlots === 0" class="vms-empty-mosaic-canvas" style="background: #181b22; display: flex; align-items: center; justify-content: center; flex: 1; height: 100%; border: 1px dashed rgba(255, 255, 255, 0.08);">
+    <div class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.5rem; user-select: none; opacity: 0.6;">
+      <img :src="branding.headerLogo || '/hydra.svg'" alt="Logo" style="width: 38px; height: 38px; object-fit: contain; filter: grayscale(1) brightness(0.65);" />
+      <span class="vms-text-mono vms-text-sm vms-font-bold" style="color: #94a3b8; letter-spacing: 1px; text-transform: uppercase;">
+        {{ branding.companyName || branding.systemName || 'HYDRA VMS' }}
+      </span>
+      <span class="vms-text-mono vms-text-xs" style="color: #64748b;">
+        [ SELECIONE UM LAYOUT OU ARRASTE UMA CÂMERA ]
+      </span>
+    </div>
   </div>
   <div
     v-else

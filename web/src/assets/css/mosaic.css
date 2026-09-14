@@ -33,6 +33,15 @@
 .vms-slot.active { border: 2px solid var(--vms-border-focus); }
 .vms-slot-video { width: 100%; height: 100%; object-fit: contain; }
 
+.vms-empty-slot-watermark {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  background: #181b22; border: 1px dashed rgba(255, 255, 255, 0.08); box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+.vms-slot:hover .vms-empty-slot-watermark {
+  background: #20242f; border-color: rgba(255, 94, 58, 0.35);
+}
+
 .vms-slot-hud {
   position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column;
   justify-content: space-between; padding: 0.5rem; opacity: 0;

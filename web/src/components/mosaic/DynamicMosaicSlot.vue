@@ -3,10 +3,12 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue"
 import type { WorkspaceSlot, CameraStreamInfo } from "../../types/mosaic"
 import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
 import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
+import { useBranding } from "../../composables/useBranding"
 import { getCameraMjpegUrl } from "../../utils/streamUrls"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
+const { branding } = useBranding()
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
 const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
 const { start: startLive, stop: stopLive } = useWebRTCPlayer(videoRef)
@@ -88,7 +90,17 @@ onMounted(handleSeekOrSwitch)
       <div class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.4rem; width: 100%; height: 100%; background: #0c0f14;"><span class="vms-badge" style="background: rgba(255, 94, 58, 0.15); color: #ff5e3a !important; border: 1px solid rgba(255, 94, 58, 0.35);">[RONDA ATIVA // {{ (slot.data as any).interval_seconds }}S]</span><span class="vms-text-sm vms-font-semibold" style="color: #fff;">{{ (slot.data as any).name }}</span></div>
     </template>
     <template v-else>
-      <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; user-select: none;"><span class="vms-text-mono vms-text-xs vms-text-dim">[ + ]</span></div>
+      <div class="vms-empty-slot-watermark">
+        <div class="vms-flex-col" style="align-items: center; justify-content: center; gap: 0.35rem; user-select: none; opacity: 0.55; transition: opacity 0.2s;">
+          <img :src="branding.headerLogo || '/hydra.svg'" alt="Logo" style="width: 26px; height: 26px; object-fit: contain; filter: grayscale(1) brightness(0.65);" />
+          <span class="vms-text-mono vms-text-xs vms-font-bold" style="color: #94a3b8; letter-spacing: 0.8px; text-transform: uppercase;">
+            {{ branding.companyName || branding.systemName || 'HYDRA VMS' }}
+          </span>
+          <span class="vms-text-mono vms-text-2xs" style="color: #64748b;">
+            [ + ARRASTE UMA CÂMERA ]
+          </span>
+        </div>
+      </div>
     </template>
   </div>
 </template>
