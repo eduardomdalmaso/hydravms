@@ -22,6 +22,7 @@ const configItems = [
 ]
 const storageItems = [
   { id: "users", icon: makeIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z") },
+  { id: "branding", icon: makeIcon("M12 2a10 10 0 1 0 10 10c0-1.66-1.34-3-3-3h-1.5a1.5 1.5 0 0 1-1.5-1.5c0-.4.15-.76.4-1.03.24-.26.4-.62.4-1.02 0-1.66-1.34-3-3-3z M6 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z M9 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z M14 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z M17 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z") },
   { id: "storage", icon: makeIcon("M4 6h16M4 12h16M4 18h16") },
   { id: "performance", icon: makeIcon("M13 2L3 14h9l-1 8 10-12h-9l1-8z") },
   { id: "logs", icon: makeIcon("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8") }

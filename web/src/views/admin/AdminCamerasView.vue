@@ -23,13 +23,13 @@ const {
 } = useDesktopTree()
 
 const { t } = useI18n(), { markAsImported } = useOnvifDiscovery()
-const { exportStreamsToJson, parseStreamsFromJson } = useStreamExportImport()
+const { exportStreamsToCsv, parseStreamsFromFile } = useStreamExportImport()
 const wizardInitialData = ref<Partial<StreamItem> | undefined>(undefined)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const handleExportStreams = () => {
-  const count = exportStreamsToJson(folders.value, displayedStreams.value)
-  showNotification(`[EXPORTAÇÃO] ${count} fluxo(s) exportado(s) com URLs mascaradas.`)
+  const count = exportStreamsToCsv(folders.value, displayedStreams.value)
+  showNotification(`[EXPORTAÇÃO CSV] ${count} fluxo(s) exportado(s) em planilha com URLs seguras.`)
 }
 
 const triggerFileInput = () => { fileInputRef.value?.click() }
@@ -39,13 +39,13 @@ const handleImportFile = async (e: Event) => {
   const file = target.files?.[0]
   if (!file) return
   try {
-    const list = await parseStreamsFromJson(file)
+    const list = await parseStreamsFromFile(file)
     for (const item of list) {
       handleSaveStream(item, currentFolderId.value || undefined)
     }
     showNotification(`[IMPORTAÇÃO] ${list.length} fluxo(s) importado(s) com sucesso.`)
   } catch (err: any) {
-    showNotification(`[ERRO DE IMPORTAÇÃO] Arquivo inválido: ${err?.message || 'Erro de parsing'}`)
+    showNotification(`[ERRO DE IMPORTAÇÃO] Arquivo inválido: ${err?.message || 'Erro de formato'}`)
   } finally {
     if (fileInputRef.value) fileInputRef.value.value = ''
   }
@@ -86,13 +86,13 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
         <input v-model="searchQuery" class="vms-auth-input" style="width: 170px; height: 32px; font-size: 12px; padding: 4px 10px; box-sizing: border-box;" :placeholder="t('filter_placeholder')" />
         <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" :title="t('new_folder')" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
         <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" :title="t('new_stream')" @click="handleOpenNewWizard()"><span>+</span><svg width="14" height="14" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg></button>
-        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Exportar Fluxos (JSON Seguro)" @click="handleExportStreams">
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Exportar Lista de Fluxos (Planilha CSV / Excel)" @click="handleExportStreams">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
-        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Importar Fluxos (JSON)" @click="triggerFileInput">
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Importar Lista de Fluxos (CSV, TXT ou JSON)" @click="triggerFileInput">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <input ref="fileInputRef" type="file" accept=".json" style="display: none;" @change="handleImportFile" />
+        <input ref="fileInputRef" type="file" accept=".csv, .json, .txt" style="display: none;" @change="handleImportFile" />
       </div>
     </div>
 

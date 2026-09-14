@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useAuth } from './composables/useAuth'
 import { useAnalyticsAlerts } from './composables/useAnalyticsAlerts'
+import { useBranding } from './composables/useBranding'
 import LoginView from './views/auth/LoginView.vue'
 import AppTopHeader from './components/layout/AppTopHeader.vue'
 import LiveMosaicView from './views/mosaic/LiveMosaicView.vue'
@@ -11,6 +12,7 @@ const AdminCenterView = defineAsyncComponent(() => import('./views/admin/AdminCe
 
 const { isAuthenticated, isLoading, errorMessage, username, isAdmin, handleLogin, handleLogout } = useAuth()
 const { isDrawerOpen, alerts, unreadCount, toggleDrawer, acknowledgeAlert, clearAllAlerts } = useAnalyticsAlerts()
+const { branding } = useBranding()
 
 const getInitialMode = (): 'vms' | 'admin' => {
   if (typeof window !== 'undefined' && window.location.hash === '#admin') return 'admin'
@@ -19,27 +21,30 @@ const getInitialMode = (): 'vms' | 'admin' => {
 
 const currentMode = ref<'vms' | 'admin'>(getInitialMode())
 
+const updateDocTitle = (mode: 'vms' | 'admin') => {
+  document.title = mode === 'admin' ? (branding.value.adminTitle || 'ADMIN CENTER') : (branding.value.systemName || 'HydraVMS')
+}
+
 const syncFromHash = () => {
   const isHashAdmin = window.location.hash === '#admin'
   if (isHashAdmin) {
     currentMode.value = 'admin'
     window.name = 'hydravms_admin_center'
-    document.title = 'HydraVMS - ADMIN CENTER'
   } else {
     currentMode.value = 'vms'
     window.name = 'hydravms_main_vms'
-    document.title = 'HydraVMS'
   }
+  updateDocTitle(currentMode.value)
 }
 
-watch(currentMode, (mode) => {
-  document.title = mode === 'admin' ? 'HydraVMS - ADMIN CENTER' : 'HydraVMS'
+watch([currentMode, branding], ([mode]) => {
+  updateDocTitle(mode)
   const targetHash = mode === 'admin' ? '#admin' : '#vms'
   window.name = mode === 'admin' ? 'hydravms_admin_center' : 'hydravms_main_vms'
   if (window.location.hash !== targetHash) {
     window.history.replaceState(null, '', targetHash)
   }
-}, { immediate: true })
+}, { deep: true, immediate: true })
 
 onMounted(() => {
   syncFromHash()

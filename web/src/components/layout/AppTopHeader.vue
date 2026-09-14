@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue"
 import UserMenuDropdown from "./UserMenuDropdown.vue"
+import { useBranding } from "../../composables/useBranding"
+
+const { branding } = useBranding()
 
 const props = withDefaults(
   defineProps<{ username?: string; isAdmin?: boolean; currentMode?: "vms" | "admin"; unreadAlertsCount?: number }>(),
@@ -41,9 +44,9 @@ const handleSelectMode = (mode: "vms" | "admin") => {
 <template>
   <header class="vms-header" style="background: #15181d; border-bottom: 1px solid var(--vms-border); height: 44px; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center;">
     <div class="vms-flex-row" style="align-items: center; gap: 0.55rem;">
-      <img src="/hydra.svg" alt="Hydra" style="width: 22px; height: 22px; object-fit: contain;" />
+      <img :src="branding.headerLogo || '/hydra.svg'" alt="Logo" style="width: 22px; height: 22px; object-fit: contain;" />
       <span style="color: #ffffff; font-family: var(--vms-font-roboto); font-size: 15px; font-weight: 800; letter-spacing: 0.8px;">
-        HYDRA VMS<template v-if="currentMode === 'admin'"> - ADMIN CENTER</template>
+        {{ currentMode === 'admin' ? (branding.adminTitle || 'ADMIN CENTER') : (branding.systemName || 'HYDRA VMS') }}
       </span>
     </div>
 

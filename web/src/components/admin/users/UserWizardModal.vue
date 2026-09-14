@@ -78,7 +78,7 @@ const handleSave = () => {
         </div>
 
         <div class="vms-form-group">
-          <label class="vms-label">Grupo / Departamento</label>
+          <label class="vms-label">Grupo</label>
           <select v-model="selectedFolderId" class="vms-auth-input">
             <option value="">[RAIZ] Sem Grupo Definido</option>
             <option v-for="f in folders" :key="f.id" :value="f.id">[GRUPO] {{ f.name }}</option>

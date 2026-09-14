@@ -18,7 +18,7 @@ defineProps<{ user: UserItem }>()
         </div>
         <div class="vms-flex-col" style="gap: 2px;">
           <span class="vms-font-bold" style="color: #fff; font-size: 13px;">{{ formatUserId(user.id) }} // {{ user.username }}</span>
-          <span class="vms-text-mono vms-text-2xs vms-text-dim">DEPARTAMENTO // {{ user.groupName.toUpperCase() }}</span>
+          <span class="vms-text-mono vms-text-2xs vms-text-dim">GRUPO // {{ user.groupName.toUpperCase() }}</span>
         </div>
       </div>
     </div>

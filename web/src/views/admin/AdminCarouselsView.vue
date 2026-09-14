@@ -48,10 +48,10 @@ const handleToggleLock = () => {
         <span v-if="selectedRonda" class="vms-text-mono vms-text-2xs vms-text-dim">{{ t('inspect_tour') }} // {{ selectedRonda.name }}</span>
         <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">{{ t('org_folders_clients') }}</span>
       </div>
-      <div v-if="!selectedRonda" class="vms-flex-row" style="gap: 0.75rem;">
-        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" :placeholder="t('filter_tours')" />
-        <button class="vms-btn vms-btn-secondary" title="Nova Pasta (Empresa/Cliente)" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
-        <button class="vms-btn vms-btn-primary" title="Nova Ronda" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+      <div v-if="!selectedRonda" class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; height: 32px; font-size: 12px; padding: 4px 10px; box-sizing: border-box;" :placeholder="t('filter_tours')" />
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Nova Pasta" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Nova Ronda" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
       </div>
     </div>
 
@@ -74,7 +74,7 @@ const handleToggleLock = () => {
             <RondaFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-ronda="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
           </div>
           <div v-if="displayedRondas.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
-            <div class="vms-desktop-section-title">// RONDAS GLOBAIS NA RAIZ (ARRASTE PARA UMA EMPRESA/CLIENTE)</div>
+            <div class="vms-desktop-section-title">// RONDAS NA RAIZ (ARRASTE PARA UMA PASTA)</div>
             <div class="vms-desktop-grid">
               <RondaAppCard v-for="r in displayedRondas" :key="r.id" :ronda="r" :is-selected="false" @dragstart="handleDragStart" @select="(ron) => selectedRonda = ron" @context="(ev, ron) => openContextMenu(ev, { type: 'stream', id: ron.id, name: ron.name, currentFolderId: currentFolderId })" />
             </div>

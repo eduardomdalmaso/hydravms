@@ -30,7 +30,7 @@ const emit = defineEmits<{
         style="cursor: pointer;"
         @click="emit('navigate-root')"
       >
-        [GRUPOS & DEPARTAMENTOS]
+        [GRUPOS]
       </span>
 
       <template v-if="currentFolder">

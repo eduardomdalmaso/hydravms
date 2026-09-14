@@ -16,17 +16,19 @@ onMounted(() => {
 // Auto-salvamento com debounce para dados cadastrais
 watch([() => props.user.fullName, () => props.user.email, () => props.user.timezone, () => props.user.phonePrimary, () => props.user.phoneSecondary], () => {
   clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(() => { isSavedAuto.value = true; setTimeout(() => { isSavedAuto.value = false }, 2500) }, 400)
+  autoSaveTimer = setTimeout(() => {
+    isSavedAuto.value = true
+    setTimeout(() => { isSavedAuto.value = false }, 2500)
+  }, 250)
 }, { deep: true })
 
 const formatPhone = (val: string): string => {
   if (!val) return ''
   let digits = val.replace(/\D/g, '')
-  if (!digits || digits === '5' || digits === '55') return ''
-  if (digits.startsWith('55') && digits.length > 2) digits = digits.slice(2)
-  if (digits.startsWith('0')) digits = digits.slice(1)
-  if (!digits) return ''
+  if (digits.length > 11 && digits.startsWith('55')) digits = digits.slice(2)
+  if (digits.length > 11 && digits.startsWith('0')) digits = digits.slice(1)
   digits = digits.slice(0, 11)
+  if (!digits) return ''
   if (digits.length <= 2) return `(${digits}`
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
   if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
@@ -34,8 +36,10 @@ const formatPhone = (val: string): string => {
 }
 
 const handlePhoneInput = (field: 'phonePrimary' | 'phoneSecondary', ev: Event) => {
-  const target = ev.target as HTMLInputElement; const formatted = formatPhone(target.value)
-  props.user[field] = formatted; target.value = formatted
+  const target = ev.target as HTMLInputElement
+  const formatted = formatPhone(target.value)
+  props.user[field] = formatted
+  target.value = formatted
 }
 
 // Validação reativa de senha em tempo real

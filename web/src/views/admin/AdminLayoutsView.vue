@@ -48,10 +48,10 @@ const handleToggleLock = () => {
         <span v-if="selectedLayout" class="vms-text-mono vms-text-2xs vms-text-dim">{{ t('inspect_grid') }} // {{ selectedLayout.name }}</span>
         <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">{{ t('org_folders_clients') }}</span>
       </div>
-      <div v-if="!selectedLayout" class="vms-flex-row" style="gap: 0.75rem;">
-        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" :placeholder="t('filter_layouts')" />
-        <button class="vms-btn vms-btn-secondary" title="Nova Pasta (Empresa/Cliente)" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
-        <button class="vms-btn vms-btn-primary" title="Novo Layout" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg></button>
+      <div v-if="!selectedLayout" class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; height: 32px; font-size: 12px; padding: 4px 10px; box-sizing: border-box;" :placeholder="t('filter_layouts')" />
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Nova Pasta" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Novo Layout" @click="isWizardOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg></button>
       </div>
     </div>
 
@@ -74,7 +74,7 @@ const handleToggleLock = () => {
             <LayoutFolderCard v-for="f in displayedFolders" :key="f.id" :folder="f" @open="(id) => currentFolderId = id" @drop-layout="handleDropOnFolder" @context="(ev, fold) => openContextMenu(ev, { type: 'folder', id: fold.id, name: fold.name })" />
           </div>
           <div v-if="displayedLayouts.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
-            <div class="vms-desktop-section-title">// LAYOUTS GLOBAIS NA RAIZ (ARRASTE PARA UMA EMPRESA/CLIENTE)</div>
+            <div class="vms-desktop-section-title">// LAYOUTS NA RAIZ (ARRASTE PARA UMA PASTA)</div>
             <div class="vms-desktop-grid">
               <LayoutAppCard v-for="l in displayedLayouts" :key="l.id" :layout="l" :is-selected="false" @dragstart="handleDragStart" @select="(lay) => selectedLayout = lay" @context="(ev, lay) => openContextMenu(ev, { type: 'stream', id: lay.id, name: lay.name, currentFolderId: currentFolderId })" />
             </div>

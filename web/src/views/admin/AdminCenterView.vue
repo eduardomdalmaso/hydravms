@@ -13,6 +13,7 @@ import AnalyticPluginEventsView from "./AnalyticPluginEventsView.vue"
 import StorageDisksView from "../storage/StorageDisksView.vue"
 import AdminPerformanceView from "./AdminPerformanceView.vue"
 import AdminLogsView from "./AdminLogsView.vue"
+import AdminBrandingView from "./AdminBrandingView.vue"
 
 const activePage = ref<AdminPageId>("video_streams")
 
@@ -38,6 +39,7 @@ const parsedPlugin = computed(() => {
         <AnalyticPluginEventsView v-else-if="parsedPlugin.type === 'events'" :plugin-id="parsedPlugin.pluginId" />
       </template>
       <AdminUsersView v-else-if="activePage === 'users'" />
+      <AdminBrandingView v-else-if="activePage === 'branding'" />
       <AdminLayoutsView v-else-if="activePage === 'layouts'" />
       <AdminCarouselsView v-else-if="activePage === 'carousels'" />
       <AdminMapsView v-else-if="activePage === 'maps'" />

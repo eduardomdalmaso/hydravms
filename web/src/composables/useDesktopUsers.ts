@@ -1,10 +1,12 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import type { UserFolderNode, UserItem } from '../types/userTree'
 import { initialUserFolders, initialRootUsers } from '../data/mockUserFolders'
 import { createDefaultUserModules } from '../data/defaultUserModules'
 import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
 import { useFolderModalState } from './useDesktopFolderOps'
 import { fetchFolders, fetchUsers } from '../services/api'
+
+const STORAGE_KEY = 'hydravms_admin_users_v2'
 
 export function useDesktopUsers() {
   const searchQuery = ref(''), folders = ref<UserFolderNode[]>(initialUserFolders), rootUsers = ref<UserItem[]>(initialRootUsers)
@@ -13,7 +15,28 @@ export function useDesktopUsers() {
   const contextMenu = ref<{ isOpen: boolean; x: number; y: number; target: ContextMenuTarget }>({ isOpen: false, x: 0, y: 0, target: { type: 'canvas' } })
   const { folderToDelete, isConfirmDeleteOpen, openDeletePrompt, closeDeletePrompt } = useFolderModalState()
 
+  const persistState = () => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ folders: folders.value, rootUsers: rootUsers.value }))
+    } catch {}
+  }
+
   onMounted(async () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed && Array.isArray(parsed.folders) && Array.isArray(parsed.rootUsers) && (parsed.folders.length > 0 || parsed.rootUsers.length > 0)) {
+            folders.value = parsed.folders
+            rootUsers.value = parsed.rootUsers
+            return
+          }
+        } catch {}
+      }
+    }
+
     const [dbF, dbU] = await Promise.all([fetchFolders('users'), fetchUsers(initialRootUsers)])
     const folderList: UserFolderNode[] = (dbF && dbF.length > 0) ? dbF.map(f => ({ id: f.id, name: f.name, isExpanded: true, users: [] })) : [...initialUserFolders]
     const unassigned: UserItem[] = [], rawList = (dbU && dbU.length > 0) ? dbU : initialRootUsers
@@ -32,7 +55,10 @@ export function useDesktopUsers() {
       if (target) target.users.push(uItem); else unassigned.push(uItem)
     })
     folders.value = folderList; rootUsers.value = unassigned
+    persistState()
   })
+
+  watch([folders, rootUsers], () => { persistState() }, { deep: true })
 
   const currentFolder = computed(() => folders.value.find(f => f.id === currentFolderId.value) || null)
   const totalUsers = computed(() => rootUsers.value.length + folders.value.reduce((acc, f) => acc + f.users.length, 0))

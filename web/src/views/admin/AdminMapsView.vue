@@ -23,10 +23,10 @@ const {
         <span v-if="selectedMap" class="vms-text-mono vms-text-2xs vms-text-dim">EDITOR // {{ selectedMap.name }}</span>
         <span v-else class="vms-text-mono vms-text-2xs vms-text-dim">ORGANIZAÇÃO EM PASTAS // MAPAS COLORIDOS OPENSOURCE & PLANTAS</span>
       </div>
-      <div v-if="!selectedMap" class="vms-flex-row" style="gap: 0.75rem;">
-        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; font-size: 12px; padding: 4px 10px;" placeholder="Filtrar mapas..." />
-        <button class="vms-btn vms-btn-secondary" title="Nova Pasta (Empresa/Cliente)" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
-        <button class="vms-btn vms-btn-primary" title="Novo Mapa / Planta" @click="isNewMapModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></button>
+      <div v-if="!selectedMap" class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
+        <input v-model="searchQuery" class="vms-auth-input" style="width: 200px; height: 32px; font-size: 12px; padding: 4px 10px; box-sizing: border-box;" placeholder="Filtrar mapas..." />
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Nova Pasta" @click="isFolderModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 512 512" fill="#ff5e3a"><path d="M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z"/></svg></button>
+        <button class="vms-btn vms-btn-secondary" style="height: 32px; padding: 0 10px; box-sizing: border-box;" title="Novo Mapa" @click="isNewMapModalOpen = true"><span>+</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></button>
       </div>
     </div>
 
