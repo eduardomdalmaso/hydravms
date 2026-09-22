@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,12 +39,10 @@ func (s *StoragePoolService) ListPools(ctx context.Context, role *domain.Storage
 
 	for _, p := range pools {
 		if p.PathOrEndpoint != "" && !strings.HasPrefix(p.PathOrEndpoint, "s3://") && !strings.HasPrefix(p.PathOrEndpoint, "nfs://") {
-			var stat syscall.Statfs_t
-			if err := syscall.Statfs(p.PathOrEndpoint, &stat); err == nil {
-				p.TotalBytes = int64(stat.Blocks) * int64(stat.Bsize)
-				freeBytes := int64(stat.Bfree) * int64(stat.Bsize)
-				p.UsedBytes = p.TotalBytes - freeBytes
-				p.AvailableBytes = int64(stat.Bavail) * int64(stat.Bsize)
+			if total, used, avail, err := GetDiskUsage(p.PathOrEndpoint); err == nil {
+				p.TotalBytes = total
+				p.UsedBytes = used
+				p.AvailableBytes = avail
 			}
 		}
 	}
@@ -57,12 +54,10 @@ func (s *StoragePoolService) CreatePool(ctx context.Context, pool *domain.Storag
 		return fmt.Errorf("storage pool name is required")
 	}
 	if pool.PathOrEndpoint != "" && !strings.HasPrefix(pool.PathOrEndpoint, "s3://") && !strings.HasPrefix(pool.PathOrEndpoint, "nfs://") {
-		var stat syscall.Statfs_t
-		if err := syscall.Statfs(pool.PathOrEndpoint, &stat); err == nil {
-			pool.TotalBytes = int64(stat.Blocks) * int64(stat.Bsize)
-			freeBytes := int64(stat.Bfree) * int64(stat.Bsize)
-			pool.UsedBytes = pool.TotalBytes - freeBytes
-			pool.AvailableBytes = int64(stat.Bavail) * int64(stat.Bsize)
+		if total, used, avail, err := GetDiskUsage(pool.PathOrEndpoint); err == nil {
+			pool.TotalBytes = total
+			pool.UsedBytes = used
+			pool.AvailableBytes = avail
 		}
 	}
 	if pool.TotalBytes <= 0 {

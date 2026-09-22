@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/google/uuid"
 	"hydravms/internal/application"
@@ -231,10 +230,9 @@ func (h *StoragePoolHandler) DetectDisks(w http.ResponseWriter, r *http.Request)
 		abs, err := filepath.Abs(ld.path)
 		if err == nil {
 			if _, statErr := os.Stat(abs); statErr == nil {
-				var stat syscall.Statfs_t
 				sizeGb := int64(1000)
-				if err := syscall.Statfs(abs, &stat); err == nil {
-					sizeGb = (int64(stat.Blocks) * int64(stat.Bsize)) / (1024 * 1024 * 1024)
+				if total, _, _, err := application.GetDiskUsage(abs); err == nil && total > 0 {
+					sizeGb = total / (1024 * 1024 * 1024)
 				}
 				detected = append(detected, map[string]any{
 					"device_path":      abs,
