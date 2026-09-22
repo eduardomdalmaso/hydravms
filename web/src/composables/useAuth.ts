@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import type { LoginCredentials } from '../types/auth'
+import { initEventSocket, closeEventSocket } from '../services/eventSocket'
 
 export function useAuth() {
   const isAuthenticated = ref(localStorage.getItem('hydra_auth') === 'true')
@@ -52,6 +53,7 @@ export function useAuth() {
       localStorage.setItem('hydra_token', data.token)
       localStorage.setItem('hydra_user', username.value)
       localStorage.setItem('hydra_role', role)
+      initEventSocket()
     } catch (err: any) {
       errorMessage.value = err.message || 'Credenciais inválidas.'
     } finally {
@@ -60,6 +62,7 @@ export function useAuth() {
   }
 
   const handleLogout = () => {
+    closeEventSocket()
     isAuthenticated.value = false
     localStorage.removeItem('hydra_auth')
     localStorage.removeItem('hydra_token')

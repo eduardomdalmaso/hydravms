@@ -35,7 +35,7 @@ const { t } = useI18n()
     <!-- Footer: Detection count and Action Button -->
     <div class="vms-flex-between" style="align-items: center; padding-top: 0.15rem;">
       <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-dim); white-space: nowrap;">
-        {{ camera.profiles.length }} {{ camera.profiles.length > 1 ? t('rtsp_profiles') : t('rtsp_profile') }}
+        {{ (camera.profiles || []).length }} {{ (camera.profiles || []).length > 1 ? t('rtsp_profiles') : t('rtsp_profile') }}
       </span>
       <button 
         class="vms-btn vms-btn-primary vms-btn-sm" 

@@ -22,7 +22,10 @@ export function useOnvifDiscovery() {
     try {
       const devices = await discoverOnvifDevices()
       if (Array.isArray(devices)) {
-        discoveredDevices.value = devices
+        discoveredDevices.value = devices.map(d => ({
+          ...d,
+          profiles: Array.isArray(d.profiles) ? d.profiles : []
+        }))
       }
       lastScanTime.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     } finally {
@@ -31,13 +34,14 @@ export function useOnvifDiscovery() {
   }
 
   const convertToStreamItem = (camera: DiscoveredOnvifCamera): Partial<StreamItem> => {
-    const mainProf = camera.profiles[0]
+    const profiles = Array.isArray(camera.profiles) ? camera.profiles : []
+    const mainProf = profiles[0]
     return {
-      name: camera.name, protocol: 'ONVIF', ip: camera.ip, port: camera.port,
-      url: mainProf ? mainProf.rtspUri : `rtsp://${camera.ip}:554/live`,
+      name: camera.name || 'Câmera ONVIF', protocol: 'ONVIF', ip: camera.ip || '', port: camera.port || 80,
+      url: mainProf?.rtspUri || `rtsp://${camera.ip || '127.0.0.1'}:554/live`,
       codec: (mainProf?.codec as 'H.265' | 'H.264') || 'H.265',
       resolution: mainProf ? mainProf.resolution : '1080P',
-      fps: 30, bitrate: '4.0 Mbps', recordMode: 'continuous', status: 'online', has_ptz: camera.hasPtz
+      fps: 30, bitrate: '4.0 Mbps', recordMode: 'continuous', status: 'online', has_ptz: !!camera.hasPtz
     }
   }
 

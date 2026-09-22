@@ -4,6 +4,7 @@ import { useAuth } from './composables/useAuth'
 import { useAnalyticsAlerts } from './composables/useAnalyticsAlerts'
 import { useBranding } from './composables/useBranding'
 import { useHelpContext } from './composables/useHelpContext'
+import { initEventSocket } from './services/eventSocket'
 import LoginView from './views/auth/LoginView.vue'
 import AppTopHeader from './components/layout/AppTopHeader.vue'
 import LiveMosaicView from './views/mosaic/LiveMosaicView.vue'
@@ -53,6 +54,9 @@ watch([currentMode, branding], ([mode]) => {
 onMounted(() => {
   syncFromHash()
   window.addEventListener('hashchange', syncFromHash)
+  if (isAuthenticated.value) {
+    initEventSocket()
+  }
 })
 
 const handleSwitchMode = (mode: 'vms' | 'admin') => {

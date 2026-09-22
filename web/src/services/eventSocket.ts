@@ -25,19 +25,25 @@ const state = reactive({
 const listeners = new Set<EventListener>()
 let ws: WebSocket | null = null, isExplicitlyClosed = false, retryAttempts = 0
 
-function getWsUrl(): string {
+function getWsUrl(): string | null {
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
   const host = (typeof window !== 'undefined' && window.location.hostname) || 'localhost'
-  const token = (typeof localStorage !== 'undefined' && localStorage.getItem('vms_token')) || 'default_token'
+  const token = typeof localStorage !== 'undefined' ? (localStorage.getItem('hydra_token') || localStorage.getItem('vms_token')) : null
+  if (!token) return null
   return `${isHttps ? 'wss:' : 'ws:'}//${host}:8083/ws/v1/live?token=${encodeURIComponent(token)}`
 }
 
 export function initEventSocket() {
+  const url = getWsUrl()
+  if (!url) {
+    // Wait for authentication before connecting
+    return
+  }
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return
   isExplicitlyClosed = false
 
   try {
-    ws = new WebSocket(getWsUrl())
+    ws = new WebSocket(url)
     ws.onopen = () => {
       state.isConnected = true
       retryAttempts = 0
@@ -56,15 +62,26 @@ export function initEventSocket() {
     ws.onclose = () => {
       state.isConnected = false
       if (!isExplicitlyClosed) {
-        const delay = Math.min(15000, Math.pow(1.5, retryAttempts++) * 1000 + 500)
+        const currentUrl = getWsUrl()
+        if (!currentUrl) return
+        const delay = Math.min(15000, Math.pow(1.5, retryAttempts++) * 1000 + 1000)
         setTimeout(initEventSocket, delay)
       }
     }
 
     ws.onerror = () => ws?.close()
   } catch {
-    setTimeout(initEventSocket, 3000)
+    setTimeout(initEventSocket, 5000)
   }
+}
+
+export function closeEventSocket() {
+  isExplicitlyClosed = true
+  if (ws) {
+    ws.close()
+    ws = null
+  }
+  state.isConnected = false
 }
 
 function handleIncomingEvent(evt: CloudEvent) {
