@@ -148,6 +148,13 @@ func (h *CameraHandler) handleRecordingProfiles(w http.ResponseWriter, r *http.R
 	}
 
 	if h.recordingService == nil {
+		if r.Method == http.MethodGet {
+			writeJSON(w, http.StatusOK, map[string]interface{}{
+				"profiles": []interface{}{},
+				"total":    0,
+			})
+			return
+		}
 		writeError(w, http.StatusServiceUnavailable, "Recording service not initialized")
 		return
 	}
