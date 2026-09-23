@@ -24,7 +24,7 @@ const handleOpenPlayback = (cam: CameraStreamInfo) => {
   selectedCameraForPlayback.value = cam; isPlaybackOpen.value = true
 }
 const handleSidebarSelectCamera = (cam: CameraStreamInfo) => {
-  addCameraToNextFreeSlot(cam); handleOpenPlayback(cam)
+  addCameraToNextFreeSlot(cam)
 }
 const handleContextMenu = (p: { event: MouseEvent; layout?: CustomLayout; isHeader?: boolean }) => {
   contextMenu.value = { x: p.event.clientX, y: p.event.clientY, layout: p.layout || null, isHeader: p.isHeader }

@@ -8,6 +8,8 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
   let activeStreamId = ''
   let activeIsHero = false
 
+  let activeHasSubStream = true
+
   const stop = () => {
     if (pc) { pc.close(); pc = null }
     if (videoRef.value) { videoRef.value.srcObject = null }
@@ -15,11 +17,12 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
     isConnecting.value = false
   }
 
-  const start = async (streamId: string, isHero = false) => {
+  const start = async (streamId: string, isHero = false, hasSubStream = true) => {
     stop()
     if (!videoRef.value || !streamId) return
     activeStreamId = streamId
     activeIsHero = isHero
+    activeHasSubStream = hasSubStream
     isConnecting.value = true
     error.value = null
 
@@ -40,14 +43,15 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
       pc.onconnectionstatechange = () => {
         if (pc?.connectionState === 'failed' || pc?.connectionState === 'disconnected') {
           stop()
-          if (!document.hidden) setTimeout(() => start(activeStreamId, activeIsHero), 1500)
+          if (!document.hidden) setTimeout(() => start(activeStreamId, activeIsHero, activeHasSubStream), 1500)
         }
       }
 
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      const path = isHero ? streamId : `${streamId}_sub`
+      const shouldUseSub = !isHero && hasSubStream
+      const path = shouldUseSub ? `${streamId}_sub` : streamId
       const endpoints = [
         `http://localhost:8889/${path}/whep`,
         `http://localhost:8889/${streamId}/whep`,

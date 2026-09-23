@@ -20,12 +20,6 @@ watch(rtcError, (err) => {
   }
 })
 
-watch(() => props.slot.data, (camData) => {
-  if (camData && (camData as CameraStreamInfo).codec?.includes('H.265')) {
-    decoderMode.value = 'H264'
-  }
-}, { immediate: true })
-
 const isPlayback = computed(() => {
   const cam = props.slot.type === 'camera' ? props.slot.data as CameraStreamInfo : null
   return !!cam && !isLive.value && activePlaybackCameraId.value === cam.id
@@ -41,7 +35,9 @@ const handleSeekOrSwitch = () => {
     else videoRef.value.pause()
   } else if (!isPlayback.value && props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
     if (videoRef.value?.src.includes('recordings')) videoRef.value.src = ''
-    startLive((props.slot.data as CameraStreamInfo).id, props.isHero)
+    const cam = props.slot.data as CameraStreamInfo
+    const hasSub = cam.protocol !== 'RTMP' && (cam.sub_stream_url !== undefined ? Boolean(cam.sub_stream_url) : true)
+    startLive(cam.id, props.isHero, hasSub)
   } else if (decoderMode.value === 'H264') {
     stopLive()
     retryKey.value = Date.now()
