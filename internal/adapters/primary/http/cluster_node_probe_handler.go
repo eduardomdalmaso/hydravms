@@ -109,11 +109,14 @@ func (h *ClusterNodeHandler) HandleProbe(w http.ResponseWriter, r *http.Request)
 		gpuModel = liveGPU.Model
 	}
 
-	if req.HTTPPort == 8081 {
+	switch req.HTTPPort {
+	case 8081:
 		role = "gpu_worker"
 		suggestedName = fmt.Sprintf("HYDRA-FORGE-NODE-%d", forgeCount)
-		if info["app_name"] == nil { info["app_name"] = "HydraForge AI Training & Inference" }
-	} else if req.HTTPPort == 8083 {
+		if info["app_name"] == nil {
+			info["app_name"] = "HydraForge AI Training & Inference"
+		}
+	case 8083:
 		role = "control_plane"
 		suggestedName = fmt.Sprintf("HYDRA-VMS-NODE-%d", vmsCount)
 	}
