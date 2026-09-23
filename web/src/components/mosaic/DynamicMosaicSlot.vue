@@ -60,9 +60,9 @@ onMounted(handleSeekOrSwitch)
     </button>
     <template v-if="slot.type === 'camera' && slot.data">
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
-        <video v-show="decoderMode === 'MSE' && (isPlaying || isPlayback)" ref="videoRef" playsinline muted style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
+        <video v-show="decoderMode === 'MSE' && (!isPlayback || isPlaying)" ref="videoRef" playsinline muted autoplay style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
         <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
-        <div v-if="(decoderMode === 'MSE' && !isPlaying && !isPlayback) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
+        <div v-if="(decoderMode === 'MSE' && isPlayback && !isPlaying) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.35rem; margin-top: 1.1rem; align-items: center;">

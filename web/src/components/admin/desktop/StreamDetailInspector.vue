@@ -10,14 +10,18 @@ const emit = defineEmits<{
   (e: 'delete', id: string): void
 }>()
 
-const refreshKey = ref(Date.now()), isRefreshing = ref(false)
+const refreshKey = ref(Date.now()), isRefreshing = ref(false), hasImageError = ref(false)
 const refreshSnapshot = async () => {
   if (isRefreshing.value) return
   isRefreshing.value = true
+  hasImageError.value = false
   try {
-    await fetch(getCameraSnapshotUrl(props.stream.id, true))
+    const res = await fetch(getCameraSnapshotUrl(props.stream.id, true))
+    if (!res.ok) hasImageError.value = true
     refreshKey.value = Date.now()
-  } catch {}
+  } catch {
+    hasImageError.value = true
+  }
   finally { setTimeout(() => { isRefreshing.value = false }, 500) }
 }
 </script>
@@ -39,7 +43,7 @@ const refreshSnapshot = async () => {
     <div class="vms-flex-col" style="padding: 1rem; gap: 1rem;">
       <!-- Mini Preview -->
       <div style="height: 140px; background: #000000; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative; overflow: hidden;">
-        <img v-if="stream.snapshotUrl" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" />
+        <img v-if="stream.snapshotUrl && !hasImageError" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" @error="hasImageError = true" @load="hasImageError = false" />
         <template v-else>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
           <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>

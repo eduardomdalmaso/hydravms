@@ -47,31 +47,39 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      let path = isHero ? streamId : `${streamId}_sub`
-      let res = await fetch(`http://localhost:8889/${path}/whep`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/sdp' },
-        body: offer.sdp
-      })
+      const path = isHero ? streamId : `${streamId}_sub`
+      const endpoints = [
+        `http://localhost:8889/${path}/whep`,
+        `http://localhost:8889/${streamId}/whep`,
+        `http://localhost:8080/whep/${path}`,
+        `http://localhost:8080/api/v1/streams/${path}/whep`,
+        `http://localhost:8080/whep/${streamId}`
+      ]
 
-      // Fallback automático para Main se Sub-Stream não existir (404)
-      if (!res.ok && !isHero && res.status === 404) {
-        path = streamId
-        res = await fetch(`http://localhost:8889/${path}/whep`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/sdp' },
-          body: offer.sdp
-        })
+      let answerSdp = ''
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/sdp' },
+            body: offer.sdp
+          })
+          if (res.ok) {
+            answerSdp = await res.text()
+            if (answerSdp) break
+          }
+        } catch (_) {
+          // Network error or connection refused on this candidate port, try next
+        }
       }
 
-      if (!res.ok) throw new Error(`WHEP status ${res.status}`)
-      const answerSdp = await res.text()
+      if (!answerSdp) throw new Error('WHEP negotiation failed on all endpoints')
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
     } catch (err: any) {
       error.value = err.message || 'WHEP failed'
       isConnecting.value = false
       isPlaying.value = false
-      if (!document.hidden) setTimeout(() => start(activeStreamId, activeIsHero), 3000)
+      if (!document.hidden) setTimeout(() => start(activeStreamId, activeIsHero), 5000)
     }
   }
 

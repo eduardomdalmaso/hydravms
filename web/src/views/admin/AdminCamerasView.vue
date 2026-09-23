@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useDesktopTree } from '../../composables/useDesktopTree'
 import { useI18n } from '../../composables/useI18n'
-import type { StreamItem } from '../../types/streamTree'
+import { useAdminCameraActions } from '../../composables/useAdminCameraActions'
 import DesktopBreadcrumb from '../../components/admin/desktop/DesktopBreadcrumb.vue'
 import DesktopFolderCard from '../../components/admin/desktop/DesktopFolderCard.vue'
 import DesktopStreamApp from '../../components/admin/desktop/DesktopStreamApp.vue'
 import StreamInspectorSplitView from '../../components/admin/desktop/StreamInspectorSplitView.vue'
 import OnvifDiscoverySection from '../../components/admin/desktop/OnvifDiscoverySection.vue'
-import TreeContextMenu, { type ContextMenuTarget } from '../../components/admin/TreeContextMenu.vue'
+import TreeContextMenu from '../../components/admin/TreeContextMenu.vue'
 import CreateFolderModal from '../../components/admin/CreateFolderModal.vue'
 import StreamWizardModal from '../../components/admin/StreamWizardModal.vue'
 import ConfirmDeleteFolderModal from '../../components/admin/ConfirmDeleteFolderModal.vue'
 import ConfirmDeleteStreamModal from '../../components/admin/ConfirmDeleteStreamModal.vue'
-import { useOnvifDiscovery } from '../../composables/useOnvifDiscovery'
-import { useStreamExportImport } from '../../composables/useStreamExportImport'
 
 const {
   searchQuery, folders, currentFolderId, currentFolder, selectedStream, notification, contextMenu,
@@ -23,79 +20,17 @@ const {
   requestDeleteFolder, confirmDeleteFolder, deleteStreamById, handleSaveFolder, handleSaveStream, showNotification
 } = useDesktopTree()
 
-const { t } = useI18n(), { markAsImported } = useOnvifDiscovery()
-const { exportStreamsToCsv, parseStreamsFromFile } = useStreamExportImport()
-const wizardInitialData = ref<Partial<StreamItem> | undefined>(undefined)
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const isConfirmDeleteStreamOpen = ref(false)
-const streamToDelete = ref<{ id: string; name: string } | null>(null)
+const { t } = useI18n()
 
-const handleExportStreams = () => {
-  const count = exportStreamsToCsv(folders.value, displayedStreams.value)
-  showNotification(`[EXPORTAÇÃO CSV] ${count} fluxo(s) exportado(s) em planilha com URLs seguras.`)
-}
-
-const triggerFileInput = () => { fileInputRef.value?.click() }
-
-const handleImportFile = async (e: Event) => {
-  const target = e.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
-  try {
-    const list = await parseStreamsFromFile(file)
-    for (const item of list) {
-      handleSaveStream(item, currentFolderId.value || undefined)
-    }
-    showNotification(`[IMPORTAÇÃO] ${list.length} fluxo(s) importado(s) com sucesso.`)
-  } catch (err: any) {
-    showNotification(`[ERRO DE IMPORTAÇÃO] Arquivo inválido: ${err?.message || 'Erro de formato'}`)
-  } finally {
-    if (fileInputRef.value) fileInputRef.value.value = ''
-  }
-}
-
-const handleOpenNewWizard = (data?: Partial<StreamItem>) => { wizardInitialData.value = data; isWizardOpen.value = true }
-const onSaveStream = (stream: Partial<StreamItem>, folderId?: string) => {
-  if (stream.ip) markAsImported(stream.ip)
-  handleSaveStream(stream, folderId)
-}
-
-const requestDeleteStream = (id: string, name?: string) => {
-  if (!name) {
-    let s = displayedStreams.value.find(item => item.id === id)
-    if (!s) { for (const f of folders.value) { s = f.streams.find(item => item.id === id); if (s) break } }
-    name = s?.name || id
-  }
-  streamToDelete.value = { id, name }
-  isConfirmDeleteStreamOpen.value = true
-}
-
-const confirmDeleteStream = () => {
-  if (streamToDelete.value) {
-    deleteStreamById(streamToDelete.value.id)
-    if (selectedStream.value?.id === streamToDelete.value.id) {
-      selectedStream.value = null
-    }
-    showNotification(`[EXCLUSÃO] Fluxo ${streamToDelete.value.name} removido com sucesso.`)
-  }
-  isConfirmDeleteStreamOpen.value = false
-  streamToDelete.value = null
-}
-
-const handleContextAction = (action: string, target: ContextMenuTarget, extra?: any) => {
-  if (action === 'open-folder' && target.id) currentFolderId.value = target.id
-  else if (action === 'create-folder') isFolderModalOpen.value = true
-  else if (action === 'create-stream') { if (target.type === 'folder' && target.id) currentFolderId.value = target.id; handleOpenNewWizard() }
-  else if (action === 'inspect-stream' && target.id) {
-    let s = displayedStreams.value.find(item => item.id === target.id)
-    if (!s) { for (const f of folders.value) { s = f.streams.find(item => item.id === target.id); if (s) break } }
-    if (s) selectedStream.value = s
-  }
-  else if (action === 'delete-folder' && target.id) requestDeleteFolder(target.id)
-  else if (action === 'delete-stream' && target.id) requestDeleteStream(target.id, target.name)
-  else if (action === 'move-stream' && target.id) moveStreamToFolder(target.id, extra)
-  else if (action === 'test-stream' && target.id) showNotification(`[SOCKET TEST] Handshake RTSP // OK (29ms)`)
-}
+const {
+  wizardInitialData, fileInputRef, isConfirmDeleteStreamOpen, streamToDelete,
+  handleExportStreams, triggerFileInput, handleImportFile, handleOpenNewWizard,
+  onSaveStream, confirmDeleteStream, handleContextAction
+} = useAdminCameraActions(
+  folders, displayedStreams, currentFolderId, selectedStream,
+  isFolderModalOpen, isWizardOpen, showNotification, handleSaveStream,
+  deleteStreamById, requestDeleteFolder, moveStreamToFolder
+)
 </script>
 
 <template>
