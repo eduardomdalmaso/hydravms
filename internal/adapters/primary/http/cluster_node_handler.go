@@ -15,11 +15,18 @@ import (
 	"hydravms/internal/adapters/secondary/postgres"
 )
 
-type ClusterNodeHandler struct {
-	repo *postgres.PostgresClusterNodeRepository
+type ClusterNodeStore interface {
+	List(ctx context.Context, tenantID uuid.UUID) ([]*postgres.ClusterNode, error)
+	Create(ctx context.Context, n *postgres.ClusterNode) error
+	UpdateMetrics(ctx context.Context, id uuid.UUID, status string, cpuPct, ramPct, gpuPct, vramUsedMB float64, activeStreams int) error
+	Delete(ctx context.Context, id uuid.UUID, tenantID uuid.UUID) error
 }
 
-func NewClusterNodeHandler(repo *postgres.PostgresClusterNodeRepository) *ClusterNodeHandler {
+type ClusterNodeHandler struct {
+	repo ClusterNodeStore
+}
+
+func NewClusterNodeHandler(repo ClusterNodeStore) *ClusterNodeHandler {
 	return &ClusterNodeHandler{repo: repo}
 }
 

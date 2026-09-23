@@ -4,7 +4,8 @@
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-emerald.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20Zero--Config-003B57?logo=sqlite&logoColor=white)](https://sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20Enterprise-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![NATS](https://img.shields.io/badge/NATS-JetStream-27AAE1?logo=nats.io&logoColor=white)](https://nats.io/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3%20Object%20Storage-C72C48?logo=minio&logoColor=white)](https://min.io/)
 [![WebRTC](https://img.shields.io/badge/Streaming-WebRTC%20%2F%20WHEP-orange.svg)](https://webrtc.org/)
@@ -16,15 +17,30 @@
 
 ---
 
+## 💾 Relational Database Engine (Dual Engine Architecture)
+
+HydraVMS features an agnostic Hexagonal Database layer supporting two execution modes out-of-the-box:
+
+1. **SQLite in WAL Mode (`hydravms.db` — Default & Zero-Config):**
+   * **Zero external installation required:** Pure Go SQLite engine compiled directly into the binary.
+   * **Instant Boot:** Auto-creates tables, indexes, and default admin credentials (`admin` / `admin`) on first run.
+   * **Performance:** Write-Ahead Logging (WAL) mode enables concurrent non-blocking reads and high-throughput transaction batches for Edge NVRs and standalone workstations.
+2. **PostgreSQL 16+ (Enterprise Cluster Mode):**
+   * Enabled automatically when `DATABASE_URL` is set or `DB_DRIVER=postgres`.
+   * Row-Level Security (RLS) multi-tenancy, partition pruning for billions of historical records, and distributed scale.
+
+---
+
 ## 🌐 Ecosystem Port Map
 
 | Service / Container | Port(s) | Protocol / Description |
 | :--- | :--- | :--- |
 | **`hydra-vms` (Frontend Web)** | `5173` | Vue 3 + Vite Cyberpunk High-Tech HUD |
 | **`hydra-vms-api` (Control Plane)** | `8083` | Go REST API & WebSocket Real-time Gateway |
-| **`hydra_postgres` (Podman)** | `5432` | PostgreSQL 16 Relational DB (RLS Multi-Tenancy) |
-| **`hydra_nats` (Podman)** | `4222`, `8222` | NATS JetStream Event Mesh & Telemetry |
-| **`hydra_minio` (Podman)** | `9000`, `9001` | S3 API (:9000) & Web Console (:9001) |
+| **`hydravms.db` (Default Embedded)** | — | SQLite WAL Zero-Config Single-Binary DB |
+| **`hydra_postgres` (Optional Podman)**| `5432` | PostgreSQL 16 Enterprise Relational DB |
+| **`hydra_nats` (Podman / Standalone)**| `4222`, `8222` | NATS JetStream Event Mesh & Telemetry |
+| **`hydra_minio` (Podman / S3)** | `9000`, `9001` | S3 API (:9000) & Web Console (:9001) |
 | **`hydra-stream` (Ingest Engine)** | `8080` | Zero-Copy SHM Video Multiplexer |
 | **MediaMTX (RTSP / WebRTC)** | `8554`, `8889` | RTSP Ingest (:8554) & WebRTC WHEP (:8889) |
 | **`hydra-forge` (AI Studio)** | `8081` | YOLO Training Studio & TensorRT Compiler |
@@ -34,7 +50,29 @@
 
 ## 🚀 Quickstart & Bootstrapping Guide
 
-### Step 1: Start Infrastructure Containers (Podman / Docker)
+### Mode A: Zero-Dependency Standalone Mode (Default with SQLite WAL)
+
+You do **NOT** need to install PostgreSQL or Docker to run HydraVMS locally:
+
+```bash
+# 1. Run Go Backend directly (automatically creates hydravms.db)
+go run ./cmd/hydravms
+
+# 2. Run Frontend in another terminal
+cd web
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173` (or `http://localhost:8083`) and log in with:
+* **Username / Email:** `admin` or `admin@hydravms.io`
+* **Password:** `admin`
+
+---
+
+### Mode B: Enterprise Container Stack (PostgreSQL 16 + NATS + MinIO)
+
+For production clusters with external containers:
 
 ```bash
 # 1. PostgreSQL 16

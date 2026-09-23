@@ -12,59 +12,86 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	httpAdapter "hydravms/internal/adapters/primary/http"
 	"hydravms/internal/adapters/primary/ws"
+	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
 	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	s3Adapter "hydravms/internal/adapters/secondary/s3"
-	"hydravms/internal/adapters/secondary/memory"
+	sqliteAdapter "hydravms/internal/adapters/secondary/sqlite"
 	"hydravms/internal/application"
 	"hydravms/internal/domain"
 	"hydravms/internal/ports"
 )
 
 func main() {
-	log.Println("[HydraVMS] Starting Control Plane (PostgreSQL, RBAC, StorageGuard, JetStream)...")
+	log.Println("[HydraVMS] Starting Control Plane (Relational DB, RBAC, StorageGuard, JetStream)...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 1. Initialize Database Repositories (PostgreSQL with fallback to In-Memory)
+	// 1. Initialize Database Repositories (SQLite WAL or PostgreSQL)
 	var folderRepo ports.FolderRepository
 	var cameraRepo ports.CameraRepository
 	var storagePoolRepo ports.StoragePoolRepository
 	var auditRepo ports.AuditLogRepository
 	var userRepo ports.UserRepository
+	var eventRepo ports.EventRepository
+	var recordingRepo ports.RecordingRepository
+	var clusterNodeStore httpAdapter.ClusterNodeStore
 	var pgPool *pgxpool.Pool
 
+	dbDriver := os.Getenv("DB_DRIVER")
 	dbURL := os.Getenv("DATABASE_URL")
-	pgCfg := postgresAdapter.DefaultConfig()
-	if dbURL != "" {
-		pgCfg.URL = dbURL
+	sqlitePath := os.Getenv("SQLITE_PATH")
+	if sqlitePath == "" {
+		sqlitePath = "hydravms.db"
 	}
 
-	pool, err := postgresAdapter.NewPool(ctx, pgCfg)
-	if err != nil {
-		log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to In-Memory repository)\n", err)
-		folderRepo = memory.NewInMemoryFolderRepository()
-		cameraRepo = memory.NewInMemoryCameraRepository()
-		auditRepo = memory.NewInMemoryAuditLogRepository()
-		userRepo = memory.NewInMemoryUserRepository()
-	} else {
-		log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
-		pgPool = pool
-		defer pool.Close()
-		folderRepo = postgresAdapter.NewFolderRepository(pool)
-		cameraRepo = postgresAdapter.NewCameraRepository(pool)
-		storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
-		auditRepo = postgresAdapter.NewAuditLogRepository(pool)
-		userRepo = postgresAdapter.NewUserRepository(pool)
+	// If Postgres explicitly requested or DATABASE_URL provided, try PostgreSQL
+	if dbDriver == "postgres" || (dbURL != "" && dbDriver != "sqlite") {
+		pgCfg := postgresAdapter.DefaultConfig()
+		if dbURL != "" {
+			pgCfg.URL = dbURL
+		}
+		pool, err := postgresAdapter.NewPool(ctx, pgCfg)
+		if err == nil {
+			log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
+			pgPool = pool
+			defer pool.Close()
+			folderRepo = postgresAdapter.NewFolderRepository(pool)
+			cameraRepo = postgresAdapter.NewCameraRepository(pool)
+			storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
+			auditRepo = postgresAdapter.NewAuditLogRepository(pool)
+			userRepo = postgresAdapter.NewUserRepository(pool)
+			eventRepo = postgresAdapter.NewEventRepository(pool)
+			recordingRepo = postgresAdapter.NewRecordingRepository(pool)
+			clusterNodeStore = postgresAdapter.NewClusterNodeRepository(pool)
+		} else {
+			log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to SQLite WAL)\n", err)
+		}
 	}
 
-	// Initialize Event Repository
-	var eventRepo ports.EventRepository
-	if pgPool != nil {
-		eventRepo = postgresAdapter.NewEventRepository(pgPool)
-	} else {
-		eventRepo = memory.NewInMemoryEventRepository()
+	// If PostgreSQL is not active, use SQLite WAL (Zero-Dependency Single Binary Mode)
+	if userRepo == nil {
+		sqliteDB, err := sqliteAdapter.OpenDB(sqlitePath)
+		if err != nil {
+			log.Printf("⚠️ [HydraVMS] SQLite init error: %v (falling back to In-Memory)\n", err)
+			folderRepo = memory.NewInMemoryFolderRepository()
+			cameraRepo = memory.NewInMemoryCameraRepository()
+			auditRepo = memory.NewInMemoryAuditLogRepository()
+			userRepo = memory.NewInMemoryUserRepository()
+			eventRepo = memory.NewInMemoryEventRepository()
+		} else {
+			log.Printf("✅ [HydraVMS] SQLite WAL Relational Database active at %s (Zero-Config Single Binary Mode)\n", sqlitePath)
+			defer sqliteDB.Close()
+			folderRepo = sqliteAdapter.NewFolderRepository(sqliteDB)
+			cameraRepo = sqliteAdapter.NewCameraRepository(sqliteDB)
+			storagePoolRepo = sqliteAdapter.NewStoragePoolRepository(sqliteDB)
+			auditRepo = sqliteAdapter.NewAuditLogRepository(sqliteDB)
+			userRepo = sqliteAdapter.NewUserRepository(sqliteDB)
+			eventRepo = sqliteAdapter.NewEventRepository(sqliteDB)
+			recordingRepo = sqliteAdapter.NewRecordingRepository(sqliteDB)
+			clusterNodeStore = sqliteAdapter.NewClusterNodeRepository(sqliteDB)
+		}
 	}
 
 	// 2. Initialize Application Core Services (Hexagonal Architecture)
@@ -111,11 +138,9 @@ func main() {
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
-	// 5. Initialize Recording Service & Repositories
-	var recordingRepo ports.RecordingRepository
+	// 5. Initialize Recording Service
 	var recordingService *application.RecordingService
-	if pgPool != nil {
-		recordingRepo = postgresAdapter.NewRecordingRepository(pgPool)
+	if recordingRepo != nil {
 		recordingService = application.NewRecordingService(recordingRepo)
 	}
 
@@ -169,9 +194,8 @@ func main() {
 		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
 	}
 	var clusterNodeHandler *httpAdapter.ClusterNodeHandler
-	if pgPool != nil {
-		clusterNodeRepo := postgresAdapter.NewClusterNodeRepository(pgPool)
-		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(clusterNodeRepo)
+	if clusterNodeStore != nil {
+		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(clusterNodeStore)
 	}
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 

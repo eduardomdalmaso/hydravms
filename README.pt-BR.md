@@ -4,7 +4,8 @@
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-emerald.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20Zero--Config-003B57?logo=sqlite&logoColor=white)](https://sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20Enterprise-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![NATS](https://img.shields.io/badge/NATS-JetStream-27AAE1?logo=nats.io&logoColor=white)](https://nats.io/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3%20Object%20Storage-C72C48?logo=minio&logoColor=white)](https://min.io/)
 [![WebRTC](https://img.shields.io/badge/Streaming-WebRTC%20%2F%20WHEP-orange.svg)](https://webrtc.org/)
@@ -16,15 +17,30 @@ O **HydraVMS** é um Sistema de Gerenciamento de Vídeo (VMS) cloud-native de ú
 
 ---
 
+## 💾 Motor de Banco de Dados Relacional (Arquitetura Dual-Engine)
+
+O HydraVMS possui uma camada agnóstica em Arquitetura Hexagonal suportando dois modos de execução nativos:
+
+1. **SQLite em Modo WAL (`hydravms.db` — Padrão Zero-Config):**
+   * **Zero instalação externa:** Motor SQLite em Go puro compilado diretamente dentro do executável.
+   * **Inicialização Instantânea:** Cria tabelas, índices e o usuário administrador padrão (`admin` / `admin`) automaticamente no primeiro boot.
+   * **Alta Performance:** O modo *Write-Ahead Logging* (WAL) garante leituras simultâneas sem bloqueio e alta vazão de escrita para NVRs Edge e estações locais de trabalho.
+2. **PostgreSQL 16+ (Modo Corporativo em Cluster):**
+   * Ativado automaticamente ao definir a variável `DATABASE_URL` ou `DB_DRIVER=postgres`.
+   * Isolamento multi-inquilino com *Row-Level Security* (RLS), particionamento de tabelas para bilhões de eventos e escalabilidade distribuída.
+
+---
+
 ## 🌐 Mapa de Portas do Ecossistema
 
 | Serviço / Container | Porta(s) | Protocolo / Descrição |
 | :--- | :--- | :--- |
 | **`hydra-vms` (Frontend Web)** | `5173` | HUD Cyberpunk em Vue 3 + Vite |
 | **`hydra-vms-api` (Control Plane)** | `8083` | API REST em Go & Gateway WebSocket em tempo real |
-| **`hydra_postgres` (Podman)** | `5432` | Banco Relacional PostgreSQL 16 (Multi-Tenant RLS) |
-| **`hydra_nats` (Podman)** | `4222`, `8222` | Barramento de Eventos e Telemetria NATS JetStream |
-| **`hydra_minio` (Podman)** | `9000`, `9001` | S3 API (:9000) & Console Web (:9001) |
+| **`hydravms.db` (Embutido Padrão)** | — | Banco Relacional SQLite WAL Zero-Config |
+| **`hydra_postgres` (Podman Opcional)**| `5432` | Banco Relacional PostgreSQL 16 Corporativo |
+| **`hydra_nats` (Podman / Standalone)**| `4222`, `8222` | Barramento de Eventos e Telemetria NATS JetStream |
+| **`hydra_minio` (Podman / S3)** | `9000`, `9001` | S3 API (:9000) & Console Web (:9001) |
 | **`hydra-stream` (Motor Ingestão)** | `8080` | Multiplexador de Vídeo Zero-Copy (/dev/shm) |
 | **MediaMTX (RTSP / WebRTC)** | `8554`, `8889` | Ingestão RTSP (:8554) & WebRTC WHEP (:8889) |
 | **`hydra-forge` (Estúdio IA)** | `8081` | Estúdio de Treinamento YOLO & Compilador TensorRT |
@@ -34,7 +50,29 @@ O **HydraVMS** é um Sistema de Gerenciamento de Vídeo (VMS) cloud-native de ú
 
 ## 🚀 Guia de Inicialização Rápida
 
-### Passo 1: Iniciar Containers de Infraestrutura (Podman / Docker)
+### Modo A: Modo Standalone Zero-Dependências (Padrão com SQLite WAL)
+
+Você **NÃO** precisa instalar PostgreSQL ou Docker para rodar e testar o HydraVMS localmente:
+
+```bash
+# 1. Iniciar o Backend Go diretamente (cria o hydravms.db automaticamente)
+go run ./cmd/hydravms
+
+# 2. Iniciar o Frontend em outro terminal
+cd web
+npm install
+npm run dev
+```
+
+Acesse `http://localhost:5173` (ou `http://localhost:8083`) e faça login com:
+* **Usuário / E-mail:** `admin` ou `admin@hydravms.io`
+* **Senha:** `admin`
+
+---
+
+### Modo B: Stack Corporativa em Containers (PostgreSQL 16 + NATS + MinIO)
+
+Para clusters de produção com serviços dedicados:
 
 ```bash
 # 1. PostgreSQL 16
