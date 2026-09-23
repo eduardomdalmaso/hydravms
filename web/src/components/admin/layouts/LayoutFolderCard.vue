@@ -21,7 +21,7 @@ const onDrop = (e: DragEvent) => {
     :class="{ 'drag-over': isDragOver }"
     style="position: relative;"
     @click="emit('open', folder.id)"
-    @contextmenu.prevent="emit('context', $event, folder)"
+    @contextmenu.prevent.stop="emit('context', $event, folder)"
     @dragover.prevent="isDragOver = true"
     @dragleave="isDragOver = false"
     @drop="onDrop"

@@ -21,7 +21,7 @@ const emit = defineEmits<{
     draggable="true"
     @dragstart="emit('dragstart', user)"
     @click="emit('select', user)"
-    @contextmenu.prevent="emit('context', $event, user)"
+    @contextmenu.prevent.stop="emit('context', $event, user)"
   >
     <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255, 94, 58, 0.12); border: 1px solid rgba(255, 94, 58, 0.35); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

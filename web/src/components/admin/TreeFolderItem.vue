@@ -20,7 +20,7 @@ const isExpanded = ref(props.folder.isExpanded ?? true)
     <div
       class="vms-tree-server-header"
       @click="isExpanded = !isExpanded"
-      @contextmenu.prevent="emit('folder-context', $event, folder)"
+      @contextmenu.prevent.stop="emit('folder-context', $event, folder)"
     >
       <div class="vms-flex-row" style="gap: 0.75rem;">
         <span class="vms-text-dim" style="font-size: 11px;">{{ isExpanded ? '▼' : '►' }}</span>

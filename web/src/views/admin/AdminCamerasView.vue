@@ -12,6 +12,7 @@ import TreeContextMenu, { type ContextMenuTarget } from '../../components/admin/
 import CreateFolderModal from '../../components/admin/CreateFolderModal.vue'
 import StreamWizardModal from '../../components/admin/StreamWizardModal.vue'
 import ConfirmDeleteFolderModal from '../../components/admin/ConfirmDeleteFolderModal.vue'
+import ConfirmDeleteStreamModal from '../../components/admin/ConfirmDeleteStreamModal.vue'
 import { useOnvifDiscovery } from '../../composables/useOnvifDiscovery'
 import { useStreamExportImport } from '../../composables/useStreamExportImport'
 
@@ -26,6 +27,8 @@ const { t } = useI18n(), { markAsImported } = useOnvifDiscovery()
 const { exportStreamsToCsv, parseStreamsFromFile } = useStreamExportImport()
 const wizardInitialData = ref<Partial<StreamItem> | undefined>(undefined)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const isConfirmDeleteStreamOpen = ref(false)
+const streamToDelete = ref<{ id: string; name: string } | null>(null)
 
 const handleExportStreams = () => {
   const count = exportStreamsToCsv(folders.value, displayedStreams.value)
@@ -57,6 +60,28 @@ const onSaveStream = (stream: Partial<StreamItem>, folderId?: string) => {
   handleSaveStream(stream, folderId)
 }
 
+const requestDeleteStream = (id: string, name?: string) => {
+  if (!name) {
+    let s = displayedStreams.value.find(item => item.id === id)
+    if (!s) { for (const f of folders.value) { s = f.streams.find(item => item.id === id); if (s) break } }
+    name = s?.name || id
+  }
+  streamToDelete.value = { id, name }
+  isConfirmDeleteStreamOpen.value = true
+}
+
+const confirmDeleteStream = () => {
+  if (streamToDelete.value) {
+    deleteStreamById(streamToDelete.value.id)
+    if (selectedStream.value?.id === streamToDelete.value.id) {
+      selectedStream.value = null
+    }
+    showNotification(`[EXCLUSÃO] Fluxo ${streamToDelete.value.name} removido com sucesso.`)
+  }
+  isConfirmDeleteStreamOpen.value = false
+  streamToDelete.value = null
+}
+
 const handleContextAction = (action: string, target: ContextMenuTarget, extra?: any) => {
   if (action === 'open-folder' && target.id) currentFolderId.value = target.id
   else if (action === 'create-folder') isFolderModalOpen.value = true
@@ -67,7 +92,7 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
     if (s) selectedStream.value = s
   }
   else if (action === 'delete-folder' && target.id) requestDeleteFolder(target.id)
-  else if (action === 'delete-stream' && target.id) deleteStreamById(target.id)
+  else if (action === 'delete-stream' && target.id) requestDeleteStream(target.id, target.name)
   else if (action === 'move-stream' && target.id) moveStreamToFolder(target.id, extra)
   else if (action === 'test-stream' && target.id) showNotification(`[SOCKET TEST] Handshake RTSP // OK (29ms)`)
 }
@@ -130,5 +155,6 @@ const handleContextAction = (action: string, target: ContextMenuTarget, extra?: 
     <CreateFolderModal :is-open="isFolderModalOpen" @close="isFolderModalOpen = false" @save="handleSaveFolder" />
     <StreamWizardModal :is-open="isWizardOpen" :initial-data="wizardInitialData" :target-folder-id="currentFolderId || undefined" :folders="folders" @close="isWizardOpen = false" @save="onSaveStream" />
     <ConfirmDeleteFolderModal :is-open="isConfirmDeleteOpen" :folder-name="folderToDelete?.name || ''" :item-count="folderToDelete?.itemCount || 0" item-type="fluxo(s)" @close="isConfirmDeleteOpen = false" @confirm="confirmDeleteFolder" />
+    <ConfirmDeleteStreamModal :is-open="isConfirmDeleteStreamOpen" :stream-name="streamToDelete?.name || ''" :stream-id="streamToDelete?.id || ''" @close="isConfirmDeleteStreamOpen = false" @confirm="confirmDeleteStream" />
   </div>
 </template>

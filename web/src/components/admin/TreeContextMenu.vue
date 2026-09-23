@@ -75,7 +75,7 @@ const handleAction = (action: string, target: ContextMenuTarget, extra?: any) =>
         </div>
 
         <div class="vms-context-divider"></div>
-        <button class="vms-context-item danger" @click="handleAction('delete-stream', target)">[{{ t('delete_stream') }}]</button>
+        <button class="vms-context-item danger" @click="handleAction('delete-stream', target)">[EXCLUIR FLUXO]</button>
       </div>
     </div>
   </div>

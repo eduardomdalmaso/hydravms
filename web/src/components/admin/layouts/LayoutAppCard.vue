@@ -17,7 +17,7 @@ const emit = defineEmits<{
     style="position: relative;"
     @dragstart="emit('dragstart', layout)"
     @click="emit('select', layout)"
-    @contextmenu.prevent="emit('context', $event, layout)"
+    @contextmenu.prevent.stop="emit('context', $event, layout)"
   >
     <!-- Locked Padlock Icon if layout is locked -->
     <div v-if="layout.is_locked" style="position: absolute; top: 6px; right: 6px;" title="[TRAVADO] Somente leitura para clientes/operadores">

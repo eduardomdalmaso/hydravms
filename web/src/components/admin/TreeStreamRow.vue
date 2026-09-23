@@ -9,7 +9,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="vms-tree-camera-row" @contextmenu.prevent="emit('stream-context', $event, stream)">
+  <div class="vms-tree-camera-row" @contextmenu.prevent.stop="emit('stream-context', $event, stream)">
     <div class="vms-flex-row" style="gap: 0.75rem;">
       <span class="vms-status-led" :class="stream.status" :title="stream.status === 'recording' ? 'Gravacao Ativa' : (stream.status === 'offline' ? 'Offline' : 'Online')"></span>
       <span class="vms-font-medium" style="color: #fff; font-size: 12px;">{{ stream.name }}</span>

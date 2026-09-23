@@ -22,7 +22,7 @@ const totalDuration = computed(() =>
     style="position: relative;"
     @dragstart="emit('dragstart', ronda)"
     @click="emit('select', ronda)"
-    @contextmenu.prevent="emit('context', $event, ronda)"
+    @contextmenu.prevent.stop="emit('context', $event, ronda)"
   >
     <div v-if="ronda.is_locked" style="position: absolute; top: 6px; right: 6px;" title="[TRAVADO]">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
