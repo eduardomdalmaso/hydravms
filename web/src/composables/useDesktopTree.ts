@@ -69,6 +69,7 @@ export function useDesktopTree() {
     await deleteRemoteCamera(id)
     rootStreams.value = rootStreams.value.filter(s => s.id !== id); folders.value.forEach(f => { f.streams = f.streams.filter(s => s.id !== id) })
     if (selectedStream.value?.id === id) selectedStream.value = null; showNotification('Fluxo removido.')
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vms:camera-updated'))
   }
 
   const handleSaveFolder = async (name: string) => {
@@ -89,6 +90,7 @@ export function useDesktopTree() {
     const target = folders.value.find(f => f.id === folderId)
     if (target) target.streams.push(newStream); else rootStreams.value.push(newStream)
     selectedStream.value = newStream; showNotification('Fluxo salvo com sucesso.')
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vms:camera-updated'))
   }
 
   return {

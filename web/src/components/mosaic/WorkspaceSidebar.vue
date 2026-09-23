@@ -25,6 +25,18 @@ const toggleSection = (s: "cameras" | "layouts" | "maps" | "carousel") => { open
 const liveMaps = ref<MapResource[]>([])
 const liveCarousels = ref<CarouselConfig[]>([])
 
+const loadCameras = async () => {
+  try {
+    const remote = await fetchCameras()
+    if (remote && remote.length > 0) {
+      cameras.value = remote.map(c => ({
+        id: c.id, name: c.name, location: c.location || 'Local', status: (c.status || 'online') as any,
+        protocol: (c.protocol?.toUpperCase() as any) || 'RTSP', has_ptz: c.has_ptz, fps: c.fps || 30, resolution: c.resolution || '1080P'
+      }))
+    }
+  } catch {}
+}
+
 const eventBus = useEventBus()
 eventBus.subscribe((evt) => {
   if (evt.type === 'system.camera.offline' && evt.subject) {
@@ -33,16 +45,16 @@ eventBus.subscribe((evt) => {
   } else if (evt.type === 'system.camera.online' && evt.subject) {
     const c = cameras.value.find(cam => cam.id === evt.subject)
     if (c) c.status = 'online' as any
+  } else if (evt.type.startsWith('system.camera.')) {
+    loadCameras()
   }
 })
 
-onMounted(async () => {
-  const remote = await fetchCameras()
-  if (remote.length > 0) {
-    cameras.value = remote.map(c => ({
-      id: c.id, name: c.name, location: c.location || 'Local', status: (c.status || 'online') as any,
-      protocol: (c.protocol?.toUpperCase() as any) || 'RTSP', has_ptz: c.has_ptz, fps: c.fps || 30, resolution: c.resolution || '1080P'
-    }))
+onMounted(() => {
+  loadCameras()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('vms:camera-updated', loadCameras)
+    window.addEventListener('focus', loadCameras)
   }
 })
 </script>

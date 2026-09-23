@@ -11,8 +11,20 @@ const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e:
 const { branding } = useBranding()
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
 const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
-const { start: startLive, stop: stopLive } = useWebRTCPlayer(videoRef)
+const { start: startLive, stop: stopLive, error: rtcError } = useWebRTCPlayer(videoRef)
 const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId, seekTrigger } = useTimelinePlayback()
+
+watch(rtcError, (err) => {
+  if (err && decoderMode.value === 'MSE') {
+    decoderMode.value = 'H264'
+  }
+})
+
+watch(() => props.slot.data, (camData) => {
+  if (camData && (camData as CameraStreamInfo).codec?.includes('H.265')) {
+    decoderMode.value = 'H264'
+  }
+}, { immediate: true })
 
 const isPlayback = computed(() => {
   const cam = props.slot.type === 'camera' ? props.slot.data as CameraStreamInfo : null
@@ -30,6 +42,9 @@ const handleSeekOrSwitch = () => {
   } else if (!isPlayback.value && props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
     if (videoRef.value?.src.includes('recordings')) videoRef.value.src = ''
     startLive((props.slot.data as CameraStreamInfo).id, props.isHero)
+  } else if (decoderMode.value === 'H264') {
+    stopLive()
+    retryKey.value = Date.now()
   }
 }
 
@@ -61,8 +76,8 @@ onMounted(handleSeekOrSwitch)
     <template v-if="slot.type === 'camera' && slot.data">
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
         <video v-show="decoderMode === 'MSE' && (!isPlayback || isPlaying)" ref="videoRef" playsinline muted autoplay style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
-        <img v-if="decoderMode === 'H264'" v-show="!isImgLoading" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
-        <div v-if="(decoderMode === 'MSE' && isPlayback && !isPlaying) || (decoderMode === 'H264' && isImgLoading)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
+        <img v-if="decoderMode === 'H264'" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <div v-if="(decoderMode === 'MSE' && isPlayback && !isPlaying)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.35rem; margin-top: 1.1rem; align-items: center;">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { FolderNode, StreamItem } from '../../types/streamTree'
-import { probeCameraSnapshot } from '../../services/adminApi'; import { generateChannelPaths } from '../../constants/rtspPresets'
+import { probeCameraSnapshot } from '../../services/adminApi'; import { generateChannelPaths, parseRtspUrl } from '../../constants/rtspPresets'
 import StreamWizardNetworkPane from './desktop/StreamWizardNetworkPane.vue'; import StreamWizardChannelsPane, { type ChannelItem } from './desktop/StreamWizardChannelsPane.vue'
 import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'; import StreamWizardGeoPane from './desktop/StreamWizardGeoPane.vue'
 
@@ -41,13 +41,21 @@ watch(() => props.isOpen, (open) => {
 const fetchSnapshot = async (): Promise<boolean> => {
   isTesting.value = true; testError.value = null
   try {
-    let targetUrl = form.value.url; const auth = form.value.user ? `${form.value.user}:${form.value.pass}@` : ''
-    if (form.value.protocol === 'ONVIF' || (!targetUrl.includes(form.value.ip) && form.value.protocol !== 'LOOP')) targetUrl = `rtsp://${auth}${form.value.ip}:554/stream1`
-    else if (auth && !targetUrl.includes('@') && form.value.protocol !== 'LOOP') targetUrl = targetUrl.replace('rtsp://', `rtsp://${auth}`)
+    let targetUrl = form.value.url
+    const auth = form.value.user ? `${form.value.user}:${form.value.pass}@` : ''
+    if (form.value.protocol === 'ONVIF') {
+      targetUrl = `rtsp://${auth}${form.value.ip}:554/stream1`
+    } else if (form.value.protocol === 'RTSP') {
+      if (!targetUrl && form.value.ip) {
+        targetUrl = `rtsp://${auth}${form.value.ip}:${form.value.port || 554}${form.value.path || '/live'}`
+      } else if (auth && !targetUrl.includes('@')) {
+        targetUrl = targetUrl.replace('rtsp://', `rtsp://${auth}`)
+      }
+    }
     const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
-    if (res && res.online) {
-      hasSnapshot.value = true; authRequired.value = !!res.auth_required; snapshotUrl.value = res.snapshot_url || undefined
-      testError.value = res.auth_required ? 'Autenticação necessária (401). Informe Usuário e Senha.' : null
+    if (res && res.online && !res.auth_required) {
+      hasSnapshot.value = true; authRequired.value = false; snapshotUrl.value = res.snapshot_url || undefined
+      testError.value = null
       detectedCodec.value = res.codec || (form.value.protocol === 'ONVIF' ? 'H.265 (HEVC)' : 'H.264'); detectedRes.value = res.resolution || '1920x1080 Full HD'; detectedFps.value = res.fps || 30; latency.value = res.latency_ms || 1
       if (res.manufacturer) form.value.brand = res.manufacturer; if (res.model) form.value.model = res.model; if (res.firmware) form.value.firmware = res.firmware; if (res.serial_number) form.value.serialNumber = res.serial_number
       if (res.rtsp_url && form.value.protocol !== 'LOOP') {
@@ -55,6 +63,10 @@ const fetchSnapshot = async (): Promise<boolean> => {
         const ch = generateChannelPaths(form.value.path, 1); channels.value = [{ id: 1, name: `${form.value.name || 'Canal 01'} (Principal)`, path: ch.main, subPath: ch.sub, status: 'online' }]
       }
       return true
+    } else if (res && res.auth_required) {
+      hasSnapshot.value = false; authRequired.value = true; snapshotUrl.value = undefined
+      testError.value = res.error || 'Autenticação necessária (401). Verifique Usuário e Senha informados.'
+      return false
     } else {
       hasSnapshot.value = false; authRequired.value = false; snapshotUrl.value = undefined
       testError.value = res?.error || `Falha de conexão com ${form.value.ip || form.value.url}. Endereço inacessível.`
@@ -89,7 +101,7 @@ const finish = () => {
 }
 </script>
 <template>
-  <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
+  <div v-if="isOpen" class="vms-modal-backdrop">
     <div class="vms-modal-dialog" style="max-width: 980px; width: 95vw; box-sizing: border-box;">
       <div class="vms-modal-header">
         <h3 class="vms-h3">NOVO FLUXO // ETAPA {{ step }} DE {{ totalSteps }}</h3>
