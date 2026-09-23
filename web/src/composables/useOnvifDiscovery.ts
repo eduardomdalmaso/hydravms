@@ -20,11 +20,25 @@ export function useOnvifDiscovery() {
   const scanNetwork = async () => {
     isScanning.value = true
     try {
-      const devices = await discoverOnvifDevices()
-      if (Array.isArray(devices)) {
-        discoveredDevices.value = devices.map(d => ({
-          ...d,
-          profiles: Array.isArray(d.profiles) ? d.profiles : []
+      const rawDevices = await discoverOnvifDevices()
+      if (Array.isArray(rawDevices)) {
+        discoveredDevices.value = rawDevices.map((d: any) => ({
+          id: d.id || d.device_id || `onvif_${d.ip_address || d.ip}_${d.port || 80}`,
+          name: d.name || `Câmera ONVIF ${d.ip_address || d.ip}`,
+          manufacturer: d.manufacturer || 'ONVIF',
+          model: d.model || 'IP Camera',
+          ip: d.ip || d.ip_address || '127.0.0.1',
+          port: d.port || 80,
+          macAddress: d.macAddress || d.hardware_id || d.serial_number || 'AA:BB:CC:DD:EE:FF',
+          profiles: (Array.isArray(d.profiles) ? d.profiles : []).map((p: any) => ({
+            name: p.name || 'MainProfile',
+            token: p.token || 'profile_0',
+            resolution: p.resolution || (p.width && p.height ? `${p.width}x${p.height}` : '1080P'),
+            codec: (p.codec || p.encoding || 'H.265').toUpperCase().includes('264') ? 'H.264' : 'H.265',
+            rtspUri: p.rtspUri || p.rtsp_stream || d.rtsp_url || `rtsp://${d.ip || d.ip_address || '127.0.0.1'}:554/live`
+          })),
+          hasPtz: !!(d.hasPtz ?? d.has_ptz),
+          isImported: !!d.isImported
         }))
       }
       lastScanTime.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })

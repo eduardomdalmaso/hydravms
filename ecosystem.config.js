@@ -33,5 +33,19 @@ module.exports = {
         PORT: "5173",
       },
     },
+
+    // 3. HydraStream - Motor de Mídia, Probing e Descoberta ONVIF WS-Discovery (porta 8080)
+    {
+      name: "hydra-stream",
+      cwd: path.resolve(__dirname, "..", "HydraStream"),
+      script: process.platform === "win32" ? "./hydrastream.exe" : "./bin/hydrastream",
+      interpreter: "none",
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 2000,
+      env: {
+        PORT: "8080",
+      },
+    },
   ],
 };
