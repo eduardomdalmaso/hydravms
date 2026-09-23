@@ -112,9 +112,8 @@ func (rt *Router) BuildHandler() http.Handler {
 		w.Write([]byte(`{"status":"healthy","service":"hydravms-controlplane"}`))
 	})
 
-	// Wrap in middleware chain: CORS -> Logger -> Audit -> Auth
-	handler := middleware.CORSMiddleware(mux)
-	handler = middleware.LoggerMiddleware(handler)
+	// Wrap in middleware chain: (Mux -> Audit -> Auth -> Logger -> CORS)
+	handler := http.Handler(mux)
 	if rt.auditService != nil {
 		handler = middleware.AuditMiddleware(rt.auditService)(handler)
 	}
@@ -134,6 +133,8 @@ func (rt *Router) BuildHandler() http.Handler {
 		}
 		handler = middleware.AuthMiddleware(validator)(handler)
 	}
+	handler = middleware.LoggerMiddleware(handler)
+	handler = middleware.CORSMiddleware(handler)
 
 	return handler
 }

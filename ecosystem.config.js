@@ -15,6 +15,7 @@ module.exports = {
         PORT: "8083",
         DB_DRIVER: "sqlite",
         SQLITE_PATH: "hydravms.db",
+        JWT_SECRET: "hydravms-enterprise-secure-jwt-signing-key-32b-secret",
         NATS_URL: "nats://127.0.0.1:4222",
         MINIO_ENDPOINT: "127.0.0.1:9000",
       },

@@ -34,9 +34,9 @@ const emit = defineEmits<{
     <div class="vms-flex-col" style="flex: 1 1 360px; min-width: 280px; justify-content: space-between; gap: 0.65rem; box-sizing: border-box;">
       <div class="vms-flex-col" style="gap: 0.65rem;">
         <div class="vms-flex-row" style="gap: 0.5rem;">
-          <div class="vms-form-group" style="width: 125px; flex-shrink: 0;">
+          <div class="vms-form-group" style="width: 130px; flex-shrink: 0;">
             <label class="vms-label">Protocolo</label>
-            <select v-model="form.protocol" class="vms-auth-input" @change="emit('resetSnapshot')">
+            <select v-model="form.protocol" class="vms-select" style="height: 38px; padding: 0 0.75rem; font-size: 13px;" @change="emit('resetSnapshot')">
               <option value="RTSP">RTSP</option>
               <option value="ONVIF">ONVIF</option>
               <option value="RTMP">RTMP</option>
@@ -45,7 +45,7 @@ const emit = defineEmits<{
           </div>
           <div class="vms-form-group" style="flex: 1; min-width: 140px;">
             <label class="vms-label">Nome da Camera</label>
-            <input v-model="form.name" class="vms-auth-input" placeholder="Ex: Portaria Leste" autofocus />
+            <input v-model="form.name" class="vms-auth-input" style="height: 38px; box-sizing: border-box;" placeholder="Ex: Portaria Leste" autofocus />
           </div>
         </div>
 
@@ -57,7 +57,7 @@ const emit = defineEmits<{
         <div class="vms-flex-row" style="gap: 0.5rem; align-items: flex-end;">
           <div class="vms-form-group" style="flex: 1; min-width: 140px; margin-bottom: 0;">
             <label class="vms-label">Pasta Destino</label>
-            <select v-model="form.folderId" class="vms-auth-input" style="height: 38px; box-sizing: border-box;">
+            <select v-model="form.folderId" class="vms-select" style="height: 38px; padding: 0 0.75rem; font-size: 13px; width: 100%;">
               <option value="">[RAIZ] Sem Pasta (Área Principal)</option>
               <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
             </select>
