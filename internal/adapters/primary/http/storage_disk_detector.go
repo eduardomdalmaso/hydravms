@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"hydravms/internal/adapters/secondary/proc"
 	"hydravms/internal/application"
 )
 
@@ -28,7 +29,9 @@ type lsblkRes struct {
 }
 
 func (h *StoragePoolHandler) DetectDisks(w http.ResponseWriter, r *http.Request) {
-	out, err := exec.CommandContext(r.Context(), "lsblk", "-J", "-b", "-o", "NAME,MODEL,SIZE,TYPE,MOUNTPOINT,TRAN,FSTYPE").Output()
+	cmd := exec.CommandContext(r.Context(), "lsblk", "-J", "-b", "-o", "NAME,MODEL,SIZE,TYPE,MOUNTPOINT,TRAN,FSTYPE")
+	proc.SetHideWindow(cmd)
+	out, err := cmd.Output()
 	var detected []map[string]any
 
 	if err == nil {

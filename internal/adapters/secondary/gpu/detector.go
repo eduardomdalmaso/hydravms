@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"hydravms/internal/adapters/secondary/proc"
 )
 
 // GPUTelemetry represents physical NVIDIA GPU hardware metrics.
@@ -42,6 +44,7 @@ func QueryGPU() GPUTelemetry {
 
 	// 1. Try nvidia-smi CLI
 	cmd := exec.CommandContext(ctx, "nvidia-smi", "--query-gpu=name,memory.total,memory.used,utilization.gpu,temperature.gpu,power.draw", "--format=csv,noheader,nounits")
+	proc.SetHideWindow(cmd)
 	out, err := cmd.Output()
 	if err == nil {
 		lines := strings.Split(strings.TrimSpace(string(out)), "\n")
