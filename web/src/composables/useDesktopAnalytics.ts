@@ -1,9 +1,32 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { AnalyticFolderNode, AnalyticInstance } from '../types/marketplace'
 import { useMarketplace } from './useMarketplace'
 
-const allFolders = ref<AnalyticFolderNode[]>([])
-const rootInstances = ref<AnalyticInstance[]>([])
+const STORAGE_FOLDERS_KEY = 'hydra_vms_analytic_folders'
+const STORAGE_INSTANCES_KEY = 'hydra_vms_analytic_instances'
+
+const loadStorage = <T>(key: string, fallback: T): T => {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+const allFolders = ref<AnalyticFolderNode[]>(loadStorage(STORAGE_FOLDERS_KEY, []))
+const rootInstances = ref<AnalyticInstance[]>(loadStorage(STORAGE_INSTANCES_KEY, []))
+
+const persistState = () => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_FOLDERS_KEY, JSON.stringify(allFolders.value))
+      localStorage.setItem(STORAGE_INSTANCES_KEY, JSON.stringify(rootInstances.value))
+    }
+  } catch {}
+}
+
+watch([allFolders, rootInstances], persistState, { deep: true })
 
 export function useDesktopAnalytics(pluginId: string) {
   const { showToast } = useMarketplace()
@@ -46,11 +69,13 @@ export function useDesktopAnalytics(pluginId: string) {
       showToast(`[ANALÍTICO] "${draggedInstance.value.name}" movido para "${dest.name}"`)
     }
     draggedInstance.value = null
+    persistState()
   }
 
   const handleCreateFolder = (name: string) => {
     allFolders.value.push({ id: `fld-${Date.now()}`, name, plugin_id: pluginId, instances: [] })
     isFolderModalOpen.value = false
+    persistState()
     showToast(`[PASTA] "${name}" criada com sucesso`)
   }
 
@@ -64,11 +89,13 @@ export function useDesktopAnalytics(pluginId: string) {
     }
     isWizardOpen.value = false
     selectedInstance.value = null
+    persistState()
     showToast(`[APP ANALÍTICO] "${inst.name}" adicionado com sucesso`)
   }
 
   const handleTogglePauseInstance = (inst: AnalyticInstance) => {
     inst.is_active = !inst.is_active
+    persistState()
     showToast(inst.is_active ? `[RETOMADO] "${inst.name}" em execução` : `[PAUSADO] "${inst.name}" interrompido`)
   }
 
@@ -82,6 +109,7 @@ export function useDesktopAnalytics(pluginId: string) {
     if (selectedInstance.value?.id === inst.id) {
       selectedInstance.value = { ...inst }
     }
+    persistState()
     showToast(`[SALVO] Analítico "${inst.name}" atualizado`)
   }
 
@@ -89,6 +117,7 @@ export function useDesktopAnalytics(pluginId: string) {
     rootInstances.value = rootInstances.value.filter(i => i.id !== id)
     allFolders.value.forEach(f => { f.instances = f.instances.filter(i => i.id !== id) })
     if (selectedInstance.value?.id === id) selectedInstance.value = null
+    persistState()
     showToast(`[EXCLUÍDO] Analítico removido com sucesso`)
   }
 
@@ -99,4 +128,5 @@ export function useDesktopAnalytics(pluginId: string) {
     handleSaveInstance, handleDeleteInstance
   }
 }
+
 

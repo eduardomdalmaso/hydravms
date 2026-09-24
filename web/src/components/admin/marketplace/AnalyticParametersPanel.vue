@@ -1,108 +1,83 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
 import type { AnalyticInstance } from '../../../types/marketplace'
-import { fetchCameras } from '../../../services/api'
 
-const props = defineProps<{
+defineProps<{
   instance: AnalyticInstance
-  disabled: boolean
 }>()
-
-const emit = defineEmits<{
-  (e: 'update', inst: AnalyticInstance): void
-}>()
-
-const cameras = ref<{ id: string; name: string }[]>([])
-const formName = ref(props.instance.name)
-const formCamera = ref(props.instance.camera_id)
-const formFps = ref(props.instance.fps_rate || 15)
-const formHardware = ref(props.instance.hardware_target || 'rtx_5090_cuda')
-const formStream = ref(props.instance.stream_type || 'main_1080p')
-const formMotion = ref(props.instance.motion_gated !== false)
-
-onMounted(async () => {
-  const cams = await fetchCameras()
-  cameras.value = cams.map(c => ({ id: c.id, name: c.name }))
-})
-
-watch([formName, formCamera, formFps, formHardware, formStream, formMotion], () => {
-  const camObj = cameras.value.find(c => c.id === formCamera.value)
-  emit('update', {
-    ...props.instance,
-    name: formName.value,
-    camera_id: formCamera.value,
-    camera_name: camObj?.name || props.instance.camera_name,
-    fps_rate: formFps.value,
-    hardware_target: formHardware.value,
-    stream_type: formStream.value,
-    motion_gated: formMotion.value
-  })
-})
 </script>
 
 <template>
-  <div class="vms-card vms-flex-col" style="padding: 1rem; gap: 0.85rem; background: #0b0e14; border: 1px solid var(--vms-border); border-radius: 8px;">
-    <div class="vms-flex-between" style="border-bottom: 1px solid var(--vms-border); padding-bottom: 0.5rem; align-items: center;">
-      <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">// PARÂMETROS DO ANALÍTICO</span>
-      <span v-if="disabled" class="vms-badge vms-badge-orange" style="font-size: 9px;">[PAUSE PARA EDITAR]</span>
+  <div class="vms-card vms-flex-col" style="padding: 0.85rem 1rem; gap: 0.75rem; background: #0b0e14; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;">
+    <div class="vms-flex-between" style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 0.4rem; align-items: center;">
+      <span class="vms-text-mono vms-text-2xs vms-font-semibold" style="color: #8b94a0; letter-spacing: 0.5px;">// PARÂMETROS DE EXECUÇÃO (SOMENTE LEITURA)</span>
+      <span class="vms-badge vms-badge-secondary" style="font-size: 8.5px; color: #64748b; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">[FIXADO]</span>
     </div>
 
-    <fieldset :disabled="disabled" class="vms-flex-col" style="gap: 0.75rem; border: none; padding: 0; margin: 0;">
-      <div class="vms-flex-row" style="gap: 0.75rem;">
-        <div class="vms-flex-col" style="gap: 0.25rem; flex: 1.2;">
-          <label class="vms-text-xs vms-font-semibold">NOME DO ANALÍTICO:</label>
-          <input v-model="formName" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;" />
-        </div>
-        <div class="vms-flex-col" style="gap: 0.25rem; flex: 1.2;">
-          <label class="vms-text-xs vms-font-semibold">CÂMERA ASSOCIADA:</label>
-          <select v-model="formCamera" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;">
-            <option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-        <div class="vms-flex-col" style="gap: 0.25rem; flex: 0.8;">
-          <label class="vms-text-xs vms-font-semibold">TAXA (FPS):</label>
-          <input v-model.number="formFps" type="number" min="1" max="50" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;" />
-        </div>
+    <!-- Read-only HUD Parameters Grid in Muted Grey Tones -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem;">
+      <!-- Camera -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">CÂMERA:</span>
+        <span class="vms-param-value">{{ instance.camera_name }}</span>
       </div>
 
-      <div class="vms-flex-row" style="gap: 0.75rem; align-items: center;">
-        <div class="vms-flex-col" style="gap: 0.25rem; flex: 1;">
-          <label class="vms-text-xs vms-font-semibold">STREAM:</label>
-          <select v-model="formStream" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;">
-            <option value="main_1080p">Main (1080p/4K)</option>
-            <option value="sub_stream">Sub (480p)</option>
-          </select>
-        </div>
-
-        <div class="vms-flex-col" style="gap: 0.25rem; flex: 1;">
-          <label class="vms-text-xs vms-font-semibold">HARDWARE TARGET:</label>
-          <div class="vms-flex-row" style="gap: 4px;">
-            <button
-              type="button"
-              class="vms-btn"
-              :class="formHardware === 'cpu_shm' ? 'vms-btn-primary' : 'vms-btn-secondary'"
-              style="flex: 1; padding: 4px 6px; font-size: 10px;"
-              @click="formHardware = 'cpu_shm'"
-            >
-              CPU
-            </button>
-            <button
-              type="button"
-              class="vms-btn"
-              :class="formHardware === 'rtx_5090_cuda' ? 'vms-btn-primary' : 'vms-btn-secondary'"
-              style="flex: 1; padding: 4px 6px; font-size: 10px;"
-              @click="formHardware = 'rtx_5090_cuda'"
-            >
-              GPU
-            </button>
-          </div>
-        </div>
-
-        <label class="vms-flex-row vms-text-xs vms-font-semibold" style="gap: 0.4rem; align-items: center; cursor: pointer; flex: 1.2; padding-top: 14px;">
-          <input v-model="formMotion" type="checkbox" style="accent-color: var(--vms-neu-accent-orange);" />
-          Detecção de movimento apenas
-        </label>
+      <!-- FPS -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">TAXA DE INFERÊNCIA:</span>
+        <span class="vms-param-value">{{ instance.fps_rate || 15 }} FPS</span>
       </div>
-    </fieldset>
+
+      <!-- Hardware -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">HARDWARE TARGET:</span>
+        <span class="vms-param-value">{{ instance.hardware_target === 'rtx_5090_cuda' ? 'GPU RTX 5090 (CUDA)' : 'CPU (ZERO-COPY SHM)' }}</span>
+      </div>
+
+      <!-- Stream -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">FLUXO DE VÍDEO:</span>
+        <span class="vms-param-value">{{ instance.stream_type === 'sub_stream' ? 'Sub-Stream (480p)' : 'Main Stream (1080p/4K)' }}</span>
+      </div>
+
+      <!-- Motion Gated -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">FILTRO DE MOVIMENTO:</span>
+        <span class="vms-param-value">{{ instance.motion_gated !== false ? 'Motion-Gated [ATIVO]' : 'Contínuo [DESATIVADO]' }}</span>
+      </div>
+
+      <!-- Zones Count -->
+      <div class="vms-param-box">
+        <span class="vms-param-label">ZONAS ATIVAS:</span>
+        <span class="vms-param-value">{{ (instance.zones || []).length > 0 ? `${instance.zones?.length} Zona(s)` : 'Frame Completo' }}</span>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.vms-param-box {
+  background: #0e1118;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  padding: 0.45rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vms-param-label {
+  font-family: var(--vms-font-mono);
+  font-size: 8.5px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.vms-param-value {
+  font-family: var(--vms-font-mono);
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

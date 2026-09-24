@@ -60,7 +60,7 @@ const handleSave = () => {
 </script>
 
 <template>
-  <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
+  <div v-if="isOpen" class="vms-modal-backdrop">
     <div class="vms-modal-solid-panel">
       <!-- Header -->
       <div class="vms-modal-header vms-flex-between">

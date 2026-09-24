@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import type { Point2D, Line2D, ZoneConfig } from '../../../types/marketplace'
 
 const props = defineProps<{
@@ -28,16 +28,12 @@ const activeColor = computed(() => {
 
 const getPolygonStr = (points: Point2D[]) => points.map(p => `${p.x * 100},${p.y * 100}`).join(' ')
 
-const handleMouseDownPoint = (idx: number) => { draggingIndex.value = idx }
-const handleMouseDownLine = (pt: 'p1' | 'p2') => { draggingLinePoint.value = pt }
-const handleMouseUp = () => { draggingIndex.value = null; draggingLinePoint.value = null }
-
 const handleMouseMove = (e: MouseEvent) => {
   if (!svgRef.value || !activeZone.value) return
   if (draggingIndex.value === null && draggingLinePoint.value === null) return
   const rect = svgRef.value.getBoundingClientRect()
-  const x = Math.max(0.02, Math.min(0.98, (e.clientX - rect.left) / rect.width))
-  const y = Math.max(0.02, Math.min(0.98, (e.clientY - rect.top) / rect.height))
+  const x = Math.max(0.01, Math.min(0.99, (e.clientX - rect.left) / rect.width))
+  const y = Math.max(0.01, Math.min(0.99, (e.clientY - rect.top) / rect.height))
 
   if (draggingIndex.value !== null) {
     const next = activeZone.value.polygon.map((p, i) => i === draggingIndex.value ? { x, y } : p)
@@ -47,10 +43,42 @@ const handleMouseMove = (e: MouseEvent) => {
     emit('update:line', { zoneId: activeZone.value.id, line: nextLine })
   }
 }
+
+const handleMouseUp = (e?: MouseEvent) => {
+  if (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  draggingIndex.value = null
+  draggingLinePoint.value = null
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+}
+
+const handleMouseDownPoint = (idx: number, e: MouseEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+  draggingIndex.value = idx
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleMouseDownLine = (pt: 'p1' | 'p2', e: MouseEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+  draggingLinePoint.value = pt
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+}
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+})
 </script>
 
 <template>
-  <div class="vms-roi-canvas-box" @mouseup="handleMouseUp" @mouseleave="handleMouseUp" @mousemove="handleMouseMove">
+  <div class="vms-roi-canvas-box" @click.stop>
     <img v-if="snapshotUrl && !hasImageError" :src="snapshotUrl" class="vms-roi-snapshot" alt="Camera Snapshot" @error="hasImageError = true" @load="hasImageError = false" />
     <div v-else class="vms-roi-placeholder">
       <div class="vms-flex-col" style="align-items: center; gap: 4px;">
@@ -86,16 +114,16 @@ const handleMouseMove = (e: MouseEvent) => {
               :x2="z.line.p2.x * 100" :y2="z.line.p2.y * 100"
               :stroke="activeColor" stroke-width="0.9" stroke-dasharray="2,1"
             />
-            <circle :cx="z.line.p1.x * 100" :cy="z.line.p1.y * 100" r="2.2" :fill="activeColor" stroke="#fff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent="handleMouseDownLine('p1')" />
+            <circle :cx="z.line.p1.x * 100" :cy="z.line.p1.y * 100" r="2.2" :fill="activeColor" stroke="#fff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent.stop="handleMouseDownLine('p1', $event)" />
             <text :x="z.line.p1.x * 100" :y="z.line.p1.y * 100 - 3" :fill="activeColor" font-size="3" font-weight="bold" text-anchor="middle">A (IN)</text>
-            <circle :cx="z.line.p2.x * 100" :cy="z.line.p2.y * 100" r="2.2" :fill="activeColor" stroke="#fff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent="handleMouseDownLine('p2')" />
+            <circle :cx="z.line.p2.x * 100" :cy="z.line.p2.y * 100" r="2.2" :fill="activeColor" stroke="#fff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent.stop="handleMouseDownLine('p2', $event)" />
             <text :x="z.line.p2.x * 100" :y="z.line.p2.y * 100 - 3" :fill="activeColor" font-size="3" font-weight="bold" text-anchor="middle">B (OUT)</text>
           </template>
 
           <template v-else>
             <polygon :points="getPolygonStr(z.polygon)" :fill="`${activeColor}33`" :stroke="activeColor" stroke-width="0.8" />
             <g v-for="(p, pIdx) in z.polygon" :key="pIdx">
-              <circle :cx="p.x * 100" :cy="p.y * 100" r="2.0" :fill="activeColor" stroke="#ffffff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent="handleMouseDownPoint(pIdx)" />
+              <circle :cx="p.x * 100" :cy="p.y * 100" r="2.0" :fill="activeColor" stroke="#ffffff" stroke-width="0.5" class="vms-roi-handle" @mousedown.prevent.stop="handleMouseDownPoint(pIdx, $event)" />
               <text :x="p.x * 100" :y="p.y * 100 - 2.5" fill="#ffffff" font-size="2.6" font-weight="bold" text-anchor="middle">P{{ pIdx + 1 }}</text>
             </g>
           </template>

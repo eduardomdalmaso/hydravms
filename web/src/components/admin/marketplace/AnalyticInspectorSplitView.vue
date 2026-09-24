@@ -93,16 +93,13 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
         <button class="vms-btn vms-btn-danger vms-btn-sm" style="padding: 5px 10px;" @click="emit('delete', localInst.id)">
           EXCLUIR
         </button>
-        <button :disabled="formActive" class="vms-btn vms-btn-primary vms-btn-sm" :style="{ opacity: formActive ? 0.35 : 1, cursor: formActive ? 'not-allowed' : 'pointer' }" style="font-weight: bold; padding: 5px 14px;" @click="handleSave">
-          SALVAR
-        </button>
       </div>
     </div>
 
     <!-- Main Split Columns -->
     <div class="vms-flex-row" style="gap: 1rem; align-items: flex-start;">
       <!-- Left Column: Realtime Stream with BBox Overlay & Parameters Panel -->
-      <div class="vms-flex-col" style="flex: 1.35; gap: 1rem; min-width: 0;">
+      <div class="vms-flex-col" style="flex: 1.35; gap: 0.75rem; min-width: 0;">
         <AnalyticLiveStreamViewer
           :camera-id="localInst.camera_id"
           :camera-name="localInst.camera_name"
@@ -110,11 +107,7 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
           :zones="localInst.zones"
           :fps="localInst.fps_rate"
         />
-        <AnalyticParametersPanel
-          :instance="localInst"
-          :disabled="formActive"
-          @update="(updated) => localInst = updated"
-        />
+        <AnalyticParametersPanel :instance="localInst" />
       </div>
 
       <!-- Right Column: Recent Snapshots Feed -->

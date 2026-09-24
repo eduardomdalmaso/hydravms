@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { ZoneConfig } from '../../../types/marketplace'
 import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
+import { useWebRTCPlayer } from '../../../composables/useWebRTCPlayer'
 import { useEventBus, initEventSocket } from '../../../services/eventSocket'
 
 const props = defineProps<{
@@ -12,9 +13,11 @@ const props = defineProps<{
   fps?: number
 }>()
 
+const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-const imgRef = ref<HTMLImageElement | null>(null)
-const snapshotUrl = ref('')
+const currentFrameUrl = ref('')
+
+const { isPlaying, start, stop } = useWebRTCPlayer(videoRef)
 
 interface DetectionBox {
   id: string
@@ -31,6 +34,7 @@ const activeDetections = ref<DetectionBox[]>([])
 const { subscribe } = useEventBus()
 let unsubscribe: (() => void) | null = null
 let animFrameId: number | null = null
+let fpsTimerId: number | null = null
 
 const renderCanvas = () => {
   if (!canvasRef.value || !props.isActive) return
@@ -40,13 +44,13 @@ const renderCanvas = () => {
   const w = canvasRef.value.width, h = canvasRef.value.height
   ctx.clearRect(0, 0, w, h)
 
-  // Draw configured Zones
+  // Draw configured Zones: Orange Dashed Line, NO background color
   if (props.zones) {
-    props.zones.forEach((z, idx) => {
+    props.zones.forEach((z) => {
       if (!z.polygon || z.polygon.length < 3) return
       ctx.beginPath()
-      ctx.strokeStyle = idx === 0 ? 'rgba(0, 240, 255, 0.85)' : 'rgba(252, 238, 10, 0.85)'
-      ctx.fillStyle = idx === 0 ? 'rgba(0, 240, 255, 0.12)' : 'rgba(252, 238, 10, 0.12)'
+      ctx.strokeStyle = '#ff5e3a'
+      ctx.setLineDash([6, 4])
       ctx.lineWidth = 2
       z.polygon.forEach((pt, pIdx) => {
         const px = pt.x * w, py = pt.y * h
@@ -54,11 +58,11 @@ const renderCanvas = () => {
       })
       ctx.closePath()
       ctx.stroke()
-      ctx.fill()
+      ctx.setLineDash([])
     })
   }
 
-  // Draw Real Detections from Backend Engine
+  // Draw Live Detections from Backend Engine
   const now = Date.now()
   activeDetections.value = activeDetections.value.filter(d => d.expiresAt > now)
 
@@ -87,18 +91,45 @@ const renderCanvas = () => {
   animFrameId = requestAnimationFrame(renderCanvas)
 }
 
-const loadSnapshot = () => {
-  if (props.cameraId) snapshotUrl.value = getCameraSnapshotUrl(props.cameraId, false)
+const startFpsStream = () => {
+  if (fpsTimerId) clearInterval(fpsTimerId)
+  if (!props.cameraId || !props.isActive) return
+
+  const targetFps = Math.max(1, Math.min(50, props.fps || 15))
+  const intervalMs = Math.floor(1000 / targetFps)
+
+  const fetchNextFrame = () => {
+    const base = getCameraSnapshotUrl(props.cameraId, false)
+    currentFrameUrl.value = `${base}&_t=${Date.now()}`
+  }
+
+  fetchNextFrame()
+  fpsTimerId = window.setInterval(fetchNextFrame, intervalMs)
 }
 
-watch(() => props.cameraId, loadSnapshot, { immediate: true })
+const initStream = () => {
+  if (props.cameraId) {
+    if (props.isActive) {
+      start(props.cameraId, true)
+      startFpsStream()
+      animFrameId = requestAnimationFrame(renderCanvas)
+    }
+  }
+}
+
+watch([() => props.cameraId, () => props.fps], initStream, { immediate: true })
 watch(() => props.isActive, (active) => {
-  if (active) animFrameId = requestAnimationFrame(renderCanvas)
-  else if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null }
+  if (active) {
+    initStream()
+  } else {
+    stop()
+    if (fpsTimerId) { clearInterval(fpsTimerId); fpsTimerId = null }
+    if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null }
+  }
 }, { immediate: true })
 
 onMounted(() => {
-  loadSnapshot()
+  initStream()
   initEventSocket()
   unsubscribe = subscribe((evt) => {
     if (!props.isActive) return
@@ -114,10 +145,11 @@ onMounted(() => {
       })
     }
   })
-  animFrameId = requestAnimationFrame(renderCanvas)
 })
 
 onUnmounted(() => {
+  stop()
+  if (fpsTimerId) clearInterval(fpsTimerId)
   if (animFrameId) cancelAnimationFrame(animFrameId)
   if (unsubscribe) unsubscribe()
 })
@@ -125,19 +157,36 @@ onUnmounted(() => {
 
 <template>
   <div class="vms-card" style="position: relative; overflow: hidden; background: #000; border: 1px solid var(--vms-border); border-radius: 8px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
-    <img ref="imgRef" :src="snapshotUrl" style="width: 100%; height: 100%; object-fit: contain;" alt="Fluxo Câmera" />
-    <canvas ref="canvasRef" width="800" height="450" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;" />
+    <!-- Live Video Element (WebRTC WHEP) -->
+    <video
+      ref="videoRef"
+      autoplay
+      muted
+      playsinline
+      style="width: 100%; height: 100%; object-fit: contain; background: #000;"
+      :style="{ opacity: isPlaying ? 1 : 0 }"
+    />
 
-    <div style="position: absolute; top: 8px; left: 10px; display: flex; gap: 8px; align-items: center; z-index: 10;">
+    <!-- Realtime FPS Frame Stream (when WebRTC is establishing or in fallback mode) -->
+    <img
+      v-if="!isPlaying"
+      :src="currentFrameUrl"
+      style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;"
+      alt="Fluxo de Vídeo"
+    />
+
+    <!-- HUD Vector & Bounding Boxes Canvas -->
+    <canvas ref="canvasRef" width="800" height="450" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;" />
+
+    <!-- Top Stream Status Badge (Clean HUD) -->
+    <div style="position: absolute; top: 8px; left: 10px; z-index: 20;">
       <span class="vms-badge" :class="isActive ? 'vms-badge-green' : 'vms-badge-orange'" style="font-size: 9px; font-weight: bold;">
         {{ isActive ? '● AO VIVO' : '■ PAUSADO' }}
       </span>
-      <span class="vms-text-mono vms-text-2xs" style="color: #fff; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 4px;">
-        {{ cameraName }} // {{ fps || 15 }} FPS
-      </span>
     </div>
 
-    <div v-if="!isActive" style="position: absolute; inset: 0; background: rgba(7, 8, 12, 0.75); backdrop-filter: blur(2px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 20;">
+    <!-- Paused Mask -->
+    <div v-if="!isActive" style="position: absolute; inset: 0; background: rgba(7, 8, 12, 0.75); backdrop-filter: blur(2px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 30;">
       <span class="vms-text-mono vms-text-sm" style="color: #fcee0a; font-weight: bold;">[PAUSADO // FLUXO INTERROMPIDO]</span>
       <span class="vms-text-mono vms-text-2xs vms-text-dim">CLIQUE EM "RETOMAR" PARA REINICIAR A DETECÇÃO EM TEMPO REAL</span>
     </div>
