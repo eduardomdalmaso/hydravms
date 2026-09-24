@@ -32,6 +32,13 @@ export interface Line2D {
   p2: Point2D
 }
 
+export interface ScheduleInterval {
+  id: string
+  days: number[]
+  start_time: string
+  end_time: string
+}
+
 export interface ZoneConfig {
   id: string
   name: string
@@ -39,7 +46,8 @@ export interface ZoneConfig {
   target_classes: string[]
   polygon: Point2D[]
   line?: Line2D
-  schedule: {
+  schedules?: ScheduleInterval[]
+  schedule?: {
     days: number[]
     start_time: string
     end_time: string
