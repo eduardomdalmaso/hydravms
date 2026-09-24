@@ -20,6 +20,34 @@ export interface PluginManifest {
   default_config: Record<string, any>
 }
 
+export type AnalyticMode = 'intrusion' | 'crowd' | 'counting' | 'dwell_time'
+
+export interface Point2D {
+  x: number
+  y: number
+}
+
+export interface Line2D {
+  p1: Point2D
+  p2: Point2D
+}
+
+export interface ZoneConfig {
+  id: string
+  name: string
+  mode: AnalyticMode
+  target_classes: string[]
+  polygon: Point2D[]
+  line?: Line2D
+  schedule: {
+    days: number[]
+    start_time: string
+    end_time: string
+  }
+  threshold?: number
+  dwell_time_seconds?: number
+}
+
 export interface AnalyticInstance {
   id: string
   plugin_id: string
@@ -30,10 +58,13 @@ export interface AnalyticInstance {
   stream_type: 'main_1080p' | 'sub_stream'
   hardware_target: 'rtx_5090_cuda' | 'cpu_shm'
   confidence_threshold: number
-  roi_mode: 'full_frame' | 'custom_polygon'
+  roi_mode: 'full_frame' | 'custom_polygon' | 'counting_line'
   specific_params: Record<string, any>
   is_active: boolean
   fps_rate: number
+  motion_gated?: boolean
+  auto_sahi?: boolean
+  zones?: ZoneConfig[]
   detections_count: number
   created_at: string
 }

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import type { AnalyticInstance, AnalyticFolderNode, PluginManifest } from '../../../types/marketplace'
+import { ref, computed, onMounted } from 'vue'
+import type { AnalyticInstance, AnalyticFolderNode, PluginManifest, AnalyticMode, Point2D, Line2D } from '../../../types/marketplace'
 import { fetchCameras } from '../../../services/api'
+import AnalyticWizardStep1 from './AnalyticWizardStep1.vue'
+import AnalyticWizardStep2 from './AnalyticWizardStep2.vue'
 
 const props = defineProps<{
   isOpen: boolean; plugin: PluginManifest; folders: AnalyticFolderNode[]; currentFolderId?: string | null
@@ -12,11 +14,21 @@ const emit = defineEmits<{
   (e: 'save', payload: { inst: AnalyticInstance; targetFolderId: string | null }): void
 }>()
 
+const step = ref<1 | 2>(1)
 const name = ref(''), camera = ref(''), stream = ref<'main_1080p' | 'sub_stream'>('main_1080p')
 const hardware = ref<'rtx_5090_cuda' | 'cpu_shm'>('rtx_5090_cuda')
-const confidence = ref(0.70), sahi = ref(true)
+const mode = ref<AnalyticMode>('intrusion')
+const fps = ref(15), motionGated = ref(true), autoSahi = ref(true)
+const scheduleStart = ref('18:00'), scheduleEnd = ref('06:00'), selectedDays = ref([1,2,3,4,5])
 const selectedFolder = ref<string | null>(props.currentFolderId || null)
+const selectedClasses = ref<string[]>(['person', 'car', 'motorcycle', 'cell_phone'])
 const cameras = ref<{ id: string; name: string }[]>([])
+
+const points = ref<Point2D[]>([
+  { x: 0.20, y: 0.15 }, { x: 0.80, y: 0.15 }, { x: 0.90, y: 0.50 },
+  { x: 0.80, y: 0.85 }, { x: 0.20, y: 0.85 }, { x: 0.10, y: 0.50 }
+])
+const line = ref<Line2D>({ p1: { x: 0.20, y: 0.50 }, p2: { x: 0.80, y: 0.50 } })
 
 onMounted(async () => {
   const cams = await fetchCameras()
@@ -24,73 +36,90 @@ onMounted(async () => {
   if (cameras.value.length > 0) camera.value = cameras.value[0].id
 })
 
-const handleConfirm = () => {
+const snapshotUrl = computed(() => camera.value ? `http://localhost:8083/api/v1/cameras/${camera.value}/snapshot` : '')
+
+const toggleClass = (id: string) => {
+  const idx = selectedClasses.value.indexOf(id)
+  if (idx >= 0) selectedClasses.value.splice(idx, 1)
+  else selectedClasses.value.push(id)
+}
+
+const toggleDay = (d: number) => {
+  const idx = selectedDays.value.indexOf(d)
+  if (idx >= 0) selectedDays.value.splice(idx, 1)
+  else selectedDays.value.push(d)
+}
+
+const handleSave = () => {
   const camObj = cameras.value.find(c => c.id === camera.value)
   const newInst: AnalyticInstance = {
     id: `inst-${Date.now()}`, plugin_id: props.plugin.id, plugin_name: props.plugin.name,
     name: name.value.trim() || `${props.plugin.name} // ${camObj?.name || 'Câmera'}`,
     camera_id: camera.value || 'cam_stream', camera_name: camObj?.name || 'Câmera',
     stream_type: stream.value, hardware_target: hardware.value,
-    confidence_threshold: confidence.value, roi_mode: 'full_frame',
-    specific_params: { sahi_enabled: sahi.value },
-    is_active: true, fps_rate: 30.0, detections_count: 0, created_at: new Date().toISOString()
+    confidence_threshold: 0.70, roi_mode: mode.value === 'counting' ? 'counting_line' : 'custom_polygon',
+    fps_rate: fps.value, motion_gated: motionGated.value, auto_sahi: autoSahi.value,
+    specific_params: { mode: mode.value, classes: selectedClasses.value },
+    zones: [{
+      id: `zone-${Date.now()}`, name: `ZONA 1 // ${mode.value.toUpperCase()}`,
+      mode: mode.value, target_classes: selectedClasses.value, polygon: points.value, line: line.value,
+      schedule: { days: selectedDays.value, start_time: scheduleStart.value, end_time: scheduleEnd.value }
+    }],
+    is_active: true, detections_count: 0, created_at: new Date().toISOString()
   }
   emit('save', { inst: newInst, targetFolderId: selectedFolder.value })
-  name.value = ''
+  step.value = 1; name.value = ''
 }
 </script>
 
 <template>
   <div v-if="isOpen" class="vms-modal-backdrop" @click.self="emit('close')">
-    <div class="vms-modal-content" style="max-width: 500px; width: 100%;">
+    <div class="vms-modal-content vms-fixed-wizard">
+      <!-- Header -->
       <div class="vms-modal-header vms-flex-between">
         <div class="vms-flex-col" style="gap: 2px;">
           <h4 class="vms-h4" style="margin: 0; color: #ffffff;">NOVO ANALÍTICO // {{ plugin.name }}</h4>
-          <span class="vms-text-mono vms-text-2xs vms-text-dim">WIZARD DE INSTANCIAÇÃO</span>
+          <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">
+            PASSO {{ step }} DE 2 // {{ step === 1 ? 'GEOMETRIA & OBJETOS' : 'PERFORMANCE & AGENDAMENTO' }}
+          </span>
         </div>
         <button class="vms-btn-icon" @click="emit('close')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
-      <div class="vms-modal-body vms-flex-col" style="gap: 0.85rem; padding: 1.25rem 0;">
-        <div class="vms-flex-col" style="gap: 0.25rem;">
-          <label class="vms-text-xs vms-font-semibold">NOME DO ANALÍTICO:</label>
-          <input v-model="name" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;" placeholder="Ex: LPR Pista 01..." />
-        </div>
-
-        <div class="vms-flex-col" style="gap: 0.25rem;">
-          <label class="vms-text-xs vms-font-semibold">CÂMERA DE VÍDEO:</label>
-          <select v-model="camera" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;">
-            <option v-if="cameras.length === 0" value="">[NENHUMA CÂMERA DISPONÍVEL]</option>
-            <option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-
-        <div class="vms-flex-col" style="gap: 0.25rem;">
-          <label class="vms-text-xs vms-font-semibold">PASTA DE DESTINO:</label>
-          <select v-model="selectedFolder" class="vms-auth-input" style="padding: 6px 10px; font-size: 11px;">
-            <option :value="null">[RAIZ DO DESKTOP]</option>
-            <option v-for="f in folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-          </select>
-        </div>
-
-        <div class="vms-flex-row" style="gap: 0.75rem;">
-          <div class="vms-flex-col" style="gap: 0.25rem; flex: 1;">
-            <label class="vms-text-xs vms-font-semibold">STREAM:</label>
-            <select v-model="stream" class="vms-auth-input" style="padding: 6px 8px; font-size: 11px;"><option value="main_1080p">Main Stream</option><option value="sub_stream">Sub Stream</option></select>
-          </div>
-          <div class="vms-flex-col" style="gap: 0.25rem; flex: 1;">
-            <label class="vms-text-xs vms-font-semibold">TARGET:</label>
-            <select v-model="hardware" class="vms-auth-input" style="padding: 6px 8px; font-size: 11px;"><option value="rtx_5090_cuda">RTX 5090</option><option value="cpu_shm">CPU SHM</option></select>
-          </div>
-        </div>
+      <!-- Content -->
+      <div class="vms-wizard-body">
+        <AnalyticWizardStep1
+          v-if="step === 1"
+          :name="name" :camera="camera" :cameras="cameras" :mode="mode"
+          :selected-classes="selectedClasses" :points="points" :line="line" :snapshot-url="snapshotUrl"
+          @update:name="name = $event" @update:camera="camera = $event" @update:mode="mode = $event"
+          @toggle:class="toggleClass" @update:points="points = $event" @update:line="line = $event"
+        />
+        <AnalyticWizardStep2
+          v-else
+          :fps="fps" :motion-gated="motionGated" :auto-sahi="autoSahi"
+          :schedule-start="scheduleStart" :schedule-end="scheduleEnd" :selected-days="selectedDays"
+          :hardware="hardware"
+          @update:fps="fps = $event" @update:motion-gated="motionGated = $event"
+          @update:auto-sahi="autoSahi = $event" @update:schedule-start="scheduleStart = $event"
+          @update:schedule-end="scheduleEnd = $event" @toggle:day="toggleDay" @update:hardware="hardware = $event"
+        />
       </div>
 
-      <div class="vms-modal-footer vms-flex-between" style="border-top: 1px solid var(--vms-border); padding-top: 0.85rem;">
-        <button class="vms-btn vms-btn-secondary vms-btn-sm" @click="emit('close')">CANCELAR</button>
-        <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="handleConfirm">SALVAR</button>
+      <!-- Footer Navigation -->
+      <div class="vms-modal-footer vms-flex-between">
+        <button v-if="step === 1" class="vms-btn vms-btn-secondary vms-btn-sm" @click="emit('close')">CANCELAR</button>
+        <button v-else class="vms-btn vms-btn-secondary vms-btn-sm" @click="step = 1">VOLTAR</button>
+        <button v-if="step === 1" class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="step = 2">AVANÇAR</button>
+        <button v-else class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="handleSave">SALVAR</button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.vms-fixed-wizard { width: 780px; max-width: 95vw; height: 580px; display: flex; flex-direction: column; }
+.vms-wizard-body { flex: 1; overflow-y: auto; padding: 0.85rem 0; }
+</style>
