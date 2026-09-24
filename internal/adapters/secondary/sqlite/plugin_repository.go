@@ -77,6 +77,10 @@ func (r *PluginRepository) ListPlugins(ctx context.Context, tenantID uuid.UUID) 
 		plugins = append(plugins, &p)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed during rows iteration: %w", err)
+	}
+
 	return plugins, nil
 }
 
