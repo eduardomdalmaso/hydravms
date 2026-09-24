@@ -6,7 +6,7 @@ import PluginCatalogGrid from '../../components/admin/marketplace/PluginCatalogG
 import PluginDetailsModal from '../../components/admin/marketplace/PluginDetailsModal.vue'
 
 const {
-  plugins, searchQuery, selectedCategory, statusFilter, toast,
+  plugins, searchQuery, statusFilter, toast,
   installedPlugins, filteredPlugins, installPlugin, uninstallPlugin, togglePlugin
 } = useMarketplace()
 
@@ -28,15 +28,15 @@ const detailsPlugin = ref<PluginManifest | null>(null)
           <span class="vms-badge vms-badge-orange" style="font-size: 10px;">{{ installedPlugins.length }}/{{ plugins.length }} INSTALADOS</span>
         </div>
         <span class="vms-text-mono vms-text-2xs vms-text-dim">
-          INSTALE ANALÍTICOS DE IA PARA ATIVAR SEUS MÓDULOS DE GESTÃO E EVENTOS NO MENU LATERAL
+          MODELOS SOTA COMPILADOS EM TENSORRT // DOWNLOAD DIRETO DO HUGGING FACE
         </span>
       </div>
     </div>
 
     <!-- Catálogo e Instalação -->
     <PluginCatalogGrid
-      :plugins="filteredPlugins" :search-query="searchQuery" :selected-category="selectedCategory" :status-filter="statusFilter"
-      @update:search-query="searchQuery = $event" @update:selected-category="selectedCategory = $event" @update:status-filter="statusFilter = $event"
+      :plugins="filteredPlugins" :search-query="searchQuery" :status-filter="statusFilter"
+      @update:search-query="searchQuery = $event" @update:status-filter="statusFilter = $event"
       @install="installPlugin" @uninstall="uninstallPlugin" @toggle="togglePlugin" @details="detailsPlugin = $event"
     />
 

@@ -2,39 +2,25 @@
 import type { PluginManifest } from '../../../types/marketplace'
 import PluginCard from './PluginCard.vue'
 
-defineProps<{ plugins: PluginManifest[]; searchQuery: string; selectedCategory: string; statusFilter: string }>()
+defineProps<{ plugins: PluginManifest[]; searchQuery: string; statusFilter: string }>()
 
 const emit = defineEmits<{
-  (e: 'update:searchQuery', val: string): void; (e: 'update:selectedCategory', val: string): void
-  (e: 'update:statusFilter', val: any): void; (e: 'install', id: string): void
-  (e: 'uninstall', id: string): void; (e: 'toggle', id: string): void
+  (e: 'update:searchQuery', val: string): void
+  (e: 'update:statusFilter', val: any): void
+  (e: 'install', id: string): void
+  (e: 'uninstall', id: string): void
+  (e: 'toggle', id: string): void
   (e: 'details', plugin: PluginManifest): void
 }>()
-
-const categories = [
-  { id: 'ALL', label: 'TODOS' },
-  { id: 'traffic', label: 'TRÁFEGO & VEÍCULOS' },
-  { id: 'access_control', label: 'ACESSO & FACIAL' },
-  { id: 'safety', label: 'SEGURANÇA & EPI' },
-  { id: 'analytics', label: 'PERÍMETRO & VMD' }
-]
 </script>
 
 <template>
   <div class="vms-flex-col" style="gap: 1rem;">
-    <!-- Filter bar -->
+    <!-- Filter and Search bar -->
     <div class="vms-flex-between" style="flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-      <div class="vms-flex-row" style="gap: 0.4rem; flex-wrap: wrap;">
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          class="vms-btn vms-btn-sm"
-          :class="selectedCategory === cat.id ? 'vms-btn-primary' : 'vms-btn-secondary'"
-          style="font-size: 11px; padding: 4px 10px;"
-          @click="emit('update:selectedCategory', cat.id)"
-        >
-          {{ cat.label }}
-        </button>
+      <div class="vms-flex-row" style="gap: 0.65rem; align-items: center;">
+        <span class="vms-text-xs vms-font-semibold" style="color: #ffffff; letter-spacing: 0.5px;">CATÁLOGO DE MODELOS SOTA</span>
+        <span class="vms-badge vms-badge-secondary" style="font-size: 10px;">{{ plugins.length }} DISPONÍVEIS</span>
       </div>
 
       <div class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
@@ -52,8 +38,8 @@ const categories = [
         <input
           :value="searchQuery"
           class="vms-auth-input"
-          style="padding: 4px 10px; font-size: 11px; width: 180px;"
-          placeholder="Buscar analítico..."
+          style="padding: 4px 10px; font-size: 11px; width: 220px;"
+          placeholder="Buscar analítico ou modelo..."
           @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
         />
       </div>
