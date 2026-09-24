@@ -23,8 +23,8 @@ const currentProgress = computed(() => installProgress.value[props.plugin.id])
           <span class="vms-text-sm vms-font-semibold" style="color: #ffffff;">{{ plugin.name }}</span>
           <span class="vms-text-mono vms-text-2xs vms-text-dim">v{{ plugin.version }} // {{ plugin.author }}</span>
         </div>
-        <span class="vms-badge" :class="plugin.is_installed ? (plugin.status === 'running' ? 'vms-badge-green' : 'vms-badge-orange') : 'vms-badge-blue'" style="font-size: 10px;">
-          {{ plugin.is_installed ? (plugin.status === 'running' ? '[INSTALADO]' : '[PAUSADO]') : '[DISPONÍVEL]' }}
+        <span class="vms-badge" :class="plugin.is_installed ? 'vms-badge-green' : 'vms-badge-blue'" style="font-size: 10px;">
+          {{ plugin.is_installed ? '[INSTALADO]' : '[DISPONÍVEL]' }}
         </span>
       </div>
 
@@ -57,10 +57,7 @@ const currentProgress = computed(() => installProgress.value[props.plugin.id])
 
       <div class="vms-flex-row" style="gap: 0.35rem;">
         <template v-if="plugin.is_installed">
-          <button class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 10px; padding: 4px 8px;" @click="emit('toggle', plugin.id)">
-            {{ plugin.status === 'running' ? 'PAUSAR' : 'ATIVAR' }}
-          </button>
-          <button class="vms-btn vms-btn-danger vms-btn-sm" style="font-size: 10px; padding: 4px 8px;" @click="emit('uninstall', plugin.id)">
+          <button class="vms-btn vms-btn-danger vms-btn-sm" style="font-size: 10px; padding: 4px 10px;" @click="emit('uninstall', plugin.id)">
             DESINSTALAR
           </button>
         </template>
