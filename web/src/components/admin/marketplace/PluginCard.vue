@@ -28,7 +28,7 @@ const currentProgress = computed(() => installProgress.value[props.plugin.id])
         </span>
       </div>
 
-      <p class="vms-text-xs vms-text-dim" style="margin: 0; line-height: 1.4; height: 36px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+      <p class="vms-text-xs vms-text-dim" style="margin: 0; line-height: 1.4; height: 36px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;">
         {{ plugin.description }}
       </p>
 
