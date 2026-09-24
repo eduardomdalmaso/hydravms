@@ -46,8 +46,13 @@ const emit = defineEmits<{
     </div>
 
     <!-- Plugins Grid -->
-    <div v-if="plugins.length === 0" class="vms-text-mono vms-text-sm vms-text-dim" style="text-align: center; padding: 3rem;">
-      // NENHUM ANALÍTICO ENCONTRADO COM OS FILTROS SELECIONADOS
+    <div v-if="plugins.length === 0" class="vms-text-mono vms-text-sm vms-text-dim" style="text-align: center; padding: 3.5rem 2rem; border: 1px dashed rgba(255,255,255,0.08); border-radius: 6px; background: rgba(0,0,0,0.2);">
+      <div class="vms-flex-col" style="gap: 0.5rem; align-items: center;">
+        <span class="vms-text-sm vms-font-semibold" style="color: #ffffff;">// CATÁLOGO DE ANALÍTICOS VAZIO</span>
+        <span class="vms-text-2xs vms-text-dim" style="max-width: 440px; line-height: 1.5;">
+          Nenhum pacote de analítico disponível localmente. Novos modelos compilados aparecerão aqui quando exportados pelo HydraForge ou publicados no Hugging Face.
+        </span>
+      </div>
     </div>
     <div v-else class="vms-marketplace-grid">
       <PluginCard

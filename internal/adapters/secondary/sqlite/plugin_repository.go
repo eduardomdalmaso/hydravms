@@ -39,7 +39,7 @@ func (r *PluginRepository) ListPlugins(ctx context.Context, tenantID uuid.UUID) 
 	}
 	defer rows.Close()
 
-	var plugins []*domain.Plugin
+	plugins := make([]*domain.Plugin, 0)
 	for rows.Next() {
 		var (
 			p                                    domain.Plugin

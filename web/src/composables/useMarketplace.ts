@@ -16,9 +16,7 @@ export function useMarketplace() {
 
   const loadPlugins = async () => {
     const list = await fetchPlugins()
-    if (list.length > 0) {
-      plugins.value = list
-    }
+    plugins.value = Array.isArray(list) ? list : []
     isLoaded.value = true
   }
 

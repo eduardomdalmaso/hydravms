@@ -321,45 +321,5 @@ func seedDefaultData(db *sql.DB) error {
 		}
 	}
 
-	// 4. Seed Official AI Vision Analytics Models in Marketplace
-	officialPlugins := []struct {
-		id, name, version, author, category, runtime, entrypoint, hw, desc string
-	}{
-		{
-			"perimeter_intrusion", "INTRUSAO DE PERIMETRO // YOLO26-SAHI", "2.1.0", "Hydra AI Research", "analytics", "binary_elf", "main",
-			"CUDA 13.3 // RTX 5090", "Deteccao de violacao perimetral e cruzamento de linha virtual com fatiamento SAHI e rastreamento multi-alvo.",
-		},
-		{
-			"loitering_detection", "DETECCAO DE PERMANENCIA // LOITERING", "1.4.0", "Hydra AI Research", "analytics", "binary_elf", "main",
-			"CUDA 13.3 // RTX 5090", "Monitoramento de permanencia suspeita em zonas restritas com medidor de tempo customizavel e alertas Gold.",
-		},
-		{
-			"crowd_counting", "CONTAGEM & DENSIDADE DE MULTIDAO", "1.8.0", "Hydra AI Research", "analytics", "binary_elf", "main",
-			"CUDA 13.3 // RTX 5090", "Estimativa de densidade populacional, contagem bidirecional em passagens e alerta de superlotacao.",
-		},
-		{
-			"operator_absence", "AUSENCIA DE POSTO // OPERADOR", "1.2.0", "Hydra AI Research", "analytics", "binary_elf", "main",
-			"CPU // ZERO-COPY SHM", "Auditoria continua de presenca humana em estacoes de trabalho criticas e portarias com timer de tolerancia.",
-		},
-		{
-			"ppe_safety", "SEGURANCA DO TRABALHO // DETECCAO EPI", "2.0.0", "Hydra AI Research", "safety", "binary_elf", "main",
-			"CUDA 13.3 // RTX 5090", "Verificacao automatica do uso de capacetes e coletes refletivos em areas industriais e canteiros de obra.",
-		},
-		{
-			"lpr_vehicle", "RECONHECIMENTO DE PLACAS // LPR SOTA", "3.0.1", "Hydra AI Research", "traffic", "binary_elf", "main",
-			"CUDA 13.3 // RTX 5090", "Leitura ultrarrapida de placas veiculares Mercosul com comparacao instantanea de lista negra/branca.",
-		},
-	}
-
-	for _, op := range officialPlugins {
-		_, _ = db.Exec(`
-			INSERT OR IGNORE INTO plugins (
-				id, name, version, author, category, runtime, entrypoint, min_vms_version,
-				permissions, config_schema, ui_schema, is_official, is_deprecated,
-				hardware_req, description, created_at, updated_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?, '1.0.0', '[]', '{}', '{}', 1, 0, ?, ?, datetime('now'), datetime('now'))
-		`, op.id, op.name, op.version, op.author, op.category, op.runtime, op.entrypoint, op.hw, op.desc)
-	}
-
 	return nil
 }
