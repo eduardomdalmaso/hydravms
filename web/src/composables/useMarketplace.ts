@@ -11,15 +11,14 @@ const events = ref<AnalyticEventRecord[]>([...mockMarketplaceEvents])
 const toast = ref<string | null>(null)
 
 export function useMarketplace() {
-  const searchQuery = ref(''), selectedCategory = ref('ALL'), statusFilter = ref<'ALL' | 'installed' | 'available'>('ALL')
+  const searchQuery = ref(''), statusFilter = ref<'ALL' | 'installed' | 'available'>('ALL')
   const showToast = (msg: string) => { toast.value = msg; setTimeout(() => { toast.value = null }, 3500) }
   const installedPlugins = computed(() => plugins.value.filter(p => p.is_installed))
 
   const filteredPlugins = computed(() => plugins.value.filter(p => {
-    const mCat = selectedCategory.value === 'ALL' || p.category === selectedCategory.value
     const mStat = statusFilter.value === 'ALL' || (statusFilter.value === 'installed' ? p.is_installed : !p.is_installed)
     const mQ = !searchQuery.value || p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    return mCat && mStat && mQ
+    return mStat && mQ
   }))
 
   const installPlugin = (id: string) => {
@@ -72,7 +71,7 @@ export function useMarketplace() {
   const getEventsByPlugin = (pluginId: string) => events.value.filter(e => e.plugin_id === pluginId)
 
   return {
-    plugins, instances, events, searchQuery, selectedCategory, statusFilter, toast,
+    plugins, instances, events, searchQuery, statusFilter, toast,
     installedPlugins, filteredPlugins, showToast, installPlugin, uninstallPlugin, togglePlugin,
     createInstance, toggleInstance, deleteInstance, getPluginById, getInstancesByPlugin, getEventsByPlugin
   }
