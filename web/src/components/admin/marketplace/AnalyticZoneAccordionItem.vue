@@ -32,10 +32,10 @@ const availableClasses = [
 ]
 
 const modes: { id: AnalyticMode; label: string }[] = [
-  { id: 'intrusion', label: 'INTRUSÃO // POLÍGONO DE SEGURANÇA' },
-  { id: 'crowd', label: 'MULTIDÃO // DENSIDADE E OCUPAÇÃO' },
-  { id: 'counting', label: 'CONTAGEM // LINHA BIDIRECIONAL (A <-> B)' },
-  { id: 'dwell_time', label: 'TEMPO EXCEDIDO // PERMANÊNCIA NA ÁREA' }
+  { id: 'intrusion', label: 'INTRUSÃO' },
+  { id: 'crowd', label: 'MULTIDÃO' },
+  { id: 'counting', label: 'CONTAGEM' },
+  { id: 'dwell_time', label: 'TEMPO EXCEDIDO' }
 ]
 
 const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -62,19 +62,12 @@ const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
     <!-- Conteúdo da Zona Expandido -->
     <div v-if="isOpen" class="vms-zone-body">
-      <!-- Nome e Modo em Dropdown -->
-      <div class="vms-flex-col" style="gap: 0.4rem;">
-        <div class="vms-flex-col" style="gap: 2px;">
-          <label class="vms-text-mono vms-text-2xs vms-text-dim">IDENTIFICADOR:</label>
-          <input :value="zone.name" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px;" @input="emit('update:name', ($event.target as HTMLInputElement).value)" />
-        </div>
-
-        <div class="vms-flex-col" style="gap: 2px;">
-          <label class="vms-text-mono vms-text-2xs vms-text-dim">MODO DA REGRA (LISTAGEM):</label>
-          <select :value="zone.mode" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px;" @change="emit('update:mode', ($event.target as HTMLSelectElement).value as AnalyticMode)">
-            <option v-for="m in modes" :key="m.id" :value="m.id">[{{ m.label }}]</option>
-          </select>
-        </div>
+      <!-- Regra Selecionável -->
+      <div class="vms-flex-col" style="gap: 2px;">
+        <label class="vms-text-mono vms-text-2xs vms-text-dim">REGRA:</label>
+        <select :value="zone.mode" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px;" @change="emit('update:mode', ($event.target as HTMLSelectElement).value as AnalyticMode)">
+          <option v-for="m in modes" :key="m.id" :value="m.id">{{ m.label }}</option>
+        </select>
       </div>
 
       <!-- Objetos Alvo em Listagem Selecionável -->

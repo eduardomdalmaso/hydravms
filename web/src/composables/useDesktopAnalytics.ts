@@ -63,25 +63,40 @@ export function useDesktopAnalytics(pluginId: string) {
       rootInstances.value.push(inst)
     }
     isWizardOpen.value = false
-    selectedInstance.value = inst
-    showToast(`[NOVO ANALÍTICO] "${inst.name}" configurado`)
+    selectedInstance.value = null
+    showToast(`[APP ANALÍTICO] "${inst.name}" adicionado com sucesso`)
+  }
+
+  const handleTogglePauseInstance = (inst: AnalyticInstance) => {
+    inst.is_active = !inst.is_active
+    showToast(inst.is_active ? `[RETOMADO] "${inst.name}" em execução` : `[PAUSADO] "${inst.name}" interrompido`)
   }
 
   const handleSaveInstance = (inst: AnalyticInstance) => {
-    selectedInstance.value = null
+    const updateInList = (list: AnalyticInstance[]) => {
+      const idx = list.findIndex(x => x.id === inst.id)
+      if (idx !== -1) list[idx] = { ...inst }
+    }
+    updateInList(rootInstances.value)
+    allFolders.value.forEach(f => updateInList(f.instances))
+    if (selectedInstance.value?.id === inst.id) {
+      selectedInstance.value = { ...inst }
+    }
     showToast(`[SALVO] Analítico "${inst.name}" atualizado`)
   }
 
   const handleDeleteInstance = (id: string) => {
     rootInstances.value = rootInstances.value.filter(i => i.id !== id)
     allFolders.value.forEach(f => { f.instances = f.instances.filter(i => i.id !== id) })
-    selectedInstance.value = null
+    if (selectedInstance.value?.id === id) selectedInstance.value = null
     showToast(`[EXCLUÍDO] Analítico removido com sucesso`)
   }
 
   return {
     searchQuery, currentFolderId, currentFolder, selectedInstance, isFolderModalOpen, isWizardOpen,
     totalInstances, displayedFolders, displayedInstances, pluginFolders, handleDragStart,
-    handleDropOnFolder, handleCreateFolder, handleCreateInstance, handleSaveInstance, handleDeleteInstance
+    handleDropOnFolder, handleCreateFolder, handleCreateInstance, handleTogglePauseInstance,
+    handleSaveInstance, handleDeleteInstance
   }
 }
+

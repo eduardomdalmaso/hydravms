@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { AnalyticInstance, AnalyticFolderNode, PluginManifest, ZoneConfig, Point2D, Line2D } from '../../../types/marketplace'
+import type { AnalyticInstance, AnalyticFolderNode, PluginManifest, ZoneConfig } from '../../../types/marketplace'
 import { fetchCameras } from '../../../services/api'
 import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 import { useMarketplace } from '../../../composables/useMarketplace'
@@ -18,10 +18,12 @@ const hardware = ref<'rtx_5090_cuda' | 'cpu_shm'>(gpuDetected.value ? 'rtx_5090_
 const selectedFolder = ref<string | null>(props.currentFolderId || null)
 const cameras = ref<{ id: string; name: string }[]>([]), activeZoneId = ref<string>('')
 const zones = ref<ZoneConfig[]>([{
-  id: `zone-${Date.now()}-1`, name: 'ZONA 1', mode: 'intrusion', target_classes: ['person', 'car', 'motorcycle', 'cell_phone'],
+  id: `zone-${Date.now()}-1`, name: 'ZONA 1', mode: 'intrusion', target_classes: ['person'],
   polygon: [{ x: 0.15, y: 0.15 }, { x: 0.85, y: 0.15 }, { x: 0.90, y: 0.50 }, { x: 0.85, y: 0.85 }, { x: 0.15, y: 0.85 }, { x: 0.10, y: 0.50 }],
-  line: { p1: { x: 0.20, y: 0.50 }, p2: { x: 0.80, y: 0.50 } }, schedules: [{ id: 's1', days: [1,2,3,4,5], start_time: '00:00', end_time: '23:59' }]
+  line: { p1: { x: 0.20, y: 0.50 }, p2: { x: 0.80, y: 0.50 } }, schedules: [{ id: 's1', days: [], start_time: '00:00', end_time: '23:59' }]
 }])
+
+const isNameValid = computed(() => name.value.trim().length > 0)
 
 onMounted(async () => {
   const cams = await fetchCameras(); cameras.value = cams.map(c => ({ id: c.id, name: c.name }))
@@ -34,21 +36,21 @@ const snapshotUrl = computed(() => camera.value ? getCameraSnapshotUrl(camera.va
 const addZone = () => {
   const count = zones.value.length + 1
   const newZ: ZoneConfig = {
-    id: `zone-${Date.now()}-${count}`, name: `ZONA ${count}`, mode: 'intrusion', target_classes: ['person', 'car'],
+    id: `zone-${Date.now()}-${count}`, name: `ZONA ${count}`, mode: 'intrusion', target_classes: ['person'],
     polygon: [{ x: 0.25, y: 0.25 }, { x: 0.75, y: 0.25 }, { x: 0.80, y: 0.55 }, { x: 0.75, y: 0.75 }, { x: 0.25, y: 0.75 }, { x: 0.20, y: 0.55 }],
-    line: { p1: { x: 0.25, y: 0.50 }, p2: { x: 0.75, y: 0.50 } }, schedules: [{ id: `s-${Date.now()}`, days: [1,2,3,4,5], start_time: '00:00', end_time: '23:59' }]
+    line: { p1: { x: 0.25, y: 0.50 }, p2: { x: 0.75, y: 0.50 } }, schedules: [{ id: `s-${Date.now()}`, days: [], start_time: '00:00', end_time: '23:59' }]
   }
   zones.value.push(newZ); activeZoneId.value = newZ.id
 }
 const deleteZone = (idx: number) => { if (zones.value.length > 1) { zones.value.splice(idx, 1); activeZoneId.value = zones.value[0].id } }
-const addSchedule = (zId: string) => { const z = zones.value.find(item => item.id === zId); if (z) { if (!z.schedules) z.schedules = []; z.schedules.push({ id: `s-${Date.now()}`, days: [1,2,3,4,5], start_time: '18:00', end_time: '06:00' }) } }
+const addSchedule = (zId: string) => { const z = zones.value.find(item => item.id === zId); if (z) { if (!z.schedules) z.schedules = []; z.schedules.push({ id: `s-${Date.now()}`, days: [], start_time: '00:00', end_time: '23:59' }) } }
 
 const handleSave = () => {
+  if (!isNameValid.value || activeTab.value !== 'perf') return
   const camObj = cameras.value.find(c => c.id === camera.value)
   const newInst: AnalyticInstance = {
     id: `inst-${Date.now()}`, plugin_id: props.plugin.id, plugin_name: props.plugin.name,
-    name: name.value.trim() || `${props.plugin.name} // ${camObj?.name || 'Câmera'}`,
-    camera_id: camera.value || 'cam_stream', camera_name: camObj?.name || 'Câmera',
+    name: name.value.trim(), camera_id: camera.value || 'cam_stream', camera_name: camObj?.name || 'Câmera',
     stream_type: 'main_1080p', hardware_target: hardware.value, confidence_threshold: 0.70,
     roi_mode: 'custom_polygon', fps_rate: fps.value, motion_gated: motionGated.value, auto_sahi: true,
     specific_params: { zones_count: zones.value.length }, zones: zones.value, is_active: true, detections_count: 0, created_at: new Date().toISOString()
@@ -84,14 +86,17 @@ const handleSave = () => {
         <div class="vms-wizard-right-pane">
           <div class="vms-flex-row" style="gap: 0.35rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.4rem;">
             <button class="vms-btn vms-btn-sm" :class="activeTab === 'rules' ? 'vms-btn-primary' : 'vms-btn-ghost'" style="font-size: 10px; padding: 3px 8px;" @click="activeTab = 'rules'">1. REGRAS & ZONAS</button>
-            <button class="vms-btn vms-btn-sm" :class="activeTab === 'perf' ? 'vms-btn-primary' : 'vms-btn-ghost'" style="font-size: 10px; padding: 3px 8px;" @click="activeTab = 'perf'">2. PERFORMANCE & HARDWARE</button>
+            <button class="vms-btn vms-btn-sm" :class="activeTab === 'perf' ? 'vms-btn-primary' : 'vms-btn-ghost'" :disabled="!isNameValid" :style="{ opacity: !isNameValid ? 0.4 : 1, cursor: !isNameValid ? 'not-allowed' : 'pointer' }" style="font-size: 10px; padding: 3px 8px;" @click="isNameValid && (activeTab = 'perf')">2. PERFORMANCE & HARDWARE</button>
           </div>
 
           <!-- Aba 1: Regras & Zonas -->
           <div v-if="activeTab === 'rules'" class="vms-flex-col" style="gap: 0.55rem; flex: 1;">
             <div class="vms-flex-row" style="gap: 0.5rem;">
-              <input :value="name" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1.3;" placeholder="Nome do Analítico..." @input="name = ($event.target as HTMLInputElement).value" />
-              <select :value="camera" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1;" @change="camera = ($event.target as HTMLSelectElement).value"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+              <div class="vms-flex-col" style="gap: 2px; flex: 1.3;">
+                <input :value="name" class="vms-auth-input" :style="{ borderColor: !isNameValid && name !== '' ? '#ff003c' : 'var(--vms-border)' }" style="padding: 4px 6px; font-size: 11px;" placeholder="Nome do Analítico (Obrigatório)..." @input="name = ($event.target as HTMLInputElement).value" />
+                <span v-if="!isNameValid" class="vms-text-mono vms-text-2xs" style="color: #ff003c; font-size: 9px;">* NOME OBRIGATÓRIO PARA AVANÇAR</span>
+              </div>
+              <select :value="camera" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1; height: 28px;" @change="camera = ($event.target as HTMLSelectElement).value"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
             </div>
             <div class="vms-flex-between" style="align-items: center; margin-top: 0.2rem;">
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">ZONAS DE VÍDEO (ACCORDION)</span>
@@ -134,9 +139,32 @@ const handleSave = () => {
           </div>
         </div>
       </div>
+
+      <!-- Footer com Fluxo Obrigatório -->
       <div class="vms-modal-footer vms-flex-between">
-        <button class="vms-btn vms-btn-secondary vms-btn-sm" @click="emit('close')">CANCELAR</button>
-        <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-weight: bold;" @click="handleSave">SALVAR</button>
+        <button v-if="activeTab === 'rules'" class="vms-btn vms-btn-secondary vms-btn-sm" @click="emit('close')">CANCELAR</button>
+        <button v-else class="vms-btn vms-btn-secondary vms-btn-sm" @click="activeTab = 'rules'">← VOLTAR</button>
+
+        <button
+          v-if="activeTab === 'rules'"
+          :disabled="!isNameValid"
+          class="vms-btn vms-btn-primary vms-btn-sm"
+          :style="{ opacity: !isNameValid ? 0.4 : 1, cursor: !isNameValid ? 'not-allowed' : 'pointer' }"
+          style="font-weight: bold;"
+          @click="isNameValid && (activeTab = 'perf')"
+        >
+          AVANÇAR →
+        </button>
+        <button
+          v-else
+          :disabled="!isNameValid"
+          class="vms-btn vms-btn-primary vms-btn-sm"
+          :style="{ opacity: !isNameValid ? 0.4 : 1, cursor: !isNameValid ? 'not-allowed' : 'pointer' }"
+          style="font-weight: bold;"
+          @click="handleSave"
+        >
+          SALVAR
+        </button>
       </div>
     </div>
   </div>

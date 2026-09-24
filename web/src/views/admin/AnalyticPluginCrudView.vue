@@ -16,7 +16,8 @@ const plugin = computed(() => getPluginById(props.pluginId))
 const {
   searchQuery, currentFolderId, currentFolder, selectedInstance, isFolderModalOpen, isWizardOpen,
   totalInstances, displayedFolders, displayedInstances, pluginFolders, handleDragStart,
-  handleDropOnFolder, handleCreateFolder, handleCreateInstance, handleSaveInstance, handleDeleteInstance
+  handleDropOnFolder, handleCreateFolder, handleCreateInstance, handleTogglePauseInstance,
+  handleSaveInstance, handleDeleteInstance
 } = useDesktopAnalytics(props.pluginId)
 </script>
 
@@ -60,14 +61,32 @@ const {
           <div v-if="displayedInstances.length > 0" class="vms-flex-col" style="gap: 0.4rem; border-top: 1px solid var(--vms-border); padding-top: 0.65rem;">
             <div class="vms-desktop-section-title">// ANALÍTICOS NA RAIZ (ARRASTE PARA UMA PASTA)</div>
             <div class="vms-desktop-grid">
-              <AnalyticAppCard v-for="i in displayedInstances" :key="i.id" :instance="i" @dragstart="handleDragStart" @select="(inst) => selectedInstance = inst" />
+              <AnalyticAppCard
+                v-for="i in displayedInstances"
+                :key="i.id"
+                :instance="i"
+                @dragstart="handleDragStart"
+                @select="(inst) => selectedInstance = inst"
+                @edit="(inst) => selectedInstance = inst"
+                @pause="handleTogglePauseInstance"
+                @delete="handleDeleteInstance"
+              />
             </div>
           </div>
         </div>
 
         <div v-else class="vms-desktop-grid">
           <div v-if="displayedInstances.length === 0" class="vms-text-mono vms-text-xs vms-text-dim" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">// PASTA VAZIA (CLIQUE EM [+] PARA CRIAR ANALÍTICO)</div>
-          <AnalyticAppCard v-for="i in displayedInstances" :key="i.id" :instance="i" @dragstart="handleDragStart" @select="(inst) => selectedInstance = inst" />
+          <AnalyticAppCard
+            v-for="i in displayedInstances"
+            :key="i.id"
+            :instance="i"
+            @dragstart="handleDragStart"
+            @select="(inst) => selectedInstance = inst"
+            @edit="(inst) => selectedInstance = inst"
+            @pause="handleTogglePauseInstance"
+            @delete="handleDeleteInstance"
+          />
         </div>
       </div>
     </div>
