@@ -2,9 +2,19 @@
 bin/
 dist/
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
+
+# Database & Storage
+*.db
+*.db-*
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+storage/
 
 # Node & Frontend
 node_modules/
