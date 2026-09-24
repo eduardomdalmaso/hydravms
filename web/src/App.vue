@@ -14,7 +14,7 @@ import InteractiveHelpModal from './components/common/help/InteractiveHelpModal.
 
 const AdminCenterView = defineAsyncComponent(() => import('./views/admin/AdminCenterView.vue'))
 
-const { isAuthenticated, isLoading, errorMessage, username, isAdmin, handleLogin, handleLogout } = useAuth()
+const { isAuthenticated, isLoading, errorMessage, username, isAdmin, checkSession, handleLogin, handleLogout } = useAuth()
 const { isDrawerOpen, alerts, unreadCount, toggleDrawer, acknowledgeAlert, clearAllAlerts } = useAnalyticsAlerts()
 const { branding } = useBranding()
 const { isHelpOpen, currentHelpPageId, toggleHelp, closeHelp } = useHelpContext()
@@ -51,11 +51,14 @@ watch([currentMode, branding], ([mode]) => {
   }
 }, { deep: true, immediate: true })
 
-onMounted(() => {
+onMounted(async () => {
   syncFromHash()
   window.addEventListener('hashchange', syncFromHash)
   if (isAuthenticated.value) {
-    initEventSocket()
+    const valid = await checkSession()
+    if (valid) {
+      initEventSocket()
+    }
   }
 })
 

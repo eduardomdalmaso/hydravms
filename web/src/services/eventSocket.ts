@@ -63,7 +63,7 @@ export function initEventSocket() {
       state.isConnected = false
       if (!isExplicitlyClosed) {
         const currentUrl = getWsUrl()
-        if (!currentUrl) return
+        if (!currentUrl || retryAttempts > 5) return
         const delay = Math.min(15000, Math.pow(1.5, retryAttempts++) * 1000 + 1000)
         setTimeout(initEventSocket, delay)
       }
@@ -71,7 +71,7 @@ export function initEventSocket() {
 
     ws.onerror = () => ws?.close()
   } catch {
-    setTimeout(initEventSocket, 5000)
+    if (retryAttempts <= 5) setTimeout(initEventSocket, 5000)
   }
 }
 

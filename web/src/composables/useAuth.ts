@@ -23,6 +23,27 @@ export function useAuth() {
 
   const isAdmin = computed(() => userRole.value === 'admin')
 
+  const checkSession = async () => {
+    const token = localStorage.getItem('hydra_token')
+    if (!token) {
+      handleLogout()
+      return false
+    }
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8083'
+      const res = await fetch(`${apiBase}/api/v1/cameras?limit=1`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.status === 401) {
+        handleLogout()
+        return false
+      }
+      return true
+    } catch {
+      return true
+    }
+  }
+
   const handleLogin = async (creds: LoginCredentials) => {
     isLoading.value = true
     errorMessage.value = null
@@ -77,6 +98,7 @@ export function useAuth() {
     username,
     userRole,
     isAdmin,
+    checkSession,
     handleLogin,
     handleLogout
   }
