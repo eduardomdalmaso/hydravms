@@ -95,12 +95,18 @@ const startFpsStream = () => {
   if (fpsTimerId) clearInterval(fpsTimerId)
   if (!props.cameraId || !props.isActive) return
 
-  const targetFps = Math.max(1, Math.min(50, props.fps || 15))
+  // Fluid UI refresh rate (minimum 15 FPS for smooth monitoring)
+  const targetFps = Math.max(15, Math.min(50, props.fps || 15))
   const intervalMs = Math.floor(1000 / targetFps)
 
   const fetchNextFrame = () => {
     const base = getCameraSnapshotUrl(props.cameraId, false)
-    currentFrameUrl.value = `${base}&_t=${Date.now()}`
+    const nextUrl = `${base}&_t=${Date.now()}`
+    const img = new Image()
+    img.onload = () => {
+      currentFrameUrl.value = nextUrl
+    }
+    img.src = nextUrl
   }
 
   fetchNextFrame()

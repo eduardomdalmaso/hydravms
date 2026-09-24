@@ -24,9 +24,11 @@ var (
 	space   = []byte{' '}
 )
 
-type ClientCommand struct {
+type InboundMessage struct {
 	Action string   `json:"action"` // "subscribe", "unsubscribe", "ping"
 	Topics []string `json:"topics"`
+	Type   string   `json:"type"`
+	Source string   `json:"source"`
 }
 
 // Client represents a single active WebSocket subscriber.
@@ -67,28 +69,36 @@ func (c *Client) Matches(topic string) bool {
 }
 
 func (c *Client) handleMessage(msg []byte) {
-	var cmd ClientCommand
-	if err := json.Unmarshal(msg, &cmd); err != nil {
+	var in InboundMessage
+	if err := json.Unmarshal(msg, &in); err != nil {
 		return
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	if in.Action != "" {
+		c.mu.Lock()
+		defer c.mu.Unlock()
 
-	switch strings.ToLower(cmd.Action) {
-	case "subscribe":
-		for _, t := range cmd.Topics {
-			c.topics[strings.TrimSpace(t)] = true
+		switch strings.ToLower(in.Action) {
+		case "subscribe":
+			for _, t := range in.Topics {
+				c.topics[strings.TrimSpace(t)] = true
+			}
+		case "unsubscribe":
+			for _, t := range in.Topics {
+				delete(c.topics, strings.TrimSpace(t))
+			}
+		case "ping":
+			select {
+			case c.Send <- []byte(`{"type":"pong"}`):
+			default:
+			}
 		}
-	case "unsubscribe":
-		for _, t := range cmd.Topics {
-			delete(c.topics, strings.TrimSpace(t))
-		}
-	case "ping":
-		select {
-		case c.Send <- []byte(`{"type":"pong"}`):
-		default:
-		}
+		return
+	}
+
+	// Inbound CloudEvent broadcast from publisher worker
+	if in.Type != "" {
+		c.Hub.BroadcastToTenant(c.TenantID, in.Type, msg)
 	}
 }
 

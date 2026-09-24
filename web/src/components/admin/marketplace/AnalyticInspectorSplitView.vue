@@ -116,6 +116,7 @@ onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
           :camera-id="localInst.camera_id"
           :camera-name="localInst.camera_name"
           :analytic-name="localInst.name"
+          :is-active="formActive"
         />
       </div>
     </div>

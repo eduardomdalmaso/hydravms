@@ -7,6 +7,7 @@ const props = defineProps<{
   cameraId: string
   cameraName: string
   analyticName: string
+  isActive?: boolean
 }>()
 
 interface LocalSnapshot {
@@ -27,6 +28,7 @@ onMounted(() => {
   const baseImg = getCameraSnapshotUrl(props.cameraId, false)
   
   unsubscribe = subscribe((evt) => {
+    if (props.isActive === false) return
     const isTargetCam = evt.subject === props.cameraId || evt.data?.camera_id === props.cameraId
     if (isTargetCam) {
       const snapUrl = evt.data?.snapshot_url || baseImg
@@ -58,7 +60,9 @@ onUnmounted(() => {
   <div class="vms-card vms-flex-col" style="flex: 1; height: 100%; max-height: calc(100vh - 210px); display: flex; flex-direction: column; background: #0b0e14; border: 1px solid var(--vms-border); border-radius: 8px; overflow: hidden;">
     <div class="vms-flex-between" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--vms-border); background: rgba(255,255,255,0.02);">
       <span class="vms-text-mono vms-text-xs vms-font-semibold" style="color: var(--vms-neu-accent-orange);">SNAPSHOTS // DETECÇÕES</span>
-      <span class="vms-badge vms-badge-green" style="font-size: 9px;">{{ snapshots.length }} EVENTOS</span>
+      <span class="vms-badge" :class="isActive !== false ? 'vms-badge-green' : 'vms-badge-orange'" style="font-size: 9px;">
+        {{ isActive !== false ? `${snapshots.length} EVENTOS` : 'PAUSADO' }}
+      </span>
     </div>
 
     <div class="vms-flex-col" style="padding: 0.75rem; gap: 0.65rem; overflow-y: auto; flex: 1;">
