@@ -12,6 +12,7 @@ type Router struct {
 	authHandler        *AuthHandler
 	folderHandler      *FolderHandler
 	cameraHandler      *CameraHandler
+	pluginHandler      *PluginHandler
 	storagePoolHandler *StoragePoolHandler
 	clusterNodeHandler *ClusterNodeHandler
 	auditHandler       *AuditHandler
@@ -25,6 +26,7 @@ func NewRouter(
 	authHandler *AuthHandler,
 	folderHandler *FolderHandler,
 	cameraHandler *CameraHandler,
+	pluginHandler *PluginHandler,
 	storagePoolHandler *StoragePoolHandler,
 	clusterNodeHandler *ClusterNodeHandler,
 	auditHandler *AuditHandler,
@@ -37,6 +39,7 @@ func NewRouter(
 		authHandler:        authHandler,
 		folderHandler:      folderHandler,
 		cameraHandler:      cameraHandler,
+		pluginHandler:      pluginHandler,
 		storagePoolHandler: storagePoolHandler,
 		clusterNodeHandler: clusterNodeHandler,
 		auditHandler:       auditHandler,
@@ -63,6 +66,12 @@ func (rt *Router) BuildHandler() http.Handler {
 	mux.HandleFunc("/api/v1/folders/", rt.folderHandler.HandleFolderByID)
 	mux.HandleFunc("/api/v1/cameras", rt.cameraHandler.HandleCameras)
 	mux.HandleFunc("/api/v1/cameras/", rt.cameraHandler.HandleCameraByID)
+
+	// Plugins & Marketplace Endpoints
+	if rt.pluginHandler != nil {
+		mux.HandleFunc("/api/v1/plugins", rt.pluginHandler.HandlePlugins)
+		mux.HandleFunc("/api/v1/plugins/", rt.pluginHandler.HandlePluginAction)
+	}
 
 	// Cluster Nodes (HydraStream & HydraForge Instances) - Admin Only
 	if rt.clusterNodeHandler != nil {

@@ -1,9 +1,8 @@
 import { ref, computed } from 'vue'
 import type { AnalyticFolderNode, AnalyticInstance } from '../types/marketplace'
-import { mockMarketplaceFolders } from '../data/mockMarketplaceFolders'
 import { useMarketplace } from './useMarketplace'
 
-const allFolders = ref<AnalyticFolderNode[]>([...mockMarketplaceFolders])
+const allFolders = ref<AnalyticFolderNode[]>([])
 const rootInstances = ref<AnalyticInstance[]>([])
 
 export function useDesktopAnalytics(pluginId: string) {

@@ -215,11 +215,55 @@ func initSchema(db *sql.DB) error {
 		updated_at DATETIME NOT NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS plugins (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		version TEXT NOT NULL,
+		author TEXT,
+		category TEXT NOT NULL DEFAULT 'analytics',
+		runtime TEXT NOT NULL DEFAULT 'python3',
+		entrypoint TEXT NOT NULL,
+		min_vms_version TEXT NOT NULL DEFAULT '1.0.0',
+		permissions TEXT NOT NULL DEFAULT '[]',
+		config_schema TEXT NOT NULL DEFAULT '{}',
+		ui_schema TEXT NOT NULL DEFAULT '{}',
+		is_official BOOLEAN NOT NULL DEFAULT 1,
+		is_deprecated BOOLEAN NOT NULL DEFAULT 0,
+		package_url TEXT,
+		package_checksum TEXT,
+		hardware_req TEXT,
+		description TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS tenant_plugins (
+		id TEXT PRIMARY KEY,
+		tenant_id TEXT NOT NULL,
+		plugin_id TEXT NOT NULL,
+		installed_version TEXT NOT NULL,
+		previous_version TEXT,
+		last_stable_version TEXT,
+		is_enabled BOOLEAN NOT NULL DEFAULT 1,
+		status TEXT NOT NULL DEFAULT 'running',
+		pid INTEGER,
+		assigned_gpu_device TEXT DEFAULT '0',
+		config_values TEXT NOT NULL DEFAULT '{}',
+		last_health_check DATETIME,
+		error_message TEXT,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NOT NULL,
+		FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+		FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
+		UNIQUE (tenant_id, plugin_id)
+	);
+
 	CREATE INDEX IF NOT EXISTS idx_cameras_tenant ON cameras(tenant_id);
 	CREATE INDEX IF NOT EXISTS idx_folders_tenant ON folders(tenant_id);
 	CREATE INDEX IF NOT EXISTS idx_events_camera_time ON events(tenant_id, camera_id, triggered_at);
 	CREATE INDEX IF NOT EXISTS idx_recordings_range ON recordings(tenant_id, camera_id, start_time, end_time);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_tenant ON audit_logs(tenant_id, created_at);
+	CREATE INDEX IF NOT EXISTS idx_tenant_plugins_tenant ON tenant_plugins(tenant_id, is_enabled);
 	`
 	_, err := db.Exec(schema)
 	return err
@@ -275,6 +319,46 @@ func seedDefaultData(db *sql.DB) error {
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'H.264', 1, datetime('now'), datetime('now'))
 			`, sc.id, defaultTenantID, sc.name, sc.protocol, sc.rtsp, sc.sub, sc.loc, sc.status, sc.res, sc.fps, sc.bitrate)
 		}
+	}
+
+	// 4. Seed Official AI Vision Analytics Models in Marketplace
+	officialPlugins := []struct {
+		id, name, version, author, category, runtime, entrypoint, hw, desc string
+	}{
+		{
+			"perimeter_intrusion", "INTRUSAO DE PERIMETRO // YOLO26-SAHI", "2.1.0", "Hydra AI Research", "analytics", "binary_elf", "main",
+			"CUDA 13.3 // RTX 5090", "Deteccao de violacao perimetral e cruzamento de linha virtual com fatiamento SAHI e rastreamento multi-alvo.",
+		},
+		{
+			"loitering_detection", "DETECCAO DE PERMANENCIA // LOITERING", "1.4.0", "Hydra AI Research", "analytics", "binary_elf", "main",
+			"CUDA 13.3 // RTX 5090", "Monitoramento de permanencia suspeita em zonas restritas com medidor de tempo customizavel e alertas Gold.",
+		},
+		{
+			"crowd_counting", "CONTAGEM & DENSIDADE DE MULTIDAO", "1.8.0", "Hydra AI Research", "analytics", "binary_elf", "main",
+			"CUDA 13.3 // RTX 5090", "Estimativa de densidade populacional, contagem bidirecional em passagens e alerta de superlotacao.",
+		},
+		{
+			"operator_absence", "AUSENCIA DE POSTO // OPERADOR", "1.2.0", "Hydra AI Research", "analytics", "binary_elf", "main",
+			"CPU // ZERO-COPY SHM", "Auditoria continua de presenca humana em estacoes de trabalho criticas e portarias com timer de tolerancia.",
+		},
+		{
+			"ppe_safety", "SEGURANCA DO TRABALHO // DETECCAO EPI", "2.0.0", "Hydra AI Research", "safety", "binary_elf", "main",
+			"CUDA 13.3 // RTX 5090", "Verificacao automatica do uso de capacetes e coletes refletivos em areas industriais e canteiros de obra.",
+		},
+		{
+			"lpr_vehicle", "RECONHECIMENTO DE PLACAS // LPR SOTA", "3.0.1", "Hydra AI Research", "traffic", "binary_elf", "main",
+			"CUDA 13.3 // RTX 5090", "Leitura ultrarrapida de placas veiculares Mercosul com comparacao instantanea de lista negra/branca.",
+		},
+	}
+
+	for _, op := range officialPlugins {
+		_, _ = db.Exec(`
+			INSERT OR IGNORE INTO plugins (
+				id, name, version, author, category, runtime, entrypoint, min_vms_version,
+				permissions, config_schema, ui_schema, is_official, is_deprecated,
+				hardware_req, description, created_at, updated_at
+			) VALUES (?, ?, ?, ?, ?, ?, ?, '1.0.0', '[]', '{}', '{}', 1, 0, ?, ?, datetime('now'), datetime('now'))
+		`, op.id, op.name, op.version, op.author, op.category, op.runtime, op.entrypoint, op.hw, op.desc)
 	}
 
 	return nil

@@ -37,6 +37,7 @@ func main() {
 	var eventRepo ports.EventRepository
 	var recordingRepo ports.RecordingRepository
 	var clusterNodeStore httpAdapter.ClusterNodeStore
+	var pluginRepo ports.PluginRepository
 	var pgPool *pgxpool.Pool
 
 	dbDriver := os.Getenv("DB_DRIVER")
@@ -91,6 +92,7 @@ func main() {
 			eventRepo = sqliteAdapter.NewEventRepository(sqliteDB)
 			recordingRepo = sqliteAdapter.NewRecordingRepository(sqliteDB)
 			clusterNodeStore = sqliteAdapter.NewClusterNodeRepository(sqliteDB)
+			pluginRepo = sqliteAdapter.NewPluginRepository(sqliteDB)
 		}
 	}
 
@@ -98,6 +100,10 @@ func main() {
 	folderService := application.NewFolderService(folderRepo)
 	cameraService := application.NewCameraService(cameraRepo)
 	auditService := application.NewAuditService(auditRepo)
+	var pluginService *application.PluginService
+	if pluginRepo != nil {
+		pluginService = application.NewPluginService(pluginRepo)
+	}
 
 	// Record initial system boot audit record
 	_ = auditService.RecordAction(
@@ -189,6 +195,10 @@ func main() {
 	auditHandler := httpAdapter.NewAuditHandler(auditService)
 	adminDataHandler := httpAdapter.NewAdminDataHandler(pgPool)
 
+	var pluginHandler *httpAdapter.PluginHandler
+	if pluginService != nil {
+		pluginHandler = httpAdapter.NewPluginHandler(pluginService)
+	}
 	var storagePoolHandler *httpAdapter.StoragePoolHandler
 	if storagePoolService != nil {
 		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
@@ -203,6 +213,7 @@ func main() {
 		authHandler,
 		folderHandler,
 		cameraHandler,
+		pluginHandler,
 		storagePoolHandler,
 		clusterNodeHandler,
 		auditHandler,
