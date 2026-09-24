@@ -92,11 +92,8 @@ const handleSave = () => {
           <!-- Aba 1: Regras & Zonas -->
           <div v-if="activeTab === 'rules'" class="vms-flex-col" style="gap: 0.55rem; flex: 1;">
             <div class="vms-flex-row" style="gap: 0.5rem;">
-              <div class="vms-flex-col" style="gap: 2px; flex: 1.3;">
-                <input :value="name" class="vms-auth-input" :style="{ borderColor: !isNameValid && name !== '' ? '#ff003c' : 'var(--vms-border)' }" style="padding: 4px 6px; font-size: 11px;" placeholder="Nome do Analítico (Obrigatório)..." @input="name = ($event.target as HTMLInputElement).value" />
-                <span v-if="!isNameValid" class="vms-text-mono vms-text-2xs" style="color: #ff003c; font-size: 9px;">* NOME OBRIGATÓRIO PARA AVANÇAR</span>
-              </div>
-              <select :value="camera" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1; height: 28px;" @change="camera = ($event.target as HTMLSelectElement).value"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
+              <input :value="name" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1.3;" placeholder="Nome do Analítico..." @input="name = ($event.target as HTMLInputElement).value" />
+              <select :value="camera" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px; flex: 1;" @change="camera = ($event.target as HTMLSelectElement).value"><option v-for="c in cameras" :key="c.id" :value="c.id">{{ c.name }}</option></select>
             </div>
             <div class="vms-flex-between" style="align-items: center; margin-top: 0.2rem;">
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">ZONAS DE VÍDEO (ACCORDION)</span>
