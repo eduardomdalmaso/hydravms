@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PluginManifest } from '../../../types/marketplace'
+import { useMarketplace } from '../../../composables/useMarketplace'
 
-defineProps<{ plugin: PluginManifest }>()
+const props = defineProps<{ plugin: PluginManifest }>()
 const emit = defineEmits<{
   (e: 'install', id: string): void
   (e: 'uninstall', id: string): void
   (e: 'toggle', id: string): void
   (e: 'details', plugin: PluginManifest): void
 }>()
+
+const { installProgress } = useMarketplace()
+const currentProgress = computed(() => installProgress.value[props.plugin.id])
 </script>
 
 <template>
@@ -31,6 +36,17 @@ const emit = defineEmits<{
         <span class="vms-badge vms-badge-secondary" style="font-size: 9px; font-family: var(--vms-font-jetbrains);">{{ plugin.hardware_req }}</span>
         <span v-if="plugin.is_installed" class="vms-badge vms-badge-orange" style="font-size: 9px;">MÓDULO ATIVO NO MENU</span>
       </div>
+
+      <!-- Barra de Progresso com Compilação TensorRT -->
+      <div v-if="currentProgress" class="vms-flex-col" style="gap: 3px; margin-top: 0.4rem; padding: 0.4rem; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid rgba(0, 240, 255, 0.2);">
+        <div class="vms-flex-between" style="font-size: 9px; font-family: var(--vms-font-mono); color: #00f0ff;">
+          <span>{{ currentProgress.step }}</span>
+          <span>{{ currentProgress.percent }}%</span>
+        </div>
+        <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+          <div :style="{ width: `${currentProgress.percent}%` }" style="height: 100%; background: linear-gradient(90deg, #ff5e3a, #00f0ff); transition: width 0.3s;" />
+        </div>
+      </div>
     </div>
 
     <!-- Actions Area -->
@@ -49,8 +65,8 @@ const emit = defineEmits<{
           </button>
         </template>
         <template v-else>
-          <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-size: 11px; padding: 4px 14px;" :disabled="plugin.status === 'updating'" @click="emit('install', plugin.id)">
-            {{ plugin.status === 'updating' ? 'BAIXANDO...' : 'INSTALAR' }}
+          <button class="vms-btn vms-btn-primary vms-btn-sm" style="font-size: 11px; padding: 4px 14px;" :disabled="plugin.status === 'updating' || !!currentProgress" @click="emit('install', plugin.id)">
+            {{ plugin.status === 'updating' || currentProgress ? 'PROCESSANDO...' : 'INSTALAR' }}
           </button>
         </template>
       </div>

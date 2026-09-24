@@ -115,15 +115,21 @@ export async function deleteRemoteCamera(id: string): Promise<boolean> {
   } catch { return false }
 }
 
-export async function fetchPlugins(): Promise<any[]> {
+export async function fetchPlugins(): Promise<{ plugins: any[]; gpu_detected: boolean; gpu_telemetry: any }> {
   try {
     const res = await authedFetch(`${API_BASE}/api/v1/plugins`, {
       headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000)
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    return Array.isArray(data.plugins) ? data.plugins : []
-  } catch { return [] }
+    return {
+      plugins: Array.isArray(data.plugins) ? data.plugins : [],
+      gpu_detected: !!data.gpu_detected,
+      gpu_telemetry: data.gpu_telemetry || null
+    }
+  } catch {
+    return { plugins: [], gpu_detected: false, gpu_telemetry: null }
+  }
 }
 
 export async function installRemotePlugin(id: string): Promise<boolean> {

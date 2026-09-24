@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { AnalyticInstance, AnalyticFolderNode, PluginManifest, AnalyticMode, Point2D, Line2D } from '../../../types/marketplace'
 import { fetchCameras } from '../../../services/api'
+import { useMarketplace } from '../../../composables/useMarketplace'
 import AnalyticWizardStep1 from './AnalyticWizardStep1.vue'
 import AnalyticWizardStep2 from './AnalyticWizardStep2.vue'
 
@@ -14,9 +15,10 @@ const emit = defineEmits<{
   (e: 'save', payload: { inst: AnalyticInstance; targetFolderId: string | null }): void
 }>()
 
+const { gpuDetected } = useMarketplace()
 const step = ref<1 | 2>(1)
 const name = ref(''), camera = ref(''), stream = ref<'main_1080p' | 'sub_stream'>('main_1080p')
-const hardware = ref<'rtx_5090_cuda' | 'cpu_shm'>('rtx_5090_cuda')
+const hardware = ref<'rtx_5090_cuda' | 'cpu_shm'>(gpuDetected.value ? 'rtx_5090_cuda' : 'cpu_shm')
 const mode = ref<AnalyticMode>('intrusion')
 const fps = ref(15), motionGated = ref(true), autoSahi = ref(true)
 const scheduleStart = ref('18:00'), scheduleEnd = ref('06:00'), selectedDays = ref([1,2,3,4,5])
@@ -101,7 +103,7 @@ const handleSave = () => {
           v-else
           :fps="fps" :motion-gated="motionGated" :auto-sahi="autoSahi"
           :schedule-start="scheduleStart" :schedule-end="scheduleEnd" :selected-days="selectedDays"
-          :hardware="hardware"
+          :hardware="hardware" :gpu-detected="gpuDetected"
           @update:fps="fps = $event" @update:motion-gated="motionGated = $event"
           @update:auto-sahi="autoSahi = $event" @update:schedule-start="scheduleStart = $event"
           @update:schedule-end="scheduleEnd = $event" @toggle:day="toggleDay" @update:hardware="hardware = $event"

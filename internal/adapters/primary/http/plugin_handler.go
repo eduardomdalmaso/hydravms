@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"hydravms/internal/adapters/primary/http/middleware"
+	"hydravms/internal/adapters/secondary/gpu"
 	"hydravms/internal/application"
 
 	"github.com/google/uuid"
@@ -35,9 +36,20 @@ func (h *PluginHandler) HandlePlugins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	liveGPU := gpu.QueryGPU()
+	for _, p := range plugins {
+		if liveGPU.Detected {
+			p.HardwareReq = "CUDA 13.3 // " + liveGPU.Model
+		} else {
+			p.HardwareReq = "CPU // ZERO-COPY SHM (AVX2)"
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"plugins": plugins,
-		"total":   len(plugins),
+		"plugins":       plugins,
+		"total":         len(plugins),
+		"gpu_detected":  liveGPU.Detected,
+		"gpu_telemetry": liveGPU,
 	})
 }
 

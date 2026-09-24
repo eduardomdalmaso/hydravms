@@ -7,6 +7,7 @@ defineProps<{
   scheduleEnd: string
   selectedDays: number[]
   hardware: 'rtx_5090_cuda' | 'cpu_shm'
+  gpuDetected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -61,11 +62,17 @@ const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
       </div>
     </div>
 
-    <!-- Hardware Target -->
+    <!-- Hardware Target Dinâmico -->
     <div class="vms-flex-row" style="gap: 0.75rem;">
       <div class="vms-flex-col" style="gap: 0.2rem; flex: 1;">
-        <label class="vms-text-xs vms-font-semibold">TARGET DE HARDWARE:</label>
-        <select :value="hardware" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;" @change="emit('update:hardware', ($event.target as HTMLSelectElement).value as any)"><option value="rtx_5090_cuda">GPU RTX 5090 (CUDA / TensorRT)</option><option value="cpu_shm">CPU SHM (ONNX Runtime)</option></select>
+        <div class="vms-flex-between">
+          <label class="vms-text-xs vms-font-semibold">TARGET DE HARDWARE:</label>
+          <span v-if="!gpuDetected" class="vms-badge vms-badge-secondary" style="font-size: 9px; color: #ff003c;">[GPU INDISPONÍVEL]</span>
+        </div>
+        <select :value="hardware" class="vms-auth-input" style="padding: 5px 8px; font-size: 11px;" @change="emit('update:hardware', ($event.target as HTMLSelectElement).value as any)">
+          <option value="rtx_5090_cuda" :disabled="!gpuDetected">GPU RTX 5090 (CUDA / TensorRT)</option>
+          <option value="cpu_shm">CPU SHM (ONNX Runtime)</option>
+        </select>
       </div>
     </div>
   </div>
