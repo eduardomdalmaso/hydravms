@@ -16,27 +16,29 @@ const activeEventModal = ref<AnalyticEventRecord | null>(null)
 
 const pluginEvents = computed(() => events.value.filter(e => e.plugin_id === props.pluginId))
 
-const filteredEvents = computed(() => pluginEvents.value.filter(e => {
-  const matchCamera = expCameraId.value === 'ALL' || e.camera_id === expCameraId.value
-  const matchObj = expObject.value === 'ALL' || e.object_label.toLowerCase() === expObject.value.toLowerCase()
+const filteredEvents = computed(() => {
+  const list = pluginEvents.value.filter(e => {
+    const matchCamera = expCameraId.value === 'ALL' || e.camera_id === expCameraId.value
+    const matchObj = expObject.value === 'ALL' || e.object_label.toLowerCase() === expObject.value.toLowerCase()
 
-  let matchTime = true
-  if (e.timestamp) {
-    const evtTime = new Date(e.timestamp).getTime()
-    if (expStartDate.value) {
-      const startIso = `${expStartDate.value}T${expStartTime.value || '00:00'}:00`
-      const startTimeMs = new Date(startIso).getTime()
-      if (!isNaN(startTimeMs) && evtTime < startTimeMs) matchTime = false
+    let matchTime = true
+    if (e.timestamp) {
+      const evtTime = new Date(e.timestamp).getTime()
+      if (expStartDate.value) {
+        const startIso = `${expStartDate.value}T${expStartTime.value || '00:00'}:00`
+        const startTimeMs = new Date(startIso).getTime()
+        if (!isNaN(startTimeMs) && evtTime < startTimeMs) matchTime = false
+      }
+      if (expEndDate.value) {
+        const endIso = `${expEndDate.value}T${expEndTime.value || '23:59'}:59`
+        const endTimeMs = new Date(endIso).getTime()
+        if (!isNaN(endTimeMs) && evtTime > endTimeMs) matchTime = false
+      }
     }
-    if (expEndDate.value) {
-      const endIso = `${expEndDate.value}T${expEndTime.value || '23:59'}:59`
-      const endTimeMs = new Date(endIso).getTime()
-      if (!isNaN(endTimeMs) && evtTime > endTimeMs) matchTime = false
-    }
-  }
-
-  return matchCamera && matchObj && matchTime
-}))
+    return matchCamera && matchObj && matchTime
+  })
+  return list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+})
 
 const handleExport = (format: 'csv' | 'json') => {
   const name = plugin.value ? plugin.value.name.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'eventos'

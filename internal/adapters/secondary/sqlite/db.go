@@ -329,7 +329,7 @@ func seedDefaultData(db *sql.DB) error {
 			package_url, package_checksum, hardware_req, description, created_at, updated_at
 		) VALUES (
 			'object_detection_sota',
-			'DETECCAO DE OBJETOS // PESSOAS, VEICULOS E ANIMAIS',
+			'DETECCAO DE OBJETOS',
 			'1.0.0',
 			'Hydra Vision AI',
 			'analytics',
