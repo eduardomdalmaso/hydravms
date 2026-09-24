@@ -49,3 +49,5 @@ recordings/
 .vscode/
 .DS_Store
 
+scripts/worker_live_analytics.py
+yolo26m.pt
