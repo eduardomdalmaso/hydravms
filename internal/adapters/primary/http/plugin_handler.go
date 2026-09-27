@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"os/exec"
 	"strings"
 
 	"hydravms/internal/adapters/primary/http/middleware"
@@ -89,6 +90,14 @@ func (h *PluginHandler) HandlePluginAction(w http.ResponseWriter, r *http.Reques
 				return
 			}
 			p, _ := h.service.GetPluginByID(r.Context(), tenantID, pluginID)
+			
+			// Dispara o download e compilação TensorRT/ONNX em segundo plano
+			go func(pkgURL string, pID string) {
+				scriptPath := "/home/hades/Documents/HydraForge/worker_python/download_and_compile.py"
+				cmd := exec.Command("python", scriptPath, pID, pkgURL)
+				_ = cmd.Run()
+			}(p.PackageURL, pluginID)
+
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"status":  "installed",
 				"message": "Plugin instalado com sucesso",
