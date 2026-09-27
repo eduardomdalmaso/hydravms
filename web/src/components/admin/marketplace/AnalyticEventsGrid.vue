@@ -26,6 +26,14 @@ const formatTimestamp = (iso: string) => {
     return d.toLocaleString('pt-BR', { timeZone: 'UTC', dateStyle: 'short', timeStyle: 'medium' })
   } catch { return iso }
 }
+
+const getBadgeStyle = (type: string) => {
+  const t = (type || '').toUpperCase()
+  if (t.includes('INTRUSÃO')) return { background: 'rgba(255, 0, 60, 0.15)', color: '#ff003c', border: '1px solid rgba(255, 0, 60, 0.35)' }
+  if (t.includes('MULTIDÃO')) return { background: 'rgba(252, 238, 10, 0.15)', color: '#fcee0a', border: '1px solid rgba(252, 238, 10, 0.35)' }
+  if (t.includes('VEÍCULO')) return { background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', border: '1px solid rgba(0, 240, 255, 0.35)' }
+  return { background: 'rgba(255, 94, 58, 0.15)', color: '#ff5e3a', border: '1px solid rgba(255, 94, 58, 0.35)' }
+}
 </script>
 
 <template>
@@ -46,8 +54,8 @@ const formatTimestamp = (iso: string) => {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 94, 58, 0.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span class="vms-text-mono vms-text-2xs" style="color: #64748b;">SNAP CROP</span>
           </div>
-          <span class="vms-badge vms-badge-orange" style="position: absolute; top: 6px; left: 6px; font-size: 9px; font-weight: bold;">[{{ evt.object_label.toUpperCase() }}]</span>
-          <span class="vms-badge vms-badge-secondary" style="position: absolute; top: 6px; right: 6px; font-size: 8.5px;">{{ (evt.event_type || 'DETECCAO').toUpperCase() }}</span>
+          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', left: '6px', fontSize: '9px', fontWeight: 'bold' }, getBadgeStyle(evt.event_type)]">[{{ evt.object_label.toUpperCase() }}]</span>
+          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', right: '6px', fontSize: '8.5px', fontWeight: 'bold' }, getBadgeStyle(evt.event_type)]">{{ (evt.event_type || 'DETECCAO').toUpperCase() }}</span>
         </div>
 
         <div class="vms-flex-col" style="gap: 4px; padding: 0.25rem 0;">

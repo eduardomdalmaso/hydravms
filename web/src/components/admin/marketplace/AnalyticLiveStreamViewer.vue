@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import type { ZoneConfig } from '../../../types/marketplace'
 import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 import { useWebRTCPlayer } from '../../../composables/useWebRTCPlayer'
-import { useEventBus, initEventSocket } from '../../../services/eventSocket'
+import { useLiveDetections } from '../../../composables/useLiveDetections'
 
 const props = defineProps<{
   cameraId: string
@@ -18,21 +18,9 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const currentFrameUrl = ref('')
 
 const { isPlaying, start, stop } = useWebRTCPlayer(videoRef)
+const { getDetections } = useLiveDetections()
+const cameraDetections = computed(() => getDetections(props.cameraId).value)
 
-interface DetectionBox {
-  id: string
-  label: string
-  conf: number
-  x: number
-  y: number
-  w: number
-  h: number
-  expiresAt: number
-}
-
-const activeDetections = ref<DetectionBox[]>([])
-const { subscribe } = useEventBus()
-let unsubscribe: (() => void) | null = null
 let animFrameId: number | null = null
 let fpsTimerId: number | null = null
 
@@ -44,7 +32,7 @@ const renderCanvas = () => {
   const w = canvasRef.value.width, h = canvasRef.value.height
   ctx.clearRect(0, 0, w, h)
 
-  // Draw configured Zones: Orange Dashed Line, NO background color
+  // Draw configured Zones: Orange Dashed Line, NO background
   if (props.zones) {
     props.zones.forEach((z) => {
       if (!z.polygon || z.polygon.length < 3) return
@@ -62,30 +50,29 @@ const renderCanvas = () => {
     })
   }
 
-  // Draw Live Detections from Backend Engine
-  const now = Date.now()
-  activeDetections.value = activeDetections.value.filter(d => d.expiresAt > now)
+  // Draw ONLY clean bounding boxes (no text, no labels)
+  const boxes = cameraDetections.value
+  boxes.forEach(b => {
+    // box is [x_pct, y_pct, w_pct, h_pct] where each is 0..100
+    const bx = (b.box[0] / 100) * w
+    const by = (b.box[1] / 100) * h
+    const bw = (b.box[2] / 100) * w
+    const bh = (b.box[3] / 100) * h
 
-  activeDetections.value.forEach(d => {
-    const bx = d.x * w, by = d.y * h, bw = d.w * w, bh = d.h * h
-
-    ctx.strokeStyle = '#00ff9d'; ctx.lineWidth = 2
+    ctx.strokeStyle = b.color || '#ff5e3a'
+    ctx.lineWidth = 2
     ctx.strokeRect(bx, by, bw, bh)
 
     // Corner HUD Reticles
-    const len = 8
-    ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3
+    const len = Math.min(8, bw / 3, bh / 3)
+    ctx.strokeStyle = '#00f0ff'
+    ctx.lineWidth = 2.5
     ctx.beginPath()
     ctx.moveTo(bx, by + len); ctx.lineTo(bx, by); ctx.lineTo(bx + len, by)
     ctx.moveTo(bx + bw - len, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + len)
+    ctx.moveTo(bx, by + bh - len); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + len, by + bh)
+    ctx.moveTo(bx + bw - len, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - len)
     ctx.stroke()
-
-    // Label Badge
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
-    ctx.fillRect(bx, by - 18, 110, 18)
-    ctx.fillStyle = '#00ff9d'
-    ctx.font = '10px "JetBrains Mono", monospace'
-    ctx.fillText(`[${d.label}] ${(d.conf * 100).toFixed(0)}%`, bx + 4, by - 5)
   })
 
   animFrameId = requestAnimationFrame(renderCanvas)
@@ -95,7 +82,6 @@ const startFpsStream = () => {
   if (fpsTimerId) clearInterval(fpsTimerId)
   if (!props.cameraId || !props.isActive) return
 
-  // Fluid UI refresh rate (minimum 15 FPS for smooth monitoring)
   const targetFps = Math.max(15, Math.min(50, props.fps || 15))
   const intervalMs = Math.floor(1000 / targetFps)
 
@@ -103,9 +89,7 @@ const startFpsStream = () => {
     const base = getCameraSnapshotUrl(props.cameraId, false)
     const nextUrl = `${base}&_t=${Date.now()}`
     const img = new Image()
-    img.onload = () => {
-      currentFrameUrl.value = nextUrl
-    }
+    img.onload = () => { currentFrameUrl.value = nextUrl }
     img.src = nextUrl
   }
 
@@ -114,12 +98,10 @@ const startFpsStream = () => {
 }
 
 const initStream = () => {
-  if (props.cameraId) {
-    if (props.isActive) {
-      start(props.cameraId, true)
-      startFpsStream()
-      animFrameId = requestAnimationFrame(renderCanvas)
-    }
+  if (props.cameraId && props.isActive) {
+    start(props.cameraId, true)
+    startFpsStream()
+    if (!animFrameId) animFrameId = requestAnimationFrame(renderCanvas)
   }
 }
 
@@ -134,30 +116,11 @@ watch(() => props.isActive, (active) => {
   }
 }, { immediate: true })
 
-onMounted(() => {
-  initStream()
-  initEventSocket()
-  unsubscribe = subscribe((evt) => {
-    if (!props.isActive) return
-    const isTargetCam = evt.subject === props.cameraId || evt.data?.camera_id === props.cameraId
-    if (isTargetCam && evt.data?.bbox) {
-      const [x, y, w, h] = evt.data.bbox
-      activeDetections.value.push({
-        id: evt.id || String(Date.now()),
-        label: (evt.data.object_label || evt.data.class || 'PESSOA').toUpperCase(),
-        conf: evt.data.confidence || 0.95,
-        x, y, w, h,
-        expiresAt: Date.now() + 1500
-      })
-    }
-  })
-})
-
+onMounted(() => { initStream() })
 onUnmounted(() => {
   stop()
   if (fpsTimerId) clearInterval(fpsTimerId)
   if (animFrameId) cancelAnimationFrame(animFrameId)
-  if (unsubscribe) unsubscribe()
 })
 </script>
 
@@ -173,7 +136,7 @@ onUnmounted(() => {
       :style="{ opacity: isPlaying ? 1 : 0 }"
     />
 
-    <!-- Realtime FPS Frame Stream (when WebRTC is establishing or in fallback mode) -->
+    <!-- Realtime FPS Frame Stream Fallback -->
     <img
       v-if="!isPlaying"
       :src="currentFrameUrl"
@@ -181,15 +144,8 @@ onUnmounted(() => {
       alt="Fluxo de Vídeo"
     />
 
-    <!-- HUD Vector & Bounding Boxes Canvas -->
+    <!-- HUD Vector & Bounding Boxes Canvas (Clean BBox, Zero Text Clutter) -->
     <canvas ref="canvasRef" width="800" height="450" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;" />
-
-    <!-- Top Stream Status Badge (Clean HUD) -->
-    <div style="position: absolute; top: 8px; left: 10px; z-index: 20;">
-      <span class="vms-badge" :class="isActive ? 'vms-badge-green' : 'vms-badge-orange'" style="font-size: 9px; font-weight: bold;">
-        {{ isActive ? '● AO VIVO' : '■ PAUSADO' }}
-      </span>
-    </div>
 
     <!-- Paused Mask -->
     <div v-if="!isActive" style="position: absolute; inset: 0; background: rgba(7, 8, 12, 0.75); backdrop-filter: blur(2px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 30;">

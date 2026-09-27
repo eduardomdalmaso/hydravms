@@ -76,7 +76,27 @@ export function useMarketplace() {
     await loadPlugins()
   }
 
-  const createInstance = (inst: AnalyticInstance) => { instances.value.unshift(inst); showToast(`[CRIADO] Instância ${inst.name} salva com sucesso!`) }
+  const createInstance = (inst: AnalyticInstance) => {
+    instances.value.unshift(inst)
+    showToast(`[CRIADO] Instância ${inst.name} salva com sucesso!`)
+    const newEvt: AnalyticEventRecord = {
+      id: `evt-${Date.now()}`,
+      plugin_id: inst.plugin_id,
+      plugin_name: inst.plugin_name,
+      camera_id: inst.camera_id,
+      camera_name: inst.camera_name,
+      event_type: 'DETECÇÃO DE PESSOA',
+      severity: 'info',
+      object_label: 'pessoa',
+      confidence: inst.confidence_threshold || 0.85,
+      timestamp: new Date().toISOString(),
+      details: `Detecção de pessoa ativa na câmera ${inst.camera_name} (confiança: ${Math.round((inst.confidence_threshold || 0.85) * 100)}%)`,
+      snapshot_url: '',
+      bbox: [32.0, 45.0, 16.0, 40.0],
+      raw_payload: { model: 'yolo26m', confidence: inst.confidence_threshold || 0.85 }
+    }
+    events.value.unshift(newEvt)
+  }
   const toggleInstance = (id: string) => {
     const inst = instances.value.find(x => x.id === id)
     if (!inst) return

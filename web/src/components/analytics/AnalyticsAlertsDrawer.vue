@@ -7,6 +7,13 @@ const emit = defineEmits<{
   (e: 'acknowledge', id: string): void
   (e: 'clearAll'): void
 }>()
+
+const getEventColor = (type: string) => {
+  if (type.includes('INTRUSÃO') || type.includes('OFFLINE')) return '#ff003c'
+  if (type.includes('MULTIDÃO')) return '#fcee0a'
+  if (type.includes('VEÍCULO')) return '#00f0ff'
+  return '#ff5e3a'
+}
 </script>
 
 <template>
@@ -42,15 +49,15 @@ const emit = defineEmits<{
           <img v-if="alt.snapshot_url" :src="alt.snapshot_url" alt="Snapshot" class="vms-snapshot-img" />
           <div v-else class="vms-snapshot-cctv">
             <div class="vms-cctv-scanline"></div>
-            <div class="vms-cctv-bbox" style="top: 24%; left: 34%; width: 32%; height: 56%;">
-              <span class="vms-cctv-tag">{{ (alt.confidence * 100).toFixed(0) }}% // {{ alt.severity.toUpperCase() }}</span>
+            <div class="vms-cctv-bbox" :style="{ borderColor: getEventColor(alt.event_type), top: '24%', left: '32%', width: '36%', height: '54%' }">
+              <span class="vms-cctv-tag" :style="{ background: getEventColor(alt.event_type), color: '#000' }">{{ (alt.confidence * 100).toFixed(0) }}% // {{ alt.severity.toUpperCase() }}</span>
             </div>
             <span class="vms-cctv-hud-cam">{{ alt.camera_name }}</span>
             <span class="vms-cctv-hud-time">{{ alt.timestamp }}</span>
           </div>
         </div>
 
-        <div class="vms-snapshot-label">
+        <div class="vms-snapshot-label" :style="{ color: getEventColor(alt.event_type) }">
           {{ alt.event_type }}
         </div>
       </div>

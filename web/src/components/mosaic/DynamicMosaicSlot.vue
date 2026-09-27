@@ -5,14 +5,24 @@ import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
 import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
 import { useBranding } from "../../composables/useBranding"
 import { getCameraMjpegUrl } from "../../utils/streamUrls"
+import { useLiveDetections } from "../../composables/useLiveDetections"
 
 const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: boolean }>()
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
 const { branding } = useBranding()
+const { getDetections } = useLiveDetections()
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
 const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
 const { start: startLive, stop: stopLive, error: rtcError } = useWebRTCPlayer(videoRef)
 const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId, seekTrigger } = useTimelinePlayback()
+
+const cameraDetections = computed(() => {
+  if (props.slot.type === 'camera' && props.slot.data) {
+    const camId = (props.slot.data as CameraStreamInfo).id
+    return getDetections(camId).value
+  }
+  return []
+})
 
 watch(rtcError, (err) => {
   if (err && decoderMode.value === 'MSE') {
@@ -73,6 +83,19 @@ onMounted(handleSeekOrSwitch)
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
         <video v-show="decoderMode === 'MSE' && (!isPlayback || isPlaying)" ref="videoRef" playsinline muted autoplay style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
         <img v-if="decoderMode === 'H264'" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <svg v-if="cameraDetections.length > 0" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+          <rect
+            v-for="b in cameraDetections"
+            :key="b.id"
+            :x="b.box[0]"
+            :y="b.box[1]"
+            :width="b.box[2]"
+            :height="b.box[3]"
+            fill="rgba(255, 94, 58, 0.06)"
+            :stroke="b.color || '#ff5e3a'"
+            stroke-width="0.8"
+          />
+        </svg>
         <div v-if="(decoderMode === 'MSE' && isPlayback && !isPlaying)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
       <div class="vms-slot-hud">

@@ -5,6 +5,7 @@ import { useAnalyticsAlerts } from './composables/useAnalyticsAlerts'
 import { useBranding } from './composables/useBranding'
 import { useHelpContext } from './composables/useHelpContext'
 import { initEventSocket } from './services/eventSocket'
+import { useLiveDetections } from './composables/useLiveDetections'
 import LoginView from './views/auth/LoginView.vue'
 import AppTopHeader from './components/layout/AppTopHeader.vue'
 import LiveMosaicView from './views/mosaic/LiveMosaicView.vue'
@@ -17,6 +18,7 @@ const { isAuthenticated, isLoading, errorMessage, username, isAdmin, checkSessio
 const { isDrawerOpen, alerts, unreadCount, toggleDrawer, acknowledgeAlert, clearAllAlerts } = useAnalyticsAlerts()
 const { branding } = useBranding()
 const { isHelpOpen, currentHelpPageId, toggleHelp, closeHelp } = useHelpContext()
+const { startLiveAnalyticsPipeline } = useLiveDetections()
 
 const getInitialMode = (): 'vms' | 'admin' => {
   if (typeof window !== 'undefined' && window.location.hash === '#admin') return 'admin'
@@ -53,6 +55,7 @@ watch([currentMode, branding], ([mode]) => {
 onMounted(async () => {
   syncFromHash()
   window.addEventListener('hashchange', syncFromHash)
+  startLiveAnalyticsPipeline()
   if (isAuthenticated.value) {
     const valid = await checkSession()
     if (valid) {
