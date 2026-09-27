@@ -27,12 +27,17 @@ const formatTimestamp = (iso: string) => {
   } catch { return iso }
 }
 
-const getBadgeStyle = (type: string) => {
+const getBadgeColor = (type: string) => {
   const t = (type || '').toUpperCase()
-  if (t.includes('INTRUSÃO')) return { background: 'rgba(255, 0, 60, 0.15)', color: '#ff003c', border: '1px solid rgba(255, 0, 60, 0.35)' }
-  if (t.includes('MULTIDÃO')) return { background: 'rgba(252, 238, 10, 0.15)', color: '#fcee0a', border: '1px solid rgba(252, 238, 10, 0.35)' }
-  if (t.includes('VEÍCULO')) return { background: 'rgba(0, 240, 255, 0.15)', color: '#00f0ff', border: '1px solid rgba(0, 240, 255, 0.35)' }
-  return { background: 'rgba(255, 94, 58, 0.15)', color: '#ff5e3a', border: '1px solid rgba(255, 94, 58, 0.35)' }
+  if (t.includes('INTRUSÃO')) return '#ff003c'
+  if (t.includes('MULTIDÃO')) return '#fcee0a'
+  if (t.includes('VEÍCULO')) return '#00f0ff'
+  return '#ff5e3a'
+}
+
+const getBadgeStyle = (type: string) => {
+  const color = getBadgeColor(type)
+  return { background: `${color}22`, color, border: `1px solid ${color}55` }
 }
 </script>
 
@@ -54,8 +59,15 @@ const getBadgeStyle = (type: string) => {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 94, 58, 0.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <span class="vms-text-mono vms-text-2xs" style="color: #64748b;">SNAP CROP</span>
           </div>
-          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', left: '6px', fontSize: '9px', fontWeight: 'bold' }, getBadgeStyle(evt.event_type)]">[{{ evt.object_label.toUpperCase() }}]</span>
-          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', right: '6px', fontSize: '8.5px', fontWeight: 'bold' }, getBadgeStyle(evt.event_type)]">{{ (evt.event_type || 'DETECCAO').toUpperCase() }}</span>
+          <svg v-if="evt.bbox" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
+            <rect :x="evt.bbox[0]" :y="evt.bbox[1]" :width="evt.bbox[2]" :height="evt.bbox[3]" fill="none" :stroke="getBadgeColor(evt.event_type)" stroke-width="1.2" stroke-dasharray="3, 1.5" />
+          </svg>
+          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', left: '6px', fontSize: '9px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }, getBadgeStyle(evt.event_type)]">
+            <svg v-if="evt.event_type.includes('MULTIDÃO') || evt.object_label.includes('multidão')" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm7.5-1c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <svg v-else width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="13.5" cy="4.5" r="2"/><path d="M13.8 8.2c-.4-.4-.9-.7-1.5-.7-.8 0-1.5.4-1.9 1l-2.9 3.9c-.3.4-.2 1 .2 1.3.4.3 1 .2 1.3-.2l2-2.7v4.5l-3.2 4.3c-.3.4-.2 1 .2 1.3.4.3 1 .2 1.3-.2l3.4-4.5 2.1 3v4.4c0 .6.4 1 1 1s1-.4 1-1v-5c0-.4-.2-.7-.5-.9l-2.4-3.4.5-4.4 2 1.5c.2.2.5.2.8.2.3 0 .6-.1.8-.3.4-.4.4-1 0-1.4l-3.2-2.3z"/></svg>
+            <span>{{ evt.event_type.toUpperCase().includes('INTRUSÃO') ? 'INTRUSÃO' : evt.object_label.toUpperCase() }}</span>
+          </span>
+          <span class="vms-badge" :style="[{ position: 'absolute', top: '6px', right: '6px', fontSize: '8.5px', fontWeight: 'bold' }, getBadgeStyle(evt.event_type)]">{{ (evt.event_type || 'INTRUSÃO').toUpperCase() }}</span>
         </div>
 
         <div class="vms-flex-col" style="gap: 4px; padding: 0.25rem 0;">
@@ -90,7 +102,7 @@ const getBadgeStyle = (type: string) => {
 .vms-explorer-events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.85rem; }
 .vms-event-card { background: var(--vms-surface); border: 1px solid var(--vms-border); border-radius: 6px; padding: 0.65rem; display: flex; flex-direction: column; gap: 0.4rem; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
 .vms-event-card:hover { transform: translateY(-2px); border-color: rgba(255, 94, 58, 0.4); }
-.vms-event-crop-preview { width: 100%; height: 110px; background: #060910; border-radius: 4px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
-.vms-event-thumb-img { width: 100%; height: 100%; object-fit: cover; }
+.vms-event-crop-preview { width: 100%; aspect-ratio: 16 / 9; background: #060910; border-radius: 4px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+.vms-event-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vms-event-thumb-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 100%; }
 </style>

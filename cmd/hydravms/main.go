@@ -130,12 +130,14 @@ func main() {
 		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(repos.clusterNodeStore)
 	}
 	layoutHandler := httpAdapter.NewLayoutHandler(repos.layoutRepo)
+	eventHandler := httpAdapter.NewEventHandler(repos.eventRepo, wsHub)
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
 	router := httpAdapter.NewRouter(
 		authHandler,
 		folderHandler,
 		cameraHandler,
+		eventHandler,
 		pluginHandler,
 		storagePoolHandler,
 		clusterNodeHandler,

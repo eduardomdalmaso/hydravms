@@ -12,6 +12,7 @@ type Router struct {
 	authHandler        *AuthHandler
 	folderHandler      *FolderHandler
 	cameraHandler      *CameraHandler
+	eventHandler       *EventHandler
 	pluginHandler      *PluginHandler
 	storagePoolHandler *StoragePoolHandler
 	clusterNodeHandler *ClusterNodeHandler
@@ -27,6 +28,7 @@ func NewRouter(
 	authHandler *AuthHandler,
 	folderHandler *FolderHandler,
 	cameraHandler *CameraHandler,
+	eventHandler *EventHandler,
 	pluginHandler *PluginHandler,
 	storagePoolHandler *StoragePoolHandler,
 	clusterNodeHandler *ClusterNodeHandler,
@@ -41,6 +43,7 @@ func NewRouter(
 		authHandler:        authHandler,
 		folderHandler:      folderHandler,
 		cameraHandler:      cameraHandler,
+		eventHandler:       eventHandler,
 		pluginHandler:      pluginHandler,
 		storagePoolHandler: storagePoolHandler,
 		clusterNodeHandler: clusterNodeHandler,
@@ -69,6 +72,12 @@ func (rt *Router) BuildHandler() http.Handler {
 	mux.HandleFunc("/api/v1/folders/", rt.folderHandler.HandleFolderByID)
 	mux.HandleFunc("/api/v1/cameras", rt.cameraHandler.HandleCameras)
 	mux.HandleFunc("/api/v1/cameras/", rt.cameraHandler.HandleCameraByID)
+
+	// AI & Security Events API
+	if rt.eventHandler != nil {
+		mux.HandleFunc("/api/v1/events", rt.eventHandler.HandleEvents)
+		mux.HandleFunc("/api/v1/events/", rt.eventHandler.HandleEventByID)
+	}
 
 	// Plugins & Marketplace Endpoints
 	if rt.pluginHandler != nil {

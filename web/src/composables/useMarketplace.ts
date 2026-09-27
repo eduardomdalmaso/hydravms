@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import type { PluginManifest, AnalyticInstance, AnalyticEventRecord } from '../types/marketplace'
-import { fetchPlugins, installRemotePlugin, uninstallRemotePlugin, toggleRemotePlugin } from '../services/api'
+import { fetchPlugins, installRemotePlugin, uninstallRemotePlugin, toggleRemotePlugin, fetchEvents } from '../services/api'
 
 const plugins = ref<PluginManifest[]>([])
 const instances = ref<AnalyticInstance[]>([])
@@ -14,10 +14,40 @@ export function useMarketplace() {
   const showToast = (msg: string) => { toast.value = msg; setTimeout(() => { toast.value = null }, 3500) }
   const installedPlugins = computed(() => plugins.value.filter(p => p.is_installed))
 
+  const loadEvents = async () => {
+    try {
+      const rawEvents = await fetchEvents()
+      if (Array.isArray(rawEvents) && rawEvents.length > 0) {
+        events.value = rawEvents.map(e => ({
+          id: e.id,
+          plugin_id: 'object_detection_sota',
+          plugin_name: 'YOLO26m Object Detection',
+          camera_id: e.camera_id || 'cam_01',
+          camera_name: e.camera_id === 'cam_01' || e.camera_id === 'c113' ? 'C113' : (e.camera_id || 'CAMERA'),
+          event_type: e.event_type?.toUpperCase().replace('SYSTEM.CAMERA.', '').replace('AI.DETECTION.', '') || 'DETECÇÃO DE PESSOA',
+          severity: e.severity === 'critical' ? 'critical' : (e.severity === 'warning' ? 'warning' : 'info'),
+          object_label: e.object_class || 'pessoa',
+          confidence: e.confidence || 0.9,
+          timestamp: e.triggered_at || e.created_at || new Date().toISOString(),
+          details: e.notes || `Detecção de ${e.object_class || 'pessoa'} na câmera`,
+          snapshot_url: e.snapshot_s3_key ? (e.snapshot_s3_key.startsWith('http') ? e.snapshot_s3_key : `http://localhost:8080${e.snapshot_s3_key}`) : 'http://localhost:8080/api/v1/streams/cam_01/snapshot',
+          bbox: e.bbox_normalized ? [
+            (e.bbox_normalized.x_center - e.bbox_normalized.width / 2) * 100,
+            (e.bbox_normalized.y_center - e.bbox_normalized.height / 2) * 100,
+            e.bbox_normalized.width * 100,
+            e.bbox_normalized.height * 100
+          ] : [20, 20, 30, 50],
+          raw_payload: e
+        }))
+      }
+    } catch {}
+  }
+
   const loadPlugins = async () => {
     const res = await fetchPlugins()
     plugins.value = Array.isArray(res.plugins) ? res.plugins : []
     gpuDetected.value = res.gpu_detected; gpuInfo.value = res.gpu_telemetry
+    await loadEvents()
     isLoaded.value = true
   }
 
@@ -79,23 +109,6 @@ export function useMarketplace() {
   const createInstance = (inst: AnalyticInstance) => {
     instances.value.unshift(inst)
     showToast(`[CRIADO] Instância ${inst.name} salva com sucesso!`)
-    const newEvt: AnalyticEventRecord = {
-      id: `evt-${Date.now()}`,
-      plugin_id: inst.plugin_id,
-      plugin_name: inst.plugin_name,
-      camera_id: inst.camera_id,
-      camera_name: inst.camera_name,
-      event_type: 'DETECÇÃO DE PESSOA',
-      severity: 'info',
-      object_label: 'pessoa',
-      confidence: inst.confidence_threshold || 0.85,
-      timestamp: new Date().toISOString(),
-      details: `Detecção de pessoa ativa na câmera ${inst.camera_name} (confiança: ${Math.round((inst.confidence_threshold || 0.85) * 100)}%)`,
-      snapshot_url: '',
-      bbox: [32.0, 45.0, 16.0, 40.0],
-      raw_payload: { model: 'yolo26m', confidence: inst.confidence_threshold || 0.85 }
-    }
-    events.value.unshift(newEvt)
   }
   const toggleInstance = (id: string) => {
     const inst = instances.value.find(x => x.id === id)
@@ -110,7 +123,7 @@ export function useMarketplace() {
 
   return {
     plugins, instances, events, searchQuery, statusFilter, toast, gpuDetected, gpuInfo, installProgress,
-    installedPlugins, filteredPlugins, showToast, loadPlugins, installPlugin, uninstallPlugin, togglePlugin,
+    installedPlugins, filteredPlugins, showToast, loadPlugins, loadEvents, installPlugin, uninstallPlugin, togglePlugin,
     createInstance, toggleInstance, deleteInstance, getPluginById, getInstancesByPlugin, getEventsByPlugin
   }
 }

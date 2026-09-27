@@ -60,19 +60,8 @@ const renderCanvas = () => {
     const bh = (b.box[3] / 100) * h
 
     ctx.strokeStyle = b.color || '#ff5e3a'
-    ctx.lineWidth = 2
+    ctx.lineWidth = 1.2
     ctx.strokeRect(bx, by, bw, bh)
-
-    // Corner HUD Reticles
-    const len = Math.min(8, bw / 3, bh / 3)
-    ctx.strokeStyle = '#00f0ff'
-    ctx.lineWidth = 2.5
-    ctx.beginPath()
-    ctx.moveTo(bx, by + len); ctx.lineTo(bx, by); ctx.lineTo(bx + len, by)
-    ctx.moveTo(bx + bw - len, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + len)
-    ctx.moveTo(bx, by + bh - len); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + len, by + bh)
-    ctx.moveTo(bx + bw - len, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - len)
-    ctx.stroke()
   })
 
   animFrameId = requestAnimationFrame(renderCanvas)

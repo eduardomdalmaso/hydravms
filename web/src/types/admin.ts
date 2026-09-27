@@ -9,6 +9,7 @@ export interface AnalyticsAlert {
   confidence: number
   timestamp: string
   snapshot_url?: string
+  bbox?: [number, number, number, number]
   is_acknowledged: boolean
 }
 

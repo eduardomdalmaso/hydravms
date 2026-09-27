@@ -143,20 +143,36 @@ export async function installRemotePlugin(id: string): Promise<boolean> {
 
 export async function uninstallRemotePlugin(id: string): Promise<boolean> {
   try {
-    const res = await authedFetch(`${API_BASE}/api/v1/plugins/${encodeURIComponent(id)}/uninstall`, {
-      method: 'POST', signal: AbortSignal.timeout(5000)
-    })
+    const res = await authedFetch(`${API_BASE}/api/v1/plugins/${encodeURIComponent(id)}/uninstall`, { method: 'POST', signal: AbortSignal.timeout(5000) })
     return res.ok
   } catch { return false }
 }
 
 export async function toggleRemotePlugin(id: string): Promise<boolean> {
   try {
-    const res = await authedFetch(`${API_BASE}/api/v1/plugins/${encodeURIComponent(id)}/toggle`, {
-      method: 'POST', signal: AbortSignal.timeout(5000)
-    })
+    const res = await authedFetch(`${API_BASE}/api/v1/plugins/${encodeURIComponent(id)}/toggle`, { method: 'POST', signal: AbortSignal.timeout(5000) })
     return res.ok
   } catch { return false }
+}
+
+export async function fetchEvents(cameraId?: string): Promise<any[]> {
+  try {
+    const q = cameraId ? `?camera_id=${encodeURIComponent(cameraId)}` : ''
+    const res = await authedFetch(`${API_BASE}/api/v1/events${q}`, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    return Array.isArray(data.events) ? data.events : []
+  } catch { return [] }
+}
+
+export async function createRemoteEvent(eventData: any): Promise<any | null> {
+  try {
+    const res = await authedFetch(`${API_BASE}/api/v1/events`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData), signal: AbortSignal.timeout(3000)
+    })
+    return res.ok ? await res.json() : null
+  } catch { return null }
 }
 
 export function connectLiveWebSocket(onMessage: (data: any) => void, onStatusChange?: (online: boolean) => void) {

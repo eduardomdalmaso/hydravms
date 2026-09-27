@@ -28,6 +28,15 @@ const persistState = () => {
 
 watch([allFolders, rootInstances], persistState, { deep: true })
 
+export function getGloballyActiveAnalyticInstances(): AnalyticInstance[] {
+  const active: AnalyticInstance[] = []
+  rootInstances.value.forEach(i => { if (i.is_active) active.push(i) })
+  allFolders.value.forEach(f => {
+    f.instances.forEach(i => { if (i.is_active) active.push(i) })
+  })
+  return active
+}
+
 export function useDesktopAnalytics(pluginId: string) {
   const { showToast } = useMarketplace()
   const searchQuery = ref('')
