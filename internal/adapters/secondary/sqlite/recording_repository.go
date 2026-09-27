@@ -37,6 +37,9 @@ func (r *SQLiteRecordingRepository) SaveProfile(ctx context.Context, p *domain.C
 	if p.RetentionDays <= 0 {
 		p.RetentionDays = 30
 	}
+	if p.StreamType == "" {
+		p.StreamType = "main"
+	}
 	if p.SegmentDurationS <= 0 {
 		p.SegmentDurationS = 60
 	}
@@ -49,17 +52,18 @@ func (r *SQLiteRecordingRepository) SaveProfile(ctx context.Context, p *domain.C
 
 	query := `
 		INSERT INTO camera_recording_profiles (
-			id, tenant_id, camera_id, name, mode, segment_duration_s,
+			id, tenant_id, camera_id, name, mode, stream_type, segment_duration_s,
 			pre_buffer_s, post_buffer_s, retention_days, schedule_json,
 			is_active, updated_at
 		) VALUES (
-			?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?,
 			?, ?
 		)
 		ON CONFLICT (id) DO UPDATE SET
 			name = excluded.name,
 			mode = excluded.mode,
+			stream_type = excluded.stream_type,
 			segment_duration_s = excluded.segment_duration_s,
 			pre_buffer_s = excluded.pre_buffer_s,
 			post_buffer_s = excluded.post_buffer_s,
@@ -69,7 +73,7 @@ func (r *SQLiteRecordingRepository) SaveProfile(ctx context.Context, p *domain.C
 			updated_at = excluded.updated_at
 	`
 	_, err := r.db.ExecContext(ctx, query,
-		profileUUID.String(), p.TenantID.String(), p.CameraID, p.Name, p.Mode, p.SegmentDurationS,
+		profileUUID.String(), p.TenantID.String(), p.CameraID, p.Name, p.Mode, p.StreamType, p.SegmentDurationS,
 		p.PreBufferS, p.PostBufferS, p.RetentionDays, p.ScheduleJSON,
 		p.IsActive, p.UpdatedAt,
 	)
@@ -82,7 +86,7 @@ func (r *SQLiteRecordingRepository) SaveProfile(ctx context.Context, p *domain.C
 func (r *SQLiteRecordingRepository) ListProfiles(ctx context.Context, tenantID uuid.UUID, cameraID string) ([]*domain.CameraRecordingProfile, error) {
 	query := `
 		SELECT 
-			id, tenant_id, camera_id, name, mode, segment_duration_s,
+			id, tenant_id, camera_id, name, mode, COALESCE(stream_type, 'main'), segment_duration_s,
 			pre_buffer_s, post_buffer_s, retention_days, COALESCE(schedule_json, '[]'),
 			is_active, updated_at
 		FROM camera_recording_profiles
@@ -101,7 +105,7 @@ func (r *SQLiteRecordingRepository) ListProfiles(ctx context.Context, tenantID u
 		var p domain.CameraRecordingProfile
 		var idStr, tenantIDStr string
 		if err := rows.Scan(
-			&idStr, &tenantIDStr, &p.CameraID, &p.Name, &p.Mode, &p.SegmentDurationS,
+			&idStr, &tenantIDStr, &p.CameraID, &p.Name, &p.Mode, &p.StreamType, &p.SegmentDurationS,
 			&p.PreBufferS, &p.PostBufferS, &p.RetentionDays, &p.ScheduleJSON,
 			&p.IsActive, &p.UpdatedAt,
 		); err != nil {

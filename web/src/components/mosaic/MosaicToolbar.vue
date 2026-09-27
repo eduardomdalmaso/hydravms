@@ -5,13 +5,19 @@ const props = defineProps<{ layout: GridLayout; totalCameras?: number }>()
 const emit = defineEmits<{ (e: 'update:layout', val: GridLayout): void; (e: 'fullscreen'): void }>()
 
 const layouts: { id: GridLayout; label: string }[] = [
-  { id: 'auto', label: 'AUTO' },
   { id: '1x1', label: '1x1' },
   { id: '1x2', label: '1x2' },
   { id: '2x2', label: '2x2' },
-  { id: '1+5', label: '1+5' },
   { id: '3x3', label: '3x3' },
-  { id: '4x4', label: '4x4' }
+  { id: '4x4', label: '4x4' },
+  { id: '5x5', label: '5x5' },
+  { id: '6x6', label: '6x6' },
+  { id: '7x7', label: '7x7' },
+  { id: '8x8', label: '8x8' },
+  { id: '10x10', label: '10x10' },
+  { id: '1+5', label: '1+5' },
+  { id: '1+8', label: '1+8' },
+  { id: '1+7', label: '1+7' }
 ]
 </script>
 

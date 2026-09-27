@@ -2,7 +2,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import type { UserFolderNode, UserItem } from '../types/userTree'
 import { initialUserFolders, initialRootUsers } from '../data/mockUserFolders'
 import { createDefaultUserModules } from '../data/defaultUserModules'
-import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
+import type { ContextMenuTarget } from '../types/contextMenu'
 import { useFolderModalState } from './useDesktopFolderOps'
 import { loadUsersAndFolders } from './useUserDataLoader'
 

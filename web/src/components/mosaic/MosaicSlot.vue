@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { ref, watch, onMounted } from 'vue'
 import type { CameraStreamInfo } from '../../types/mosaic'
+import { useWebRTCPlayer } from '../../composables/useWebRTCPlayer'
+import { getCameraMjpegUrl } from '../../utils/streamUrls'
 
 const props = defineProps<{
   camera?: CameraStreamInfo
@@ -8,6 +11,26 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ (e: 'select', cam: CameraStreamInfo): void }>()
+
+const videoRef = ref<HTMLVideoElement | null>(null)
+const useMjpeg = ref(false)
+const { start: startLive, stop: stopLive, error: rtcError } = useWebRTCPlayer(videoRef)
+
+watch(rtcError, (err) => {
+  if (err) useMjpeg.value = true
+})
+
+const initStream = () => {
+  if (props.camera) {
+    useMjpeg.value = false
+    startLive(props.camera.id, props.isHero, true)
+  } else {
+    stopLive()
+  }
+}
+
+watch(() => [props.camera?.id, props.isHero], initStream)
+onMounted(initStream)
 </script>
 
 <template>
@@ -18,8 +41,17 @@ const emit = defineEmits<{ (e: 'select', cam: CameraStreamInfo): void }>()
   >
     <template v-if="camera">
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; overflow: hidden; position: relative;">
+        <video
+          v-show="!useMjpeg"
+          ref="videoRef"
+          playsinline
+          muted
+          autoplay
+          style="width: 100%; height: 100%; object-fit: contain; display: block;"
+        ></video>
         <img
-          :src="`http://localhost:8080/api/v1/streams/${camera.id}/mjpeg`"
+          v-if="useMjpeg"
+          :src="getCameraMjpegUrl(camera.id)"
           alt="Camera Stream"
           style="width: 100%; height: 100%; object-fit: contain; display: block;"
         />

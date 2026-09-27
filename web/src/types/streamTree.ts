@@ -3,12 +3,17 @@ export interface StreamItem {
   name: string
   protocol: 'RTSP' | 'RTMP' | 'ONVIF' | 'LOOP'
   url: string
+  subUrl?: string
   ip: string
   port: number
   codec: 'H.265' | 'H.264'
+  subCodec?: 'H.265' | 'H.264'
   resolution: string
+  subResolution?: string
   fps: number
+  subFps?: number
   bitrate: string
+  subBitrate?: string
   recordMode: 'continuous' | 'motion' | 'ai_event' | 'disabled'
   status: 'online' | 'offline' | 'recording'
   has_ptz: boolean

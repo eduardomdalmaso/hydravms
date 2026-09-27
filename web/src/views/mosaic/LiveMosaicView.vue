@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useLiveWorkspace } from '../../composables/useLiveWorkspace'
 import { useMultiMonitor } from '../../composables/useMultiMonitor'
+import { fetchRemoteRecordings } from '../../services/recordingApi'
 import WorkspaceSidebar from '../../components/mosaic/WorkspaceSidebar.vue'
 import WorkspaceTopTabs from '../../components/mosaic/WorkspaceTopTabs.vue'
 import DynamicMosaicGrid from '../../components/mosaic/DynamicMosaicGrid.vue'
@@ -17,11 +18,23 @@ const { isPopout, activeMonitorNumber, openInPopout, dispatchToMonitor, initChan
 
 const isCarouselOpen = ref(false)
 const isPlaybackOpen = ref(false)
+const toastMessage = ref<string | null>(null)
 const contextMenu = ref<{ x: number; y: number; layout?: CustomLayout | null; isHeader?: boolean } | null>(null)
 const layoutToRename = ref<CustomLayout | null>(null)
 
-const handleOpenPlayback = (cam: CameraStreamInfo) => {
-  selectedCameraForPlayback.value = cam; isPlaybackOpen.value = true
+const showToast = (msg: string) => {
+  toastMessage.value = msg
+  setTimeout(() => { if (toastMessage.value === msg) toastMessage.value = null }, 4000)
+}
+
+const handleOpenPlayback = async (cam: CameraStreamInfo) => {
+  const segs = await fetchRemoteRecordings(cam.id)
+  if (!segs || segs.length === 0) {
+    showToast(`[SEM GRAVAÇÕES] Câmera "${cam.name}" não possui registros gravados salvos no sistema.`)
+    return
+  }
+  selectedCameraForPlayback.value = cam
+  isPlaybackOpen.value = true
 }
 const handleSidebarSelectCamera = (cam: CameraStreamInfo) => {
   addCameraToNextFreeSlot(cam)
@@ -94,6 +107,13 @@ onMounted(() => {
         <span class="vms-text-mono vms-text-2xs" style="color: #ff5e3a; font-weight: 700;">MONITOR 0{{ activeMonitorNumber }} // VIDEO WALL</span>
         <button class="vms-btn vms-btn-ghost vms-btn-sm" style="font-size: 9px; padding: 1px 4px; color: #cbd5e1;" title="Tela Cheia" @click="toggleFullscreen">[ TELA CHEIA ]</button>
       </div>
+
+      <Transition name="vms-toast">
+        <div v-if="toastMessage" class="vms-toast-notification" style="top: 1rem; right: 1rem; z-index: 9999;" @click="toastMessage = null">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>{{ toastMessage }}</span>
+        </div>
+      </Transition>
 
       <WorkspaceTopTabs
         :tabs="workspaceTabs.openTabs.value" :activeTabId="workspaceTabs.activeTabId.value"

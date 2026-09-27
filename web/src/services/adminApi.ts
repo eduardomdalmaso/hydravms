@@ -63,7 +63,58 @@ export async function deleteRemoteClusterNode(id: string): Promise<boolean> {
 }
 
 export async function fetchLiveLayouts(f: EnterpriseLayoutItem[] = []): Promise<EnterpriseLayoutItem[]> {
-  try { const r = await fetch(`${API_BASE}/api/v1/layouts`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).layouts || f : f } catch { return f }
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/layouts`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
+    if (!r.ok) return f
+    const data = await r.json()
+    if (!Array.isArray(data.layouts)) return f
+    return data.layouts.map((l: any) => ({
+      id: l.id,
+      name: l.name,
+      grid: l.grid_type || '2x2',
+      companyScope: l.folder_id ? 'EMPRESA' : 'GLOBAL // RAIZ',
+      folderId: l.folder_id || undefined,
+      is_locked: !!l.is_locked,
+      target_monitor: l.target_monitor || 0,
+      created_by: 'adminMaster',
+      createdAt: l.created_at ? l.created_at.split('T')[0] : '2026-09-26',
+      targetScope: 'specific_users',
+      allowedUserIds: l.allowed_user_ids || [],
+      slots: (l.slots_config || []).map((s: any) => ({
+        slotIndex: s.slot_index ?? s.slotIndex ?? 0,
+        cameraId: s.camera_id || s.cameraId,
+        cameraName: s.camera_name || s.cameraName,
+        ptz_lock: !!s.ptz_lock,
+        muted: !!s.muted
+      }))
+    }))
+  } catch { return f }
+}
+
+export async function createRemoteLayout(l: Partial<EnterpriseLayoutItem>): Promise<boolean> {
+  try {
+    const payload = {
+      id: l.id?.includes('-') ? l.id : undefined,
+      name: l.name, folder_id: l.folderId, grid_type: l.grid || '2x2',
+      is_locked: !!l.is_locked, target_monitor: l.target_monitor || 0,
+      allowed_user_ids: l.allowedUserIds || [],
+      slots_config: (l.slots || []).map(s => ({
+        slot_index: s.slotIndex, camera_id: s.cameraId || '', camera_name: s.cameraName || '', ptz_lock: !!s.ptz_lock, muted: !!s.muted
+      }))
+    }
+    const r = await fetch(`${API_BASE}/api/v1/layouts`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(3000)
+    })
+    return r.ok
+  } catch { return false }
+}
+
+export async function deleteRemoteLayout(id: string): Promise<boolean> {
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/layouts/${id}`, { method: 'DELETE', headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) })
+    return r.ok
+  } catch { return false }
 }
 export async function fetchLiveMaps(f: EnterpriseMapItem[] = []): Promise<EnterpriseMapItem[]> {
   try { const r = await fetch(`${API_BASE}/api/v1/maps`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(3000) }); return r.ok ? (await r.json()).maps || f : f } catch { return f }

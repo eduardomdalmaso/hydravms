@@ -1,4 +1,4 @@
-export type GridLayout = 'auto' | '1x1' | '1x2' | '2x2' | '3x3' | '4x4' | '8x8' | '10x10' | '1+5' | '1+7' | '1+12'
+export type GridLayout = 'auto' | '1x1' | '1x2' | '2x2' | '3x3' | '4x4' | '5x5' | '6x6' | '7x7' | '8x8' | '10x10' | '1+5' | '1+8' | '1+7' | '1+12'
 export type PlaybackSpeed = 0.5 | 1 | 2 | 3
 export type SlotContentType = 'camera' | 'map' | 'carousel'
 export type StreamProtocol = 'RTSP' | 'RTMP' | 'ONVIF'

@@ -26,10 +26,18 @@ const loadSegments = async () => {
   if (!props.camera?.id) return
   activePlaybackCameraId.value = props.camera.id
   const segs = await fetchRemoteRecordings(props.camera.id)
+  if (!segs || segs.length === 0) {
+    realRecordedRanges.value = []
+    return
+  }
   realRecordedRanges.value = segs.map(s => ({
     start: new Date(s.start_time).getTime(),
     end: new Date(s.end_time).getTime()
   }))
+  if (isLive.value && realRecordedRanges.value.length > 0) {
+    const lastSeg = realRecordedRanges.value[realRecordedRanges.value.length - 1]
+    seek(lastSeg.end)
+  }
 }
 
 let pollTimer: any = null
@@ -58,7 +66,7 @@ const notify = (msg: string) => { if (typeof window !== 'undefined') window.aler
 <template>
   <div class="vms-vezha-timeline">
     <div class="vms-drawer-header" style="padding: 0.35rem 0.85rem; display: flex; align-items: center; gap: 0.75rem;">
-      <DayTemporalRuler :currentTime="currentTime" @seek="seek($event)" />
+      <DayTemporalRuler :currentTime="currentTime" :recordedRanges="realRecordedRanges" @seek="seek($event)" />
       <button class="vms-ubuntu-close-btn" style="position: relative; top: 0; right: 0;" title="Fechar Reprodução" @click="emit('close')">
         <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2L10 10M10 2L2 10" /></svg>
       </button>

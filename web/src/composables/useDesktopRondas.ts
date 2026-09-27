@@ -2,7 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import type { RondaFolderNode, EnterpriseRondaItem } from '../types/rondaTree'
 import { initialRondaFolders } from '../data/mockRondaFolders'
 import { initialRootRondas } from '../data/mockRondaRoot'
-import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
+import type { ContextMenuTarget } from '../types/contextMenu'
 import { useFolderModalState } from './useDesktopFolderOps'
 import { fetchFolders } from '../services/api'
 

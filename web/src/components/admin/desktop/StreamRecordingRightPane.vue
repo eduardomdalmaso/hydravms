@@ -49,8 +49,9 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
           <tr>
             <th style="width: 75px; text-align: left;">ID</th>
             <th style="text-align: left;">NOME DO CADASTRO</th>
-            <th style="width: 80px; text-align: center;">ATIVAR</th>
-            <th style="width: 90px; text-align: center;">AÇÕES</th>
+            <th style="width: 70px; text-align: center;">FLUXO</th>
+            <th style="width: 70px; text-align: center;">ATIVAR</th>
+            <th style="width: 80px; text-align: center;">AÇÕES</th>
           </tr>
         </thead>
         <tbody v-if="profiles.length > 0">
@@ -58,6 +59,11 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
             <td class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange); text-align: left;">{{ formatProfileId(idx + 1) }}</td>
             <td style="text-align: left;">
               <span class="vms-font-semibold" style="color: #fff;">{{ p.name }}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="vms-badge" style="background: rgba(255, 94, 58, 0.12); color: #ff5e3a; border: 1px solid rgba(255, 94, 58, 0.35); fontSize: 9px; padding: 1px 5px;">
+                {{ (p.streamType || 'main').toUpperCase() }}
+              </span>
             </td>
             <td style="text-align: center;">
               <div style="display: flex; align-items: center; justify-content: center;">
@@ -78,7 +84,7 @@ const handleSaveProfile = async (profile: RecordingProfile) => {
         </tbody>
         <tbody v-else>
           <tr>
-            <td colspan="4" class="vms-text-mono vms-text-2xs vms-text-dim" style="text-align: center; padding: 2.5rem 1rem;">
+            <td colspan="5" class="vms-text-mono vms-text-2xs vms-text-dim" style="text-align: center; padding: 2.5rem 1rem;">
               // NENHUM PERFIL DE GRAVAÇÃO CADASTRADO. CLIQUE EM [+] PARA CRIAR.
             </td>
           </tr>

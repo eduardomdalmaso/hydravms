@@ -37,6 +37,9 @@ func (r *PostgresRecordingRepository) SaveProfile(ctx context.Context, p *domain
 	if p.RetentionDays <= 0 {
 		p.RetentionDays = 30
 	}
+	if p.StreamType == "" {
+		p.StreamType = "main"
+	}
 	if p.SegmentDurationS <= 0 {
 		p.SegmentDurationS = 60
 	}
@@ -49,17 +52,18 @@ func (r *PostgresRecordingRepository) SaveProfile(ctx context.Context, p *domain
 
 	query := `
 		INSERT INTO camera_recording_profiles (
-			id, tenant_id, camera_id, name, mode, segment_duration_s,
+			id, tenant_id, camera_id, name, mode, stream_type, segment_duration_s,
 			pre_buffer_s, post_buffer_s, retention_days, schedule_json,
 			is_active, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10::jsonb,
-			$11, $12
+			$1, $2, $3, $4, $5, $6, $7,
+			$8, $9, $10, $11::jsonb,
+			$12, $13
 		)
 		ON CONFLICT (id) DO UPDATE SET
 			name = EXCLUDED.name,
 			mode = EXCLUDED.mode,
+			stream_type = EXCLUDED.stream_type,
 			segment_duration_s = EXCLUDED.segment_duration_s,
 			pre_buffer_s = EXCLUDED.pre_buffer_s,
 			post_buffer_s = EXCLUDED.post_buffer_s,
@@ -69,7 +73,7 @@ func (r *PostgresRecordingRepository) SaveProfile(ctx context.Context, p *domain
 			updated_at = EXCLUDED.updated_at
 	`
 	_, err := r.pool.Exec(ctx, query,
-		profileUUID, p.TenantID, p.CameraID, p.Name, p.Mode, p.SegmentDurationS,
+		profileUUID, p.TenantID, p.CameraID, p.Name, p.Mode, p.StreamType, p.SegmentDurationS,
 		p.PreBufferS, p.PostBufferS, p.RetentionDays, p.ScheduleJSON,
 		p.IsActive, p.UpdatedAt,
 	)
@@ -82,7 +86,7 @@ func (r *PostgresRecordingRepository) SaveProfile(ctx context.Context, p *domain
 func (r *PostgresRecordingRepository) ListProfiles(ctx context.Context, tenantID uuid.UUID, cameraID string) ([]*domain.CameraRecordingProfile, error) {
 	query := `
 		SELECT 
-			id, tenant_id, camera_id, name, mode, segment_duration_s,
+			id, tenant_id, camera_id, name, mode, COALESCE(stream_type, 'main'), segment_duration_s,
 			pre_buffer_s, post_buffer_s, retention_days, COALESCE(schedule_json::text, '[]'),
 			is_active, updated_at
 		FROM camera_recording_profiles
@@ -101,7 +105,7 @@ func (r *PostgresRecordingRepository) ListProfiles(ctx context.Context, tenantID
 		var p domain.CameraRecordingProfile
 		var profUUID uuid.UUID
 		if err := rows.Scan(
-			&profUUID, &p.TenantID, &p.CameraID, &p.Name, &p.Mode, &p.SegmentDurationS,
+			&profUUID, &p.TenantID, &p.CameraID, &p.Name, &p.Mode, &p.StreamType, &p.SegmentDurationS,
 			&p.PreBufferS, &p.PostBufferS, &p.RetentionDays, &p.ScheduleJSON,
 			&p.IsActive, &p.UpdatedAt,
 		); err != nil {

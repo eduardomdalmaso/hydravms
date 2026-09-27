@@ -9,18 +9,18 @@ const props = defineProps<{ isOpen: boolean; profile?: RecordingProfile | null; 
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', profile: RecordingProfile): void }>()
 
 const form = ref<RecordingProfile>({
-  id: '', name: '', mode: 'continuous', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15
+  id: '', name: '', mode: 'continuous', streamType: 'main', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15
 })
 
 watch(() => props.isOpen, (open) => {
   if (!open) return
-  if (props.profile) form.value = { ...props.profile, schedule: props.profile.schedule.map(r => [...r]) }
-  else form.value = { id: props.nextId || 'REC_01', name: '', mode: 'continuous', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15 }
+  if (props.profile) form.value = { ...props.profile, streamType: props.profile.streamType || 'main', schedule: props.profile.schedule.map(r => [...r]) }
+  else form.value = { id: props.nextId || 'REC_01', name: '', mode: 'continuous', streamType: 'main', isActive: true, schedule: createDefaultSchedule(true), preBuffer: 5, postBuffer: 15 }
 })
 
 watch(() => form.value, (newVal) => {
   if (props.profile) {
-    props.profile.mode = newVal.mode; props.profile.name = newVal.name
+    props.profile.mode = newVal.mode; props.profile.name = newVal.name; props.profile.streamType = newVal.streamType
     props.profile.preBuffer = newVal.preBuffer; props.profile.postBuffer = newVal.postBuffer
     props.profile.schedule = newVal.schedule
   }
@@ -51,14 +51,23 @@ const handleSave = () => {
         </button>
       </div>
 
-      <!-- Mode Selector -->
-      <div class="vms-form-group">
-        <label class="vms-label">Tipo de Gravação</label>
-        <select v-model="form.mode" class="vms-auth-input">
-          <option value="continuous">CONTÍNUA</option>
-          <option value="motion">MOVIMENTO</option>
-          <option value="ai_event">EVENTO</option>
-        </select>
+      <!-- Mode & Stream Selector Row -->
+      <div class="vms-flex-row" style="gap: 0.75rem;">
+        <div class="vms-form-group" style="flex: 1;">
+          <label class="vms-label">Tipo de Gravação</label>
+          <select v-model="form.mode" class="vms-auth-input">
+            <option value="continuous">CONTÍNUA</option>
+            <option value="motion">MOVIMENTO</option>
+            <option value="ai_event">EVENTO</option>
+          </select>
+        </div>
+        <div class="vms-form-group" style="flex: 1;">
+          <label class="vms-label">Fluxo / Resolução</label>
+          <select v-model="form.streamType" class="vms-auth-input">
+            <option value="main">[MAIN] FLUXO PRINCIPAL</option>
+            <option value="sub">[SUB] SUBSTREAM</option>
+          </select>
+        </div>
       </div>
 
       <div class="vms-form-group">

@@ -12,7 +12,8 @@ type CameraRecordingProfile struct {
 	TenantID         uuid.UUID `json:"tenant_id"`
 	CameraID         string    `json:"camera_id"`
 	Name             string    `json:"name"`
-	Mode             string    `json:"mode"` // 'continuous', 'motion', 'ai_event'
+	Mode             string    `json:"mode"`        // 'continuous', 'motion', 'ai_event'
+	StreamType       string    `json:"stream_type"` // 'main', 'sub'
 	SegmentDurationS int       `json:"segment_duration_s"`
 	PreBufferS       int       `json:"pre_buffer_s"`
 	PostBufferS      int       `json:"post_buffer_s"`

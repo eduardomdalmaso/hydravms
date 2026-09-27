@@ -9,7 +9,6 @@ import LoginView from './views/auth/LoginView.vue'
 import AppTopHeader from './components/layout/AppTopHeader.vue'
 import LiveMosaicView from './views/mosaic/LiveMosaicView.vue'
 import AnalyticsAlertsDrawer from './components/analytics/AnalyticsAlertsDrawer.vue'
-import FloatingHelpTrigger from './components/common/help/FloatingHelpTrigger.vue'
 import InteractiveHelpModal from './components/common/help/InteractiveHelpModal.vue'
 
 const AdminCenterView = defineAsyncComponent(() => import('./views/admin/AdminCenterView.vue'))
@@ -89,6 +88,7 @@ const handleSwitchMode = (mode: 'vms' | 'admin') => {
         :currentMode="currentMode"
         :unreadAlertsCount="unreadCount"
         @toggleAlerts="toggleDrawer"
+        @toggleHelp="toggleHelp"
         @switchMode="handleSwitchMode"
         @logout="handleLogout"
       />
@@ -98,8 +98,7 @@ const handleSwitchMode = (mode: 'vms' | 'admin') => {
         <AdminCenterView v-else-if="currentMode === 'admin' && isAdmin" />
       </div>
 
-      <!-- Floating Help Trigger & Modal -->
-      <FloatingHelpTrigger :is-open="isHelpOpen" @toggle="toggleHelp" />
+      <!-- Interactive Help Modal -->
       <InteractiveHelpModal :is-open="isHelpOpen" :current-page-id="currentMode === 'vms' ? 'video_streams' : currentHelpPageId" @close="closeHelp" />
 
       <Transition name="vms-drawer">

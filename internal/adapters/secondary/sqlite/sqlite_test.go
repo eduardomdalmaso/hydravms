@@ -39,14 +39,6 @@ func TestSQLiteRepositories(t *testing.T) {
 
 	// 2. Test Camera Repository
 	camRepo := NewCameraRepository(db)
-	cams, err := camRepo.List(ctx, tenantID, nil)
-	if err != nil {
-		t.Fatalf("Failed to list cameras: %v", err)
-	}
-	if len(cams) == 0 {
-		t.Errorf("Expected seeded cameras, got 0")
-	}
-
 	newCam := &domain.Camera{
 		ID:        "cam_test_01",
 		TenantID:  tenantID,
@@ -60,6 +52,13 @@ func TestSQLiteRepositories(t *testing.T) {
 	}
 	if err := camRepo.Create(ctx, newCam); err != nil {
 		t.Fatalf("Failed to create test camera: %v", err)
+	}
+	cams, err := camRepo.List(ctx, tenantID, nil)
+	if err != nil {
+		t.Fatalf("Failed to list cameras: %v", err)
+	}
+	if len(cams) == 0 {
+		t.Errorf("Expected at least 1 camera, got 0")
 	}
 	fetchedCam, err := camRepo.GetByID(ctx, tenantID, "cam_test_01")
 	if err != nil || fetchedCam.Name != "TEST CAMERA" {

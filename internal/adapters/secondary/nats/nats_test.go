@@ -17,7 +17,8 @@ func TestNATSIntegration(t *testing.T) {
 	cfg := nats.DefaultConfig()
 	client, err := nats.NewNATSClient(ctx, cfg)
 	if err != nil {
-		t.Fatalf("Failed to connect to NATS: %v", err)
+		t.Skipf("Skipping NATS integration test (NATS server offline: %v)", err)
+		return
 	}
 	defer client.Close()
 

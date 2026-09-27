@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { StreamItem, FolderNode } from '../types/streamTree'
-import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
+import type { ContextMenuTarget } from '../types/contextMenu'
 import { useOnvifDiscovery } from './useOnvifDiscovery'
 import { useStreamExportImport } from './useStreamExportImport'
 

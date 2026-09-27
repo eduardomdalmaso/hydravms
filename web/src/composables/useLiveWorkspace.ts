@@ -19,9 +19,13 @@ export function useLiveWorkspace(username: string = 'operador') {
       case '2x2': return 4
       case '3x3': return 9
       case '4x4': return 16
+      case '5x5': return 25
+      case '6x6': return 36
+      case '7x7': return 49
       case '8x8': return 64
       case '10x10': return 100
       case '1+5': return 6
+      case '1+8': return 9
       case '1+7': return 8
       case '1+12': return 13
       default: return 4

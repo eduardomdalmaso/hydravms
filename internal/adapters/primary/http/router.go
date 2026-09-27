@@ -17,6 +17,7 @@ type Router struct {
 	clusterNodeHandler *ClusterNodeHandler
 	auditHandler       *AuditHandler
 	adminDataHandler   *AdminDataHandler
+	layoutHandler      *LayoutHandler
 	authService        *application.AuthService
 	auditService       *application.AuditService
 	wsHandler          *ws.WebSocketHandler
@@ -31,6 +32,7 @@ func NewRouter(
 	clusterNodeHandler *ClusterNodeHandler,
 	auditHandler *AuditHandler,
 	adminDataHandler *AdminDataHandler,
+	layoutHandler *LayoutHandler,
 	authService *application.AuthService,
 	auditService *application.AuditService,
 	wsHandler *ws.WebSocketHandler,
@@ -44,6 +46,7 @@ func NewRouter(
 		clusterNodeHandler: clusterNodeHandler,
 		auditHandler:       auditHandler,
 		adminDataHandler:   adminDataHandler,
+		layoutHandler:      layoutHandler,
 		authService:        authService,
 		auditService:       auditService,
 		wsHandler:          wsHandler,
@@ -86,10 +89,18 @@ func (rt *Router) BuildHandler() http.Handler {
 		mux.Handle("/api/v1/audit/logs", adminOnly(http.HandlerFunc(rt.auditHandler.HandleLogs)))
 	}
 
-	// Admin Center: Users, Layouts, Maps, Tours
+	// Layouts Endpoints (Grid layouts CRUD)
+	if rt.layoutHandler != nil {
+		mux.HandleFunc("/api/v1/layouts", rt.layoutHandler.ServeHTTP)
+		mux.HandleFunc("/api/v1/layouts/", rt.layoutHandler.ServeHTTP)
+	}
+
+	// Admin Center: Users, Maps, Tours
 	if rt.adminDataHandler != nil {
 		mux.Handle("/api/v1/users", adminOnly(http.HandlerFunc(rt.adminDataHandler.HandleUsers)))
-		mux.HandleFunc("/api/v1/layouts", rt.adminDataHandler.HandleLayouts)
+		if rt.layoutHandler == nil {
+			mux.HandleFunc("/api/v1/layouts", rt.adminDataHandler.HandleLayouts)
+		}
 		mux.HandleFunc("/api/v1/maps", rt.adminDataHandler.HandleMaps)
 		mux.HandleFunc("/api/v1/tours", rt.adminDataHandler.HandleTours)
 	}

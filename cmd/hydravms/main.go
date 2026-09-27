@@ -9,17 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	httpAdapter "hydravms/internal/adapters/primary/http"
 	"hydravms/internal/adapters/primary/ws"
-	"hydravms/internal/adapters/secondary/memory"
 	natsAdapter "hydravms/internal/adapters/secondary/nats"
-	postgresAdapter "hydravms/internal/adapters/secondary/postgres"
 	s3Adapter "hydravms/internal/adapters/secondary/s3"
-	sqliteAdapter "hydravms/internal/adapters/secondary/sqlite"
 	"hydravms/internal/application"
 	"hydravms/internal/domain"
-	"hydravms/internal/ports"
 )
 
 func main() {
@@ -28,84 +23,19 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 1. Initialize Database Repositories (SQLite WAL or PostgreSQL)
-	var folderRepo ports.FolderRepository
-	var cameraRepo ports.CameraRepository
-	var storagePoolRepo ports.StoragePoolRepository
-	var auditRepo ports.AuditLogRepository
-	var userRepo ports.UserRepository
-	var eventRepo ports.EventRepository
-	var recordingRepo ports.RecordingRepository
-	var clusterNodeStore httpAdapter.ClusterNodeStore
-	var pluginRepo ports.PluginRepository
-	var pgPool *pgxpool.Pool
-
-	dbDriver := os.Getenv("DB_DRIVER")
-	dbURL := os.Getenv("DATABASE_URL")
-	sqlitePath := os.Getenv("SQLITE_PATH")
-	if sqlitePath == "" {
-		sqlitePath = "hydravms.db"
+	repos := initRepositories(ctx)
+	if repos.pgPool != nil {
+		defer repos.pgPool.Close()
 	}
 
-	// If Postgres explicitly requested or DATABASE_URL provided, try PostgreSQL
-	if dbDriver == "postgres" || (dbURL != "" && dbDriver != "sqlite") {
-		pgCfg := postgresAdapter.DefaultConfig()
-		if dbURL != "" {
-			pgCfg.URL = dbURL
-		}
-		pool, err := postgresAdapter.NewPool(ctx, pgCfg)
-		if err == nil {
-			log.Println("✅ [HydraVMS] PostgreSQL relational database connected and connection pool initialized")
-			pgPool = pool
-			defer pool.Close()
-			folderRepo = postgresAdapter.NewFolderRepository(pool)
-			cameraRepo = postgresAdapter.NewCameraRepository(pool)
-			storagePoolRepo = postgresAdapter.NewStoragePoolRepository(pool)
-			auditRepo = postgresAdapter.NewAuditLogRepository(pool)
-			userRepo = postgresAdapter.NewUserRepository(pool)
-			eventRepo = postgresAdapter.NewEventRepository(pool)
-			recordingRepo = postgresAdapter.NewRecordingRepository(pool)
-			clusterNodeStore = postgresAdapter.NewClusterNodeRepository(pool)
-		} else {
-			log.Printf("⚠️ [HydraVMS] PostgreSQL not reachable: %v (falling back to SQLite WAL)\n", err)
-		}
-	}
-
-	// If PostgreSQL is not active, use SQLite WAL (Zero-Dependency Single Binary Mode)
-	if userRepo == nil {
-		sqliteDB, err := sqliteAdapter.OpenDB(sqlitePath)
-		if err != nil {
-			log.Printf("⚠️ [HydraVMS] SQLite init error: %v (falling back to In-Memory)\n", err)
-			folderRepo = memory.NewInMemoryFolderRepository()
-			cameraRepo = memory.NewInMemoryCameraRepository()
-			auditRepo = memory.NewInMemoryAuditLogRepository()
-			userRepo = memory.NewInMemoryUserRepository()
-			eventRepo = memory.NewInMemoryEventRepository()
-		} else {
-			log.Printf("✅ [HydraVMS] SQLite WAL Relational Database active at %s (Zero-Config Single Binary Mode)\n", sqlitePath)
-			defer sqliteDB.Close()
-			folderRepo = sqliteAdapter.NewFolderRepository(sqliteDB)
-			cameraRepo = sqliteAdapter.NewCameraRepository(sqliteDB)
-			storagePoolRepo = sqliteAdapter.NewStoragePoolRepository(sqliteDB)
-			auditRepo = sqliteAdapter.NewAuditLogRepository(sqliteDB)
-			userRepo = sqliteAdapter.NewUserRepository(sqliteDB)
-			eventRepo = sqliteAdapter.NewEventRepository(sqliteDB)
-			recordingRepo = sqliteAdapter.NewRecordingRepository(sqliteDB)
-			clusterNodeStore = sqliteAdapter.NewClusterNodeRepository(sqliteDB)
-			pluginRepo = sqliteAdapter.NewPluginRepository(sqliteDB)
-		}
-	}
-
-	// 2. Initialize Application Core Services (Hexagonal Architecture)
-	folderService := application.NewFolderService(folderRepo)
-	cameraService := application.NewCameraService(cameraRepo)
-	auditService := application.NewAuditService(auditRepo)
+	folderService := application.NewFolderService(repos.folderRepo)
+	cameraService := application.NewCameraService(repos.cameraRepo)
+	auditService := application.NewAuditService(repos.auditRepo)
 	var pluginService *application.PluginService
-	if pluginRepo != nil {
-		pluginService = application.NewPluginService(pluginRepo)
+	if repos.pluginRepo != nil {
+		pluginService = application.NewPluginService(repos.pluginRepo)
 	}
 
-	// Record initial system boot audit record
 	_ = auditService.RecordAction(
 		ctx,
 		"00000000-0000-0000-0000-000000000001",
@@ -120,7 +50,6 @@ func main() {
 		map[string]interface{}{"version": "1.0.0", "status": "online"},
 	)
 
-	// 3. Connect to S3 / MinIO Object Storage for Video Recordings & Snapshots
 	s3Cfg := s3Adapter.DefaultConfig()
 	if endpoint := os.Getenv("MINIO_ENDPOINT"); endpoint != "" {
 		s3Cfg.Endpoint = endpoint
@@ -135,22 +64,19 @@ func main() {
 		} else {
 			log.Println("✅ [HydraVMS] MinIO S3 Object Storage connected & buckets verified")
 		}
-		if storagePoolRepo != nil {
-			storagePoolService = application.NewStoragePoolService(storagePoolRepo, minioClient)
+		if repos.storagePoolRepo != nil {
+			storagePoolService = application.NewStoragePoolService(repos.storagePoolRepo, minioClient)
 		}
 	}
 
-	// 4. Initialize Real-Time WebSocket Hub
 	wsHub := ws.NewHub()
 	go wsHub.Run()
 
-	// 5. Initialize Recording Service
 	var recordingService *application.RecordingService
-	if recordingRepo != nil {
-		recordingService = application.NewRecordingService(recordingRepo)
+	if repos.recordingRepo != nil {
+		recordingService = application.NewRecordingService(repos.recordingRepo)
 	}
 
-	// 6. Connect to NATS Event Mesh & JetStream if available
 	var eventPublisher *natsAdapter.EventPublisher
 	natsCfg := natsAdapter.DefaultConfig()
 	natsClient, err := natsAdapter.NewNATSClient(ctx, natsCfg)
@@ -162,7 +88,6 @@ func main() {
 
 		eventPublisher = natsAdapter.NewEventPublisher(natsClient)
 
-		// Start NATS to WebSocket Bridge
 		bridge := ws.NewNATSWebSocketBridge(natsClient.Conn(), wsHub)
 		if err := bridge.Start(ctx); err != nil {
 			log.Printf("⚠️ [HydraVMS] Failed to start NATS bridge: %v\n", err)
@@ -170,30 +95,27 @@ func main() {
 			log.Println("✅ [HydraVMS] NATS to WebSocket Bridge active for all tenants (hydra.v1.*.>)")
 		}
 
-		// Start Durable NATS Recording Consumer
-		if recordingRepo != nil {
-			recordingConsumer := natsAdapter.NewRecordingConsumer(natsClient, recordingRepo)
+		if repos.recordingRepo != nil {
+			recordingConsumer := natsAdapter.NewRecordingConsumer(natsClient, repos.recordingRepo)
 			if err := recordingConsumer.Start(ctx); err != nil {
 				log.Printf("⚠️ [HydraVMS] Failed to start NATS recording consumer: %v\n", err)
 			}
 		}
 	}
 
-	// 7. Launch Automatic Camera Health Watchdog Service
 	var broadcaster application.EventBroadcaster
 	if eventPublisher != nil {
 		broadcaster = eventPublisher
 	}
-	watchdog := application.NewCameraWatchdog(cameraRepo, eventRepo, broadcaster, wsHub, 2500*time.Millisecond)
+	watchdog := application.NewCameraWatchdog(repos.cameraRepo, repos.eventRepo, broadcaster, wsHub, 2500*time.Millisecond)
 	watchdog.Start(ctx)
 
-	// 8. Initialize HTTP Handlers & Router
-	authService := application.NewAuthService(userRepo, auditService)
+	authService := application.NewAuthService(repos.userRepo, auditService)
 	authHandler := httpAdapter.NewAuthHandler(authService)
 	folderHandler := httpAdapter.NewFolderHandler(folderService)
 	cameraHandler := httpAdapter.NewCameraHandler(cameraService, recordingService)
 	auditHandler := httpAdapter.NewAuditHandler(auditService)
-	adminDataHandler := httpAdapter.NewAdminDataHandler(pgPool)
+	adminDataHandler := httpAdapter.NewAdminDataHandler(repos.pgPool)
 
 	var pluginHandler *httpAdapter.PluginHandler
 	if pluginService != nil {
@@ -204,9 +126,10 @@ func main() {
 		storagePoolHandler = httpAdapter.NewStoragePoolHandler(storagePoolService)
 	}
 	var clusterNodeHandler *httpAdapter.ClusterNodeHandler
-	if clusterNodeStore != nil {
-		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(clusterNodeStore)
+	if repos.clusterNodeStore != nil {
+		clusterNodeHandler = httpAdapter.NewClusterNodeHandler(repos.clusterNodeStore)
 	}
+	layoutHandler := httpAdapter.NewLayoutHandler(repos.layoutRepo)
 	wsHandler := ws.NewWebSocketHandler(wsHub)
 
 	router := httpAdapter.NewRouter(
@@ -218,6 +141,7 @@ func main() {
 		clusterNodeHandler,
 		auditHandler,
 		adminDataHandler,
+		layoutHandler,
 		authService,
 		auditService,
 		wsHandler,
@@ -229,7 +153,6 @@ func main() {
 		port = "8083"
 	}
 
-	// Production-Ready HTTP Server with Strict Timeouts
 	server := &http.Server{
 		Addr:              ":" + port,
 		Handler:           handler,
@@ -237,7 +160,7 @@ func main() {
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       60 * time.Second,
-		MaxHeaderBytes:    1 << 20, // 1 MB
+		MaxHeaderBytes:    1 << 20,
 	}
 
 	go func() {
@@ -247,7 +170,6 @@ func main() {
 		}
 	}()
 
-	// Graceful Shutdown & Drain Connections
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

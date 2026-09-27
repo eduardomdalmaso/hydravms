@@ -1,34 +1,53 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { GridLayout } from '../../types/mosaic'
+import { fetchLiveLayouts, createRemoteLayout } from '../../services/adminApi'
 
 const emit = defineEmits<{ (e: 'applyLayout', layout: GridLayout): void }>()
 
-const layoutName = ref('Layout - Operacao 24h')
+const layoutName = ref('')
 const selectedGrid = ref<GridLayout>('2x2')
-const savedLayouts = ref<{ id: string; name: string; grid: GridLayout; camCount: number }[]>([
-  { id: 'lay-1', name: 'Portaria & Perimetro', grid: '2x2', camCount: 4 },
-  { id: 'lay-2', name: 'Galpao & Docas de Carga', grid: '1+5', camCount: 6 },
-  { id: 'lay-3', name: 'Visao Geral Master 3x3', grid: '3x3', camCount: 9 }
-])
+const savedLayouts = ref<{ id: string; name: string; grid: GridLayout; camCount: number }[]>([])
 
 const gridTemplates: { id: GridLayout; label: string; slots: number }[] = [
   { id: '1x1', label: '1x1 (Hero)', slots: 1 },
+  { id: '1x2', label: '1x2 (2 Cameras)', slots: 2 },
   { id: '2x2', label: '2x2 (4 Cameras)', slots: 4 },
   { id: '3x3', label: '3x3 (9 Cameras)', slots: 9 },
   { id: '4x4', label: '4x4 (16 Cameras)', slots: 16 },
-  { id: '1+5', label: '1+5 (1 Destaque + 5)', slots: 6 }
+  { id: '5x5', label: '5x5 (25 Cameras)', slots: 25 },
+  { id: '6x6', label: '6x6 (36 Cameras)', slots: 36 },
+  { id: '7x7', label: '7x7 (49 Cameras)', slots: 49 },
+  { id: '8x8', label: '8x8 (64 Cameras)', slots: 64 },
+  { id: '10x10', label: '10x10 (100 Cameras)', slots: 100 },
+  { id: '1+5', label: '1+5 (1 Destaque + 5)', slots: 6 },
+  { id: '1+8', label: '1+8 (1 Destaque + 8)', slots: 9 },
+  { id: '1+7', label: '1+7 (1 Destaque + 7)', slots: 8 }
 ]
 
-const handleSaveLayout = () => {
-  if (!layoutName.value) return
-  savedLayouts.value.unshift({
-    id: `lay-${Date.now()}`,
-    name: layoutName.value,
+const loadLayouts = async () => {
+  const layouts = await fetchLiveLayouts()
+  savedLayouts.value = layouts.map(l => ({
+    id: l.id,
+    name: l.name,
+    grid: l.grid,
+    camCount: l.slots?.length || 0
+  }))
+}
+
+onMounted(loadLayouts)
+
+const handleSaveLayout = async () => {
+  if (!layoutName.value.trim()) return
+  await createRemoteLayout({
+    name: layoutName.value.trim(),
     grid: selectedGrid.value,
-    camCount: gridTemplates.find(g => g.id === selectedGrid.value)?.slots || 4
+    is_locked: false,
+    allowedUserIds: [],
+    slots: []
   })
-  window.alert(`Layout "${layoutName.value}" salvo com sucesso!`)
+  layoutName.value = ''
+  await loadLayouts()
 }
 </script>
 

@@ -1,7 +1,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { FolderNode, StreamItem } from '../types/streamTree'
 import { initialFolders } from '../data/mockStreamFolders'
-import type { ContextMenuTarget } from '../components/admin/TreeContextMenu.vue'
+import type { ContextMenuTarget } from '../types/contextMenu'
 import { fetchFolders, fetchCameras, createRemoteFolder, createRemoteCamera, deleteRemoteFolder, deleteRemoteCamera } from '../services/api'
 import { buildStreamTree, createNewStreamItem } from '../utils/streamTreeUtils'
 import { useEventBus } from '../services/eventSocket'

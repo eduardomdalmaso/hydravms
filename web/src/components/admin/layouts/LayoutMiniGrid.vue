@@ -12,20 +12,36 @@ const slotCount = computed(() => {
   if (props.grid === '1x1') return 1
   if (props.grid === '1x2') return 2
   if (props.grid === '2x2') return 4
-  if (props.grid === '1+5') return 6
   if (props.grid === '3x3') return 9
-  return 16
+  if (props.grid === '4x4') return 16
+  if (props.grid === '5x5') return 25
+  if (props.grid === '6x6') return 36
+  if (props.grid === '7x7') return 49
+  if (props.grid === '8x8') return 64
+  if (props.grid === '10x10') return 100
+  if (props.grid === '1+5') return 6
+  if (props.grid === '1+8') return 9
+  if (props.grid === '1+7') return 8
+  return 4
 })
 
-const isHero = (slotIdx: number) => props.grid === '1+5' && slotIdx === 0
+const isHero = (slotIdx: number) => (props.grid === '1+5' || props.grid === '1+8' || props.grid === '1+7') && slotIdx === 0
 
 const gridTemplateStyle = computed(() => {
   if (props.grid === '1x1') return { gridTemplateColumns: '1fr', maxWidth: '480px', aspectRatio: '16 / 9' }
   if (props.grid === '1x2') return { gridTemplateColumns: 'repeat(2, 1fr)', maxWidth: '540px', aspectRatio: '16 / 9' }
   if (props.grid === '2x2') return { gridTemplateColumns: 'repeat(2, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', maxWidth: '540px', aspectRatio: '16 / 10' }
-  if (props.grid === '1+5') return { gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', maxWidth: '580px', aspectRatio: '16 / 10' }
   if (props.grid === '3x3') return { gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', maxWidth: '580px', aspectRatio: '16 / 10' }
-  return { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(4, 1fr)', maxWidth: '600px', aspectRatio: '16 / 10' }
+  if (props.grid === '4x4') return { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(4, 1fr)', maxWidth: '600px', aspectRatio: '16 / 10' }
+  if (props.grid === '5x5') return { gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', maxWidth: '620px', aspectRatio: '16 / 10' }
+  if (props.grid === '6x6') return { gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'repeat(6, 1fr)', maxWidth: '640px', aspectRatio: '16 / 10' }
+  if (props.grid === '7x7') return { gridTemplateColumns: 'repeat(7, 1fr)', gridTemplateRows: 'repeat(7, 1fr)', maxWidth: '660px', aspectRatio: '16 / 10' }
+  if (props.grid === '8x8') return { gridTemplateColumns: 'repeat(8, 1fr)', gridTemplateRows: 'repeat(8, 1fr)', maxWidth: '680px', aspectRatio: '16 / 10' }
+  if (props.grid === '10x10') return { gridTemplateColumns: 'repeat(10, 1fr)', gridTemplateRows: 'repeat(10, 1fr)', maxWidth: '700px', aspectRatio: '16 / 10' }
+  if (props.grid === '1+5') return { gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', maxWidth: '580px', aspectRatio: '16 / 10' }
+  if (props.grid === '1+8') return { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', maxWidth: '600px', aspectRatio: '16 / 10' }
+  if (props.grid === '1+7') return { gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(4, 1fr)', maxWidth: '600px', aspectRatio: '16 / 10' }
+  return { gridTemplateColumns: 'repeat(2, 1fr)', maxWidth: '540px', aspectRatio: '16 / 10' }
 })
 
 const getCameraInSlot = (slotIdx: number) => props.slots.find(s => s.slotIndex === slotIdx)

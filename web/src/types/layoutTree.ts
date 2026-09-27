@@ -5,6 +5,8 @@ export interface LayoutSlotItem {
   cameraId?: string
   cameraName?: string
   streamUrl?: string
+  ptz_lock?: boolean
+  muted?: boolean
 }
 
 export interface EnterpriseLayoutItem {

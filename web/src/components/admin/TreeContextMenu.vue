@@ -1,18 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from '../../composables/useI18n'
+import type { ContextMenuTarget, SimpleFolderOption } from '../../types/contextMenu'
 
-export interface ContextMenuTarget {
-  type: 'canvas' | 'folder' | 'stream'
-  id?: string
-  name?: string
-  currentFolderId?: string | null
-}
-
-export interface SimpleFolderOption {
-  id: string
-  name: string
-}
+export type { ContextMenuTarget, SimpleFolderOption }
 
 defineProps<{
   isOpen: boolean

@@ -16,17 +16,22 @@ export interface RegisteredCamera {
   id: string
   name: string
   rtsp_url: string
+  sub_stream_url?: string
   ip: string
   port: number
   codec: 'H.264' | 'H.265'
+  sub_codec?: 'H.264' | 'H.265'
   resolution: string
+  sub_resolution?: string
   fps: number
+  sub_fps?: number
   has_ptz: boolean
   status: 'online' | 'offline' | 'recording'
   group?: string
   protocol?: string
   location?: string
   bitrate_kbps?: number
+  sub_bitrate_kbps?: number
   folder_id?: string
 }
 

@@ -65,7 +65,7 @@ const handleSave = () => {
         <div class="vms-form-group">
           <label class="vms-label">FORMATO DE GRADE</label>
           <div class="vms-flex-row" style="gap: 0.4rem; flex-wrap: wrap;">
-            <button v-for="g in (['1x1', '1x2', '2x2', '1+5', '3x3', '4x4'] as GridLayout[])" :key="g"
+            <button v-for="g in (['1x1', '1x2', '2x2', '3x3', '4x4', '5x5', '6x6', '7x7', '8x8', '10x10', '1+5', '1+8', '1+7'] as GridLayout[])" :key="g"
               class="vms-btn vms-btn-sm" :class="grid === g ? 'vms-btn-primary' : 'vms-btn-secondary'"
               style="font-size: 10px; padding: 3px 8px;" @click="grid = g">{{ g }}</button>
           </div>

@@ -20,7 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const availableGrids: GridLayout[] = [
-  '1x1', '2x2', '3x3', '4x4', '8x8', '10x10', '1+5', '1+7', '1+12'
+  '1x1', '1x2', '2x2', '3x3', '4x4', '5x5', '6x6', '7x7', '8x8', '10x10', '1+5', '1+8', '1+7'
 ]
 
 const menuPos = computed(() => {
