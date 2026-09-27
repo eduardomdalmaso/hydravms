@@ -1,11 +1,14 @@
 # Build & Dist
 bin/
 dist/
+hydravms
+hydravms.exe*
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
 
 # Database & Storage
 *.db
