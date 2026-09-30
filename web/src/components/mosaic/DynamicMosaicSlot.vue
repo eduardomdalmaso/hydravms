@@ -13,7 +13,7 @@ const { branding } = useBranding()
 const { getDetections } = useLiveDetections()
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
 const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
-const { start: startLive, stop: stopLive, error: rtcError } = useWebRTCPlayer(videoRef)
+const { start: startLive, stop: stopLive, error: rtcError, isPlaying: isLivePlaying, isConnecting: isLiveConnecting } = useWebRTCPlayer(videoRef)
 const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId, seekTrigger } = useTimelinePlayback()
 
 const cameraDetections = computed(() => {
@@ -33,6 +33,12 @@ watch(rtcError, (err) => {
 const isPlayback = computed(() => {
   const cam = props.slot.type === 'camera' ? props.slot.data as CameraStreamInfo : null
   return !!cam && !isLive.value && activePlaybackCameraId.value === cam.id
+})
+
+const isStreamBuffering = computed(() => {
+  if (decoderMode.value === 'H264') return isImgLoading.value
+  if (isPlayback.value) return !isPlaying.value
+  return !isLivePlaying.value || isLiveConnecting.value
 })
 
 const handleSeekOrSwitch = () => {
@@ -96,7 +102,7 @@ onMounted(handleSeekOrSwitch)
             stroke-width="0.8"
           />
         </svg>
-        <div v-if="(decoderMode === 'MSE' && isPlayback && !isPlaying)" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
+        <div v-if="isStreamBuffering" class="vms-offline-sphere-container"><div class="vms-ubuntu-spinner"></div></div>
       </div>
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.35rem; margin-top: 1.1rem; align-items: center;">

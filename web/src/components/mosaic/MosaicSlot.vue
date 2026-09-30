@@ -14,7 +14,8 @@ const emit = defineEmits<{ (e: 'select', cam: CameraStreamInfo): void }>()
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const useMjpeg = ref(false)
-const { start: startLive, stop: stopLive, error: rtcError } = useWebRTCPlayer(videoRef)
+const isImgLoading = ref(true)
+const { start: startLive, stop: stopLive, error: rtcError, isPlaying, isConnecting } = useWebRTCPlayer(videoRef)
 
 watch(rtcError, (err) => {
   if (err) useMjpeg.value = true
@@ -23,6 +24,7 @@ watch(rtcError, (err) => {
 const initStream = () => {
   if (props.camera) {
     useMjpeg.value = false
+    isImgLoading.value = true
     startLive(props.camera.id, props.isHero, true)
   } else {
     stopLive()
@@ -54,7 +56,11 @@ onMounted(initStream)
           :src="getCameraMjpegUrl(camera.id)"
           alt="Camera Stream"
           style="width: 100%; height: 100%; object-fit: contain; display: block;"
+          @load="isImgLoading = false"
         />
+        <div v-if="(!useMjpeg && (!isPlaying || isConnecting)) || (useMjpeg && isImgLoading)" class="vms-offline-sphere-container">
+          <div class="vms-ubuntu-spinner"></div>
+        </div>
       </div>
       <div class="vms-slot-hud">
         <div class="vms-flex-row" style="gap: 0.5rem;">

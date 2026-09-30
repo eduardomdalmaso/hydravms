@@ -31,12 +31,17 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
       pc.addTransceiver('video', { direction: 'recvonly' })
       pc.addTransceiver('audio', { direction: 'recvonly' })
 
+      if (videoRef.value) {
+        videoRef.value.onplaying = () => {
+          isPlaying.value = true
+          isConnecting.value = false
+        }
+      }
+
       pc.ontrack = (event) => {
         if (videoRef.value && event.streams[0]) {
           videoRef.value.srcObject = event.streams[0]
           videoRef.value.play().catch(() => {})
-          isPlaying.value = true
-          isConnecting.value = false
         }
       }
 
