@@ -54,8 +54,24 @@ if (Test-Path $ForgeDir) {
     }
 }
 
-# 4. Frontend Dependencies
-Write-Host "`n[4/5] Verificando dependências do Frontend..." -ForegroundColor Yellow
+# 4. FFmpeg Tooling Check
+Write-Host "`n[4/6] Verificando FFmpeg & Codecs de Vídeo..." -ForegroundColor Yellow
+$ffmpegCmd = Get-Command ffmpeg -ErrorAction SilentlyContinue
+if (-not $ffmpegCmd) {
+    $wingetFfmpeg = Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter "ffmpeg.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+    if (-not $wingetFfmpeg) {
+        Write-Host "  -> FFmpeg não encontrado. Auto-instalando via winget..." -ForegroundColor Gray
+        winget install Gyan.FFmpeg --accept-source-agreements --accept-package-agreements | Out-Null
+        Write-Host "  -> FFmpeg instalado com sucesso!" -ForegroundColor Green
+    } else {
+        Write-Host "  -> FFmpeg localizado em: $wingetFfmpeg" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  -> FFmpeg pronto no PATH." -ForegroundColor Green
+}
+
+# 5. Frontend Dependencies
+Write-Host "`n[5/6] Verificando dependências do Frontend..." -ForegroundColor Yellow
 if (-not (Test-Path "$RootDir\web\node_modules")) {
     Write-Host "  -> Instalando dependências npm no frontend..." -ForegroundColor Gray
     Push-Location "$RootDir\web"
@@ -66,8 +82,8 @@ if (-not (Test-Path "$RootDir\web\node_modules")) {
     Write-Host "  -> node_modules do frontend pronto." -ForegroundColor Green
 }
 
-# 5. PM2 Check and Launch
-Write-Host "`n[5/5] Inicializando serviços no PM2..." -ForegroundColor Yellow
+# 6. PM2 Check and Launch
+Write-Host "`n[6/6] Inicializando serviços no PM2..." -ForegroundColor Yellow
 Push-Location $RootDir
 pm2 delete all 2>$null | Out-Null
 pm2 start ecosystem.config.js
