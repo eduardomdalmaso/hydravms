@@ -48,5 +48,20 @@ module.exports = {
         PORT: "8080",
       },
     },
+
+    // 4. HydraForge - Estúdio de Treinamento YOLO & Inferência IA (porta 8081)
+    {
+      name: "hydra-forge",
+      cwd: path.resolve(__dirname, "..", "HydraForge"),
+      script: process.platform === "win32" ? "./hydraforge.exe" : "./bin/hydraforge",
+      interpreter: "none",
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 2000,
+      env: {
+        PORT: "8081",
+        JWT_SECRET: "hydravms-enterprise-secure-jwt-signing-key-32b-secret",
+      },
+    },
   ],
 };
