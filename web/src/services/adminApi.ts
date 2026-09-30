@@ -137,9 +137,9 @@ export async function discoverOnvifDevices(): Promise<any[]> {
   } catch { return [] }
 }
 
-export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?: string; password?: string; url?: string; protocol?: string }): Promise<any> {
+export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?: string; password?: string; url?: string; protocol?: string; stream_id?: string }): Promise<any> {
   try {
-    const payload = { url: p.url, ip_address: p.ip, port: p.port, username: p.user || '', password: p.password || '', protocol: p.protocol || 'RTSP' }
+    const payload = { url: p.url, ip_address: p.ip, port: p.port, username: p.user || '', password: p.password || '', protocol: p.protocol || 'RTSP', stream_id: p.stream_id }
     const r = await fetch(`${getStreamBaseUrl()}/api/v1/streams/probe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload), signal: AbortSignal.timeout(8000)

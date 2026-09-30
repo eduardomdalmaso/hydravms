@@ -52,7 +52,8 @@ const fetchSnapshot = async (): Promise<boolean> => {
         targetUrl = targetUrl.replace('rtsp://', `rtsp://${auth}`)
       }
     }
-    const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol })
+    const streamId = form.value.name ? form.value.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_') : ''
+    const res = await probeCameraSnapshot({ ip: form.value.ip, port: form.value.port, user: form.value.user, password: form.value.pass, url: targetUrl, protocol: form.value.protocol, stream_id: streamId })
     if (res && res.online && !res.auth_required) {
       hasSnapshot.value = true; authRequired.value = false; snapshotUrl.value = res.snapshot_url || undefined
       testError.value = null
