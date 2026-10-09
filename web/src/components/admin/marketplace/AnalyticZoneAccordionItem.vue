@@ -3,26 +3,18 @@ import { ref } from 'vue'
 import type { ZoneConfig, AnalyticMode, ScheduleInterval } from '../../../types/marketplace'
 
 const props = defineProps<{
-  zone: ZoneConfig
-  color: string
-  isOpen: boolean
-  canDelete: boolean
+  zone: ZoneConfig; color: string; isOpen: boolean; canDelete: boolean; isFacial?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'toggle'): void
-  (e: 'delete'): void
-  (e: 'update:name', val: string): void
-  (e: 'update:mode', val: AnalyticMode): void
-  (e: 'toggle:class', clsId: string): void
-  (e: 'add:schedule'): void
-  (e: 'delete:schedule', idx: number): void
+  (e: 'toggle' | 'delete' | 'add:schedule'): void
+  (e: 'update:name', val: string): void; (e: 'update:mode', val: AnalyticMode): void
+  (e: 'toggle:class', clsId: string): void; (e: 'delete:schedule', idx: number): void
   (e: 'update:scheduleTime', payload: { idx: number; field: 'start_time' | 'end_time'; val: string }): void
   (e: 'toggle:scheduleDay', payload: { idx: number; day: number }): void
 }>()
 
 const isObjectsDropdownOpen = ref(false)
-
 const availableClasses = [
   { id: 'person', label: 'Pessoa' }, { id: 'cell_phone', label: 'Celular' },
   { id: 'car', label: 'Carro' }, { id: 'motorcycle', label: 'Moto' },
@@ -30,15 +22,26 @@ const availableClasses = [
   { id: 'bus', label: 'Ônibus' }, { id: 'bird', label: 'Pássaros' },
   { id: 'cat', label: 'Gato' }, { id: 'dog', label: 'Cachorro' }
 ]
-
 const modes: { id: AnalyticMode; label: string }[] = [
-  { id: 'intrusion', label: 'INTRUSÃO' },
-  { id: 'crowd', label: 'MULTIDÃO' },
-  { id: 'counting', label: 'CONTAGEM' },
-  { id: 'dwell_time', label: 'TEMPO EXCEDIDO' }
+  { id: 'intrusion', label: 'INTRUSÃO' }, { id: 'crowd', label: 'MULTIDÃO' },
+  { id: 'counting', label: 'CONTAGEM' }, { id: 'dwell_time', label: 'TEMPO EXCEDIDO' }
 ]
-
 const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+const formatTimeBR = (raw: string): string => {
+  const d = raw.replace(/\D/g, '').slice(0, 4)
+  if (d.length <= 2) return d
+  const hh = Math.min(parseInt(d.slice(0, 2), 10) || 0, 23).toString().padStart(2, '0')
+  const mm = d.length === 4 ? Math.min(parseInt(d.slice(2), 10) || 0, 59).toString().padStart(2, '0') : d.slice(2)
+  return `${hh}:${mm}`
+}
+
+const onTimeInput = (idx: number, field: 'start_time' | 'end_time', ev: Event) => {
+  const input = ev.target as HTMLInputElement
+  const formatted = formatTimeBR(input.value)
+  input.value = formatted
+  emit('update:scheduleTime', { idx, field, val: formatted })
+}
 </script>
 
 <template>
@@ -48,7 +51,7 @@ const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
       <div class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
         <span class="vms-zone-dot" :style="{ backgroundColor: color }"></span>
         <span class="vms-text-xs vms-font-semibold" style="color: #ffffff;">{{ zone.name.toUpperCase() }}</span>
-        <span class="vms-badge vms-badge-secondary" style="font-size: 8.5px;">{{ zone.mode.toUpperCase() }}</span>
+        <span class="vms-badge vms-badge-secondary" style="font-size: 8.5px;">{{ isFacial ? 'ÁREA DE CAPTURA' : zone.mode.toUpperCase() }}</span>
       </div>
       <div class="vms-flex-row" style="gap: 0.4rem; align-items: center;" @click.stop>
         <button v-if="canDelete" class="vms-btn-icon" style="color: #ff003c; padding: 2px;" title="Excluir Zona" @click="emit('delete')">
@@ -62,16 +65,22 @@ const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
     <!-- Conteúdo da Zona Expandido -->
     <div v-if="isOpen" class="vms-zone-body">
-      <!-- Regra Selecionável -->
+      <!-- Edição do Nome da Zona -->
       <div class="vms-flex-col" style="gap: 2px;">
+        <label class="vms-text-mono vms-text-2xs vms-text-dim">NOME DA ZONA:</label>
+        <input :value="zone.name" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px;" placeholder="Ex: Catraca 1, Entrada..." @input="emit('update:name', ($event.target as HTMLInputElement).value)" />
+      </div>
+
+      <!-- Regra Selecionável (Exclusivo para Objetos) -->
+      <div v-if="!isFacial" class="vms-flex-col" style="gap: 2px;">
         <label class="vms-text-mono vms-text-2xs vms-text-dim">REGRA:</label>
         <select :value="zone.mode" class="vms-auth-input" style="padding: 4px 6px; font-size: 11px;" @change="emit('update:mode', ($event.target as HTMLSelectElement).value as AnalyticMode)">
           <option v-for="m in modes" :key="m.id" :value="m.id">{{ m.label }}</option>
         </select>
       </div>
 
-      <!-- Objetos Alvo em Listagem Selecionável -->
-      <div class="vms-flex-col" style="gap: 2px; position: relative;">
+      <!-- Objetos Alvo em Listagem Selecionável (Exclusivo para Objetos) -->
+      <div v-if="!isFacial" class="vms-flex-col" style="gap: 2px; position: relative;">
         <label class="vms-text-mono vms-text-2xs vms-text-dim">OBJETOS ALVO (LISTAGEM):</label>
         <button class="vms-auth-input vms-flex-between" style="padding: 4px 8px; font-size: 10.5px; text-align: left; cursor: pointer;" @click="isObjectsDropdownOpen = !isObjectsDropdownOpen">
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffffff;">
@@ -96,10 +105,9 @@ const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
         </div>
 
         <div v-for="(sch, sIdx) in (zone.schedules || [])" :key="sch.id || sIdx" class="vms-schedule-row-inline">
-          <div class="vms-flex-row" style="gap: 0.25rem; align-items: center; flex-shrink: 0;">
-            <input :value="sch.start_time" type="time" class="vms-auth-input" style="padding: 2px 4px; font-size: 10px; width: 70px;" @input="emit('update:scheduleTime', { idx: sIdx, field: 'start_time', val: ($event.target as HTMLInputElement).value })" />
-            <span class="vms-text-mono vms-text-2xs vms-text-dim">→</span>
-            <input :value="sch.end_time" type="time" class="vms-auth-input" style="padding: 2px 4px; font-size: 10px; width: 70px;" @input="emit('update:scheduleTime', { idx: sIdx, field: 'end_time', val: ($event.target as HTMLInputElement).value })" />
+          <div class="vms-flex-row" style="gap: 0.35rem; align-items: center; flex-shrink: 0;">
+            <input :value="sch.start_time" type="text" maxlength="5" placeholder="00:00" inputmode="numeric" class="vms-auth-input" style="padding: 2px 4px; font-size: 10px; width: 44px; text-align: center; font-family: var(--vms-font-mono);" title="Início 24h (00:00 às 23:59)" @input="onTimeInput(sIdx, 'start_time', $event)" />
+            <input :value="sch.end_time" type="text" maxlength="5" placeholder="23:59" inputmode="numeric" class="vms-auth-input" style="padding: 2px 4px; font-size: 10px; width: 44px; text-align: center; font-family: var(--vms-font-mono);" title="Término 24h (00:00 às 23:59)" @input="onTimeInput(sIdx, 'end_time', $event)" />
           </div>
 
           <div class="vms-flex-row" style="gap: 2px; flex: 1; justify-content: center; flex-wrap: nowrap;">

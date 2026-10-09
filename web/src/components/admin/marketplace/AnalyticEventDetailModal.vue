@@ -12,6 +12,8 @@ const copied = ref(false)
 
 const formattedJson = computed(() => {
   if (!props.event) return ''
+  const isFacial = props.event.plugin_id === 'facial_recognition_sota' || props.event.event_type.includes('BIOMETRIA')
+  const faceStatus = props.event.face_status || (props.event.is_known || (props.event.person_name && !props.event.person_name.toLowerCase().includes('desconhecido')) ? 'Reconhecido' : 'Desconhecido')
   const standardPayload = {
     id: props.event.id,
     timestamp: props.event.timestamp,
@@ -20,10 +22,15 @@ const formattedJson = computed(() => {
     plugin_id: props.event.plugin_id,
     plugin_name: props.event.plugin_name,
     event_type: props.event.event_type,
+    status_reconhecimento: isFacial ? faceStatus : undefined,
+    person_name: isFacial ? (faceStatus === 'Reconhecido' ? (props.event.person_name || 'Reconhecido') : 'Desconhecido') : undefined,
     object_label: props.event.object_label,
     details: props.event.details,
     snapshot_url: props.event.snapshot_url || null,
+    crop_url: props.event.crop_url || null,
     bbox: props.event.bbox || null,
+    age: props.event.age || null,
+    gender: props.event.gender || null,
     metadata: props.event.raw_payload || {}
   }
   return JSON.stringify(standardPayload, null, 2)
@@ -51,17 +58,29 @@ const copyJson = () => {
       </div>
 
       <div class="vms-modal-body vms-flex-col" style="gap: 1rem; padding: 1rem 0; flex: 1; overflow-y: auto;">
-        <!-- Header com Snapshot e Dados Principais -->
-        <div class="vms-flex-row" style="gap: 1rem; align-items: center;">
-          <div style="width: 140px; height: 95px; background: #060910; border-radius: 6px; border: 1px dashed rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-            <img v-if="event.snapshot_url" :src="event.snapshot_url" style="width: 100%; height: 100%; object-fit: cover;" alt="Event Snapshot" />
-            <div v-else class="vms-flex-col" style="align-items: center; gap: 4px;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <span class="vms-text-mono vms-text-2xs" style="color: #64748b;">SNAP CROP</span>
+        <!-- Header com Fotos: Full Frame e Cropped da Face -->
+        <div class="vms-flex-row" style="gap: 0.75rem; align-items: flex-start; flex-wrap: wrap;">
+          <!-- Foto 1: Cropped da Face (se disponível) -->
+          <div v-if="event.crop_url" class="vms-flex-col" style="gap: 3px;">
+            <span class="vms-text-mono vms-text-2xs vms-text-dim">CROPPED FACE:</span>
+            <div style="width: 110px; height: 95px; background: #060910; border-radius: 6px; border: 1px solid var(--vms-neu-accent-orange); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img :src="event.crop_url" style="width: 100%; height: 100%; object-fit: cover;" alt="Face Crop" />
             </div>
-            <svg v-if="event.bbox" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
-              <rect :x="event.bbox[0]" :y="event.bbox[1]" :width="event.bbox[2]" :height="event.bbox[3]" fill="none" stroke="#ff003c" stroke-width="1.2" stroke-dasharray="3, 1.5" />
-            </svg>
+          </div>
+
+          <!-- Foto 2: Full Frame (Cena Completa com BBox Sólido Laranja) -->
+          <div class="vms-flex-col" style="gap: 3px;">
+            <span class="vms-text-mono vms-text-2xs vms-text-dim">FULL FRAME:</span>
+            <div style="width: 145px; height: 95px; background: #060910; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+              <img v-if="event.snapshot_url" :src="event.snapshot_url" style="width: 100%; height: 100%; object-fit: cover;" alt="Event Full Frame" />
+              <div v-else class="vms-flex-col" style="align-items: center; gap: 4px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span class="vms-text-mono vms-text-2xs" style="color: #64748b;">SEM SNAPSHOT</span>
+              </div>
+              <svg v-if="event.bbox" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;">
+                <rect :x="event.bbox[0]" :y="event.bbox[1]" :width="event.bbox[2]" :height="event.bbox[3]" fill="none" stroke="#ff5e3a" stroke-width="1.8" />
+              </svg>
+            </div>
           </div>
 
           <div class="vms-flex-col" style="gap: 0.35rem; flex: 1;">

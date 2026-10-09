@@ -11,6 +11,7 @@ export interface BoundingBox {
   color?: string
   category?: string
   confidence?: number
+  crop_url?: string
 }
 
 const activeCameraDetections = ref<Record<string, BoundingBox[]>>({})
@@ -53,8 +54,28 @@ export function useLiveDetections() {
   const { alerts } = useAnalyticsAlerts()
   const { events } = useMarketplace()
 
-  const setDetections = (cameraId: string, boxes: BoundingBox[]) => { activeCameraDetections.value[cameraId] = boxes }
-  const getDetections = (cameraId: string) => computed(() => activeCameraDetections.value[cameraId] || [])
+  const setDetections = (cameraId: string, boxes: BoundingBox[]) => {
+    activeCameraDetections.value[cameraId] = boxes
+    activeCameraDetections.value['cam_01'] = boxes
+    activeCameraDetections.value['c113'] = boxes
+  }
+  const getDetections = (cameraId: string) => computed(() => {
+    if (!cameraId) return []
+    if (activeCameraDetections.value[cameraId]?.length) {
+      return activeCameraDetections.value[cameraId]
+    }
+    if (activeCameraDetections.value['cam_01']?.length) {
+      return activeCameraDetections.value['cam_01']
+    }
+    if (activeCameraDetections.value['c113']?.length) {
+      return activeCameraDetections.value['c113']
+    }
+    const vals = Object.values(activeCameraDetections.value)
+    for (const v of vals) {
+      if (v && v.length > 0) return v
+    }
+    return []
+  })
 
   const pushAIEvent = (
     cameraId: string, cameraName: string, pluginId: string, pluginName: string,
@@ -96,15 +117,25 @@ export function useLiveDetections() {
       const data = await res.json()
       if (data && Array.isArray(data.detections)) {
         const boxes: BoundingBox[] = data.detections
-          .filter((d: any) => d.class_name === 'person' || d.label === 'person' || d.label === 'pessoa')
-          .map((d: any) => ({
-            id: d.id || d.track_id || Math.random(),
-            box: d.box as [number, number, number, number],
-            color: '#ff5e3a',
-            category: 'person',
-            confidence: d.confidence || d.conf
-          }))
+          .filter((d: any) => {
+            const cls = (d.class_name || d.label || '').toLowerCase()
+            return cls === 'person' || cls === 'pessoa' || cls === 'face' || cls === 'facial' || cls === 'rosto'
+          })
+          .map((d: any) => {
+            const cls = (d.class_name || d.label || '').toLowerCase()
+            const isFace = cls === 'face' || cls === 'facial' || cls === 'rosto'
+            return {
+              id: d.id || d.track_id || Math.random(),
+              box: d.box as [number, number, number, number],
+              color: '#ff5e3a',
+              category: isFace ? 'face' : 'person',
+              confidence: d.confidence || d.conf,
+              crop_url: d.crop_url
+            }
+          })
         activeCameraDetections.value[camId] = boxes
+        activeCameraDetections.value['cam_01'] = boxes
+        activeCameraDetections.value['c113'] = boxes
 
         // Strict pause check: if no active instance exists, do not dispatch any event
         const activeInsts = getActiveInstances(camId)
@@ -116,21 +147,23 @@ export function useLiveDetections() {
         for (const inst of activeInsts) {
           if (!inst.is_active) continue
 
-          const threshold = inst.confidence_threshold || 0.60
+          const isFaceInst = (inst.plugin_id || '').includes('face') || (inst.plugin_id || '').includes('facial')
+          const threshold = inst.confidence_threshold || (isFaceInst ? 0.25 : 0.40)
           const zone = inst.zones?.[0]
           const poly = zone?.polygon || inst.specific_params?.polygon
 
           for (const b of boxes) {
             if ((b.confidence || 0) < threshold) continue
 
-            // Bottom-center foot coordinate (percentage 0..100)
-            const feetX = b.box[0] + b.box[2] / 2
-            const feetY = b.box[1] + b.box[3]
+            const isFace = b.category === 'face'
+            const checkX = b.box[0] + b.box[2] / 2
+            const checkY = isFace ? (b.box[1] + b.box[3] / 2) : (b.box[1] + b.box[3])
 
-            const isInside = poly && poly.length >= 3 ? isPointInPolygon(feetX, feetY, poly) : (inst.roi_mode === 'full_frame')
+            const isInside = (isFace || !poly || poly.length < 3) ? true : isPointInPolygon(checkX, checkY, poly)
             if (isInside) {
               lastEventTime = now
-              pushAIEvent(camId, camName, inst.plugin_id, inst.plugin_name, 'INTRUSÃO', b.confidence || 0.85, b.box)
+              const evtType = isFace ? 'BIOMETRIA FACIAL' : 'INTRUSÃO'
+              pushAIEvent(camId, camName, inst.plugin_id, inst.plugin_name, evtType as any, b.confidence || 0.85, b.box)
               return
             }
           }

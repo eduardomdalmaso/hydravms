@@ -17,30 +17,48 @@ export function useMarketplace() {
   const loadEvents = async () => {
     try {
       const rawEvents = await fetchEvents()
-      if (Array.isArray(rawEvents) && rawEvents.length > 0) {
-        events.value = rawEvents.map(e => ({
-          id: e.id,
-          plugin_id: 'object_detection_sota',
-          plugin_name: 'YOLO26m Object Detection',
-          camera_id: e.camera_id || 'cam_01',
-          camera_name: e.camera_id === 'cam_01' || e.camera_id === 'c113' ? 'C113' : (e.camera_id || 'CAMERA'),
-          event_type: e.event_type?.toUpperCase().replace('SYSTEM.CAMERA.', '').replace('AI.DETECTION.', '') || 'DETECÇÃO DE PESSOA',
-          severity: e.severity === 'critical' ? 'critical' : (e.severity === 'warning' ? 'warning' : 'info'),
-          object_label: e.object_class || 'pessoa',
-          confidence: e.confidence || 0.9,
-          timestamp: e.triggered_at || e.created_at || new Date().toISOString(),
-          details: e.notes || `Detecção de ${e.object_class || 'pessoa'} na câmera`,
-          snapshot_url: e.snapshot_s3_key ? (e.snapshot_s3_key.startsWith('http') ? e.snapshot_s3_key : `http://localhost:8080${e.snapshot_s3_key}`) : 'http://localhost:8080/api/v1/streams/cam_01/snapshot',
-          bbox: e.bbox_normalized ? [
-            (e.bbox_normalized.x_center - e.bbox_normalized.width / 2) * 100,
-            (e.bbox_normalized.y_center - e.bbox_normalized.height / 2) * 100,
-            e.bbox_normalized.width * 100,
-            e.bbox_normalized.height * 100
-          ] : [20, 20, 30, 50],
-          raw_payload: e
-        }))
+      if (Array.isArray(rawEvents)) {
+        events.value = rawEvents.map(e => {
+          const isFace = e.plugin_id === 'facial_recognition_sota' || e.event_type?.toUpperCase().includes('FACE') || e.object_class === 'face'
+          const snapUrl = e.snapshot_s3_key ? (e.snapshot_s3_key.startsWith('http') ? e.snapshot_s3_key : `http://localhost:8080${e.snapshot_s3_key}`) : (e.camera_id ? `http://localhost:8080/api/v1/streams/${e.camera_id}/snapshot` : '')
+          const cropUrl = e.crop_s3_key ? (e.crop_s3_key.startsWith('http') ? e.crop_s3_key : `http://localhost:8080${e.crop_s3_key}`) : ''
+          const pName = e.person_name || e.raw_payload?.person_name
+          const isKnown = Boolean(e.is_known || (pName && !pName.toLowerCase().includes('desconhecido')))
+          const faceStatus: 'Reconhecido' | 'Desconhecido' = isKnown ? 'Reconhecido' : 'Desconhecido'
+          return {
+            id: e.id,
+            plugin_id: isFace ? 'facial_recognition_sota' : (e.plugin_id || 'object_detection_sota'),
+            plugin_name: isFace ? 'Reconhecimento Facial' : (e.plugin_name || 'YOLO26m Object Detection'),
+            camera_id: e.camera_id || 'cam_01',
+            camera_name: e.camera_name || (e.camera_id === 'cam_01' || e.camera_id === 'c113' ? 'C113' : (e.camera_id || 'CAMERA')),
+            event_type: e.event_type?.toUpperCase().replace('SYSTEM.CAMERA.', '').replace('AI.DETECTION.', '') || (isFace ? 'BIOMETRIA FACIAL' : 'DETECÇÃO DE PESSOA'),
+            severity: e.severity === 'critical' ? 'critical' : (e.severity === 'warning' ? 'warning' : 'info'),
+            object_label: e.object_class || (isFace ? 'face' : 'pessoa'),
+            confidence: e.confidence || 0.9,
+            timestamp: e.triggered_at || e.created_at || new Date().toISOString(),
+            details: e.notes || (isFace ? `Biometria facial: ${faceStatus}` : `Detecção de ${e.object_class || 'pessoa'} na câmera`),
+            snapshot_url: snapUrl,
+            crop_url: cropUrl,
+            face_status: isFace ? faceStatus : undefined,
+            person_name: isFace ? (isKnown ? (pName || 'Reconhecido') : 'Desconhecido') : pName,
+            age: e.age !== undefined ? e.age : e.raw_payload?.age,
+            gender: e.gender || e.raw_payload?.gender,
+            is_known: isKnown,
+            bbox: e.bbox_normalized ? [
+              (e.bbox_normalized.x_center - e.bbox_normalized.width / 2) * 100,
+              (e.bbox_normalized.y_center - e.bbox_normalized.height / 2) * 100,
+              e.bbox_normalized.width * 100,
+              e.bbox_normalized.height * 100
+            ] : [20, 20, 30, 50],
+            raw_payload: e
+          }
+        })
+      } else {
+        events.value = []
       }
-    } catch {}
+    } catch {
+      events.value = []
+    }
   }
 
   const loadPlugins = async () => {

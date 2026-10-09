@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import type { ZoneConfig } from '../../../types/marketplace'
-import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
-import { useWebRTCPlayer } from '../../../composables/useWebRTCPlayer'
+import { getCameraMjpegUrl } from '../../../utils/streamUrls'
 import { useLiveDetections } from '../../../composables/useLiveDetections'
 
 const props = defineProps<{
@@ -13,26 +12,24 @@ const props = defineProps<{
   fps?: number
 }>()
 
-const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-const currentFrameUrl = ref('')
+const liveStreamUrl = ref('')
 
-const { isPlaying, start, stop } = useWebRTCPlayer(videoRef)
-const { getDetections } = useLiveDetections()
+const { getDetections, startLiveAnalyticsPipeline } = useLiveDetections()
 const cameraDetections = computed(() => getDetections(props.cameraId).value)
 
 let animFrameId: number | null = null
-let fpsTimerId: number | null = null
+let reconnectTimer: any = null
 
 const renderCanvas = () => {
-  if (!canvasRef.value || !props.isActive) return
+  if (!props.isActive) { animFrameId = null; return }
+  if (!canvasRef.value) { animFrameId = requestAnimationFrame(renderCanvas); return }
   const ctx = canvasRef.value.getContext('2d')
-  if (!ctx) return
+  if (!ctx) { animFrameId = requestAnimationFrame(renderCanvas); return }
 
   const w = canvasRef.value.width, h = canvasRef.value.height
   ctx.clearRect(0, 0, w, h)
 
-  // Draw configured Zones: Orange Dashed Line, NO background
   if (props.zones) {
     props.zones.forEach((z) => {
       if (!z.polygon || z.polygon.length < 3) return
@@ -41,8 +38,7 @@ const renderCanvas = () => {
       ctx.setLineDash([6, 4])
       ctx.lineWidth = 2
       z.polygon.forEach((pt, pIdx) => {
-        const px = pt.x * w, py = pt.y * h
-        pIdx === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+        pIdx === 0 ? ctx.moveTo(pt.x * w, pt.y * h) : ctx.lineTo(pt.x * w, pt.y * h)
       })
       ctx.closePath()
       ctx.stroke()
@@ -50,87 +46,88 @@ const renderCanvas = () => {
     })
   }
 
-  // Draw ONLY clean bounding boxes (no text, no labels)
+  // Draw ONLY clean bounding boxes (solid orange, no text clutter)
   const boxes = cameraDetections.value
-  boxes.forEach(b => {
-    // box is [x_pct, y_pct, w_pct, h_pct] where each is 0..100
-    const bx = (b.box[0] / 100) * w
-    const by = (b.box[1] / 100) * h
-    const bw = (b.box[2] / 100) * w
-    const bh = (b.box[3] / 100) * h
+  if (boxes && boxes.length > 0) {
+    boxes.forEach(b => {
+      const bx = (b.box[0] / 100) * w
+      const by = (b.box[1] / 100) * h
+      const bw = (b.box[2] / 100) * w
+      const bh = (b.box[3] / 100) * h
 
-    ctx.strokeStyle = b.color || '#ff5e3a'
-    ctx.lineWidth = 1.2
-    ctx.strokeRect(bx, by, bw, bh)
-  })
+      ctx.strokeStyle = b.color || '#ff5e3a'
+      ctx.lineWidth = 2
+      ctx.strokeRect(bx, by, bw, bh)
+    })
+  }
 
   animFrameId = requestAnimationFrame(renderCanvas)
 }
 
-const startFpsStream = () => {
-  if (fpsTimerId) clearInterval(fpsTimerId)
-  if (!props.cameraId || !props.isActive) return
-
-  const targetFps = Math.max(15, Math.min(50, props.fps || 15))
-  const intervalMs = Math.floor(1000 / targetFps)
-
-  const fetchNextFrame = () => {
-    const base = getCameraSnapshotUrl(props.cameraId, false)
-    const nextUrl = `${base}&_t=${Date.now()}`
-    const img = new Image()
-    img.onload = () => { currentFrameUrl.value = nextUrl }
-    img.src = nextUrl
-  }
-
-  fetchNextFrame()
-  fpsTimerId = window.setInterval(fetchNextFrame, intervalMs)
-}
-
-const initStream = () => {
+const updateStreamSource = () => {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
   if (props.cameraId && props.isActive) {
-    start(props.cameraId, true)
-    startFpsStream()
+    liveStreamUrl.value = `${getCameraMjpegUrl(props.cameraId)}?t=${Date.now()}`
+    startLiveAnalyticsPipeline()
     if (!animFrameId) animFrameId = requestAnimationFrame(renderCanvas)
+  } else {
+    liveStreamUrl.value = ''
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId)
+      animFrameId = null
+    }
   }
 }
 
-watch([() => props.cameraId, () => props.fps], initStream, { immediate: true })
-watch(() => props.isActive, (active) => {
-  if (active) {
-    initStream()
-  } else {
-    stop()
-    if (fpsTimerId) { clearInterval(fpsTimerId); fpsTimerId = null }
-    if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null }
+const handleVisibilityOrFocus = () => {
+  if (document.visibilityState === 'visible' && props.isActive) {
+    updateStreamSource()
   }
-}, { immediate: true })
+}
 
-onMounted(() => { initStream() })
+const handleStreamError = () => {
+  if (props.isActive && !reconnectTimer) {
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null
+      updateStreamSource()
+    }, 300)
+  }
+}
+
+watch([() => props.cameraId, () => props.isActive], updateStreamSource, { immediate: true })
+
+onMounted(() => {
+  startLiveAnalyticsPipeline()
+  updateStreamSource()
+  if (!animFrameId) animFrameId = requestAnimationFrame(renderCanvas)
+  document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+  window.addEventListener('focus', handleVisibilityOrFocus)
+})
+
 onUnmounted(() => {
-  stop()
-  if (fpsTimerId) clearInterval(fpsTimerId)
-  if (animFrameId) cancelAnimationFrame(animFrameId)
+  liveStreamUrl.value = ''
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId)
+    animFrameId = null
+  }
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+  window.removeEventListener('focus', handleVisibilityOrFocus)
 })
 </script>
 
 <template>
   <div class="vms-card" style="position: relative; overflow: hidden; background: #000; border: 1px solid var(--vms-border); border-radius: 8px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
-    <!-- Live Video Element (WebRTC WHEP) -->
-    <video
-      ref="videoRef"
-      autoplay
-      muted
-      playsinline
-      style="width: 100%; height: 100%; object-fit: contain; background: #000;"
-      :style="{ opacity: isPlaying ? 1 : 0 }"
-    />
-
-    <!-- Realtime FPS Frame Stream Fallback -->
+    <!-- Direct Real-time OpenCV MJPEG Stream -->
     <img
-      v-if="!isPlaying"
-      :src="currentFrameUrl"
-      style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;"
-      alt="Fluxo de Vídeo"
+      v-if="liveStreamUrl"
+      :src="liveStreamUrl"
+      @error="handleStreamError"
+      style="width: 100%; height: 100%; object-fit: contain; display: block;"
+      alt="Fluxo em Tempo Real OpenCV"
     />
 
     <!-- HUD Vector & Bounding Boxes Canvas (Clean BBox, Zero Text Clutter) -->

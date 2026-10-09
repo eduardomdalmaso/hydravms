@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 import { useLiveDetections } from '../../../composables/useLiveDetections'
 import type { ZoneConfig } from '../../../types/marketplace'
@@ -27,6 +27,11 @@ const { getDetections } = useLiveDetections()
 const liveBoxes = getDetections(props.cameraId)
 let lastSnapTime = 0
 
+const isFacialAnalytic = computed(() => {
+  const n = (props.analyticName || '').toLowerCase()
+  return n.includes('facial') || n.includes('face') || n.includes('biometria')
+})
+
 // Point-in-polygon helper to detect if person is inside ROI zone
 const isPointInPolygon = (x: number, y: number, poly: { x: number; y: number }[]) => {
   let inside = false
@@ -45,47 +50,51 @@ watch(liveBoxes, (boxes) => {
   if (now - lastSnapTime < 3000) return // Cooldown 3s between snapshot captures
 
   for (const b of boxes) {
-    if (b.category === 'person') {
-      const centerX = b.box[0] + b.box[2] / 2
-      const centerY = b.box[1] + b.box[3] / 2
+    if (isFacialAnalytic.value && b.category !== 'face') continue
+    if (!isFacialAnalytic.value && b.category !== 'person') continue
+    if ((b.confidence || 0) < (isFacialAnalytic.value ? 0.50 : 0.40)) continue
+
+    const isFace = b.category === 'face'
+    const centerX = b.box[0] + b.box[2] / 2
+    const centerY = b.box[1] + b.box[3] / 2
 
       let zoneName = 'ÁREA MONITORADA'
-      let isIntrusion = false
+      let isTriggered = false
 
-      if (props.zones && props.zones.length > 0) {
-        for (const z of props.zones) {
-          if (z.polygon && z.polygon.length >= 3 && isPointInPolygon(centerX, centerY, z.polygon)) {
-            zoneName = `ROI // ${z.name.toUpperCase()}`
-            isIntrusion = true
-            break
-          }
-        }
+      if (isFace) {
+        zoneName = 'BIOMETRIA // FACIAL'
+        const match = props.zones?.find(z => z.polygon && z.polygon.length >= 3 && isPointInPolygon(centerX, centerY, z.polygon))
+        if (match) zoneName = `ROI // ${match.name.toUpperCase()}`
+        isTriggered = true
+      } else if (props.zones && props.zones.length > 0) {
+        const match = props.zones.find(z => z.polygon && z.polygon.length >= 3 && isPointInPolygon(centerX, centerY, z.polygon))
+        if (match) { zoneName = `ROI // ${match.name.toUpperCase()}`; isTriggered = true }
       } else {
         zoneName = 'ROI // INTRUSÃO'
-        isIntrusion = true
+        isTriggered = true
       }
 
-      if (isIntrusion) {
+      if (isTriggered) {
         lastSnapTime = now
         const snapUrl = `${getCameraSnapshotUrl(props.cameraId, true)}&_t=${now}`
+        const cropUrl = b.crop_url ? (b.crop_url.startsWith('http') ? b.crop_url : `http://localhost:8080${b.crop_url}`) : snapUrl
         const time = new Date().toLocaleTimeString()
         const conf = Math.round((b.confidence || 0.85) * 100)
 
         snapshots.value.unshift({
           id: `snap-${now}-${Math.random().toString(36).substr(2, 4)}`,
           time,
-          label: 'INTRUSÃO // PESSOA',
+          label: isFace ? 'BIOMETRIA // FACE' : 'INTRUSÃO // PESSOA',
           conf,
           zone: zoneName,
-          url: snapUrl,
-          bbox: b.box
+          url: isFace ? cropUrl : snapUrl,
+          bbox: isFace ? undefined : b.box
         })
 
         if (snapshots.value.length > 30) snapshots.value.pop()
         break
       }
     }
-  }
 }, { deep: true })
 </script>
 

@@ -20,7 +20,7 @@ export interface PluginManifest {
   default_config: Record<string, any>
 }
 
-export type AnalyticMode = 'intrusion' | 'crowd' | 'counting' | 'dwell_time'
+export type AnalyticMode = 'intrusion' | 'crowd' | 'counting' | 'dwell_time' | 'capture'
 
 export interface Point2D {
   x: number
@@ -90,8 +90,14 @@ export interface AnalyticEventRecord {
   object_label: string
   details: string
   snapshot_url?: string
+  crop_url?: string
   bbox?: [number, number, number, number]
   raw_payload: Record<string, any>
+  person_name?: string
+  face_status?: 'Reconhecido' | 'Desconhecido'
+  age?: number
+  gender?: string
+  is_known?: boolean
 }
 
 export interface AnalyticFolderNode {
