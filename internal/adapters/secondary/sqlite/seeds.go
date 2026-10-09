@@ -56,7 +56,33 @@ func seedDefaultData(db *sql.DB) error {
 			'Deteccao e rastreamento SOTA de pessoas, celular, animais e veiculos com Auto-SAHI, Motion-Gating e Poligono/Linha de contagem.',
 			datetime('now'),
 			datetime('now')
-		)
+		);
+
+		INSERT OR IGNORE INTO plugins (
+			id, name, version, author, category, runtime, entrypoint, min_vms_version,
+			permissions, config_schema, ui_schema, is_official, is_deprecated,
+			package_url, package_checksum, hardware_req, description, created_at, updated_at
+		) VALUES (
+			'facial_recognition_sota',
+			'RECONHECIMENTO FACIAL',
+			'1.0.0',
+			'Hydra Vision AI',
+			'analytics',
+			'python3',
+			'face_analytic/worker_cli.py',
+			'1.0.0',
+			'["video:shm_read", "events:write", "cuda:ipc"]',
+			'{"min_height": 40, "max_height": 0, "min_faces": 3, "blur_threshold": 60.0, "unknown_score": 0.60, "recognition_threshold": 0.75}',
+			'{}',
+			1,
+			0,
+			'https://huggingface.co/hydravision/facial-recognition',
+			'sha256:auto',
+			'CUDA 13.3 // RTX 5090',
+			'Analitico Facial Forense com Person-Gating, selecao de Best Frame, Blur Laplaciano adaptativo e ReID Cross-Camera.',
+			datetime('now'),
+			datetime('now')
+		);
 	`)
 
 	return nil

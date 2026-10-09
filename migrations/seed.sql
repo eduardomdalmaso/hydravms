@@ -52,7 +52,7 @@ VALUES (
 INSERT INTO plugins (id, name, version, author, category, runtime, entrypoint, is_official)
 VALUES 
     ('plugin-yolo-lpr', 'LPR / Reconhecimento de Placas', '2.4.0', 'Hydra Intelligence', 'analytics', 'python3', 'lpr.py', TRUE),
-    ('plugin-facial-rec', 'Reconhecimento Facial Forense', '1.9.5', 'Hydra Intelligence', 'analytics', 'python3', 'face.py', TRUE),
+    ('plugin-facial-rec', 'Reconhecimento Facial', '1.9.5', 'Hydra Intelligence', 'analytics', 'python3', 'face.py', TRUE),
     ('plugin-ppe-detection', 'Detecção de EPI (Segurança do Trabalho)', '3.1.0', 'Hydra Intelligence', 'safety', 'python3', 'ppe.py', TRUE),
     ('plugin-fire-smoke', 'Detecção Precoce de Fogo e Fumaça', '2.0.1', 'Hydra Intelligence', 'safety', 'python3', 'fire.py', TRUE)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;

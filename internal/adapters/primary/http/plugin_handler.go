@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -94,7 +95,12 @@ func (h *PluginHandler) HandlePluginAction(w http.ResponseWriter, r *http.Reques
 			// Dispara o download e compilação TensorRT/ONNX em segundo plano
 			go func(pkgURL string, pID string) {
 				scriptPath := "/home/hades/Documents/HydraForge/worker_python/download_and_compile.py"
-				cmd := exec.Command("python", scriptPath, pID, pkgURL)
+				pyBin := "/home/hades/miniconda3/envs/reductor-prompt/bin/python"
+				if _, err := os.Stat(pyBin); err != nil {
+					pyBin = "python3"
+				}
+				cmd := exec.Command(pyBin, scriptPath, pID, pkgURL)
+				cmd.Env = append(os.Environ(), "HF_TOKEN="+os.Getenv("HF_TOKEN"))
 				_ = cmd.Run()
 			}(p.PackageURL, pluginID)
 

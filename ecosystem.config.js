@@ -63,5 +63,19 @@ module.exports = {
         JWT_SECRET: "hydravms-enterprise-secure-jwt-signing-key-32b-secret",
       },
     },
+
+    // 5. HydraVault - Curadoria, Auto-Rotulagem & Edge Cases (porta 8082)
+    {
+      name: "hydra-vault",
+      cwd: path.resolve(__dirname, "..", "HydraVault"),
+      script: process.platform === "win32" ? "./hydravault.exe" : "./bin/hydravault",
+      interpreter: "none",
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 2000,
+      env: {
+        PORT: "8082",
+      },
+    },
   ],
 };
