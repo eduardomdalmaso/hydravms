@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"hydravms/internal/adapters/secondary/crypto"
 	"hydravms/internal/domain"
 )
 
@@ -35,6 +36,11 @@ func (r *SQLiteCameraRepository) Create(ctx context.Context, c *domain.Camera) e
 		nodeIDStr = sql.NullString{String: c.AssignedNodeID.String(), Valid: true}
 	}
 
+	encPass, err := crypto.Encrypt(c.ONVIFPass)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt onvif password: %w", err)
+	}
+
 	query := `
 		INSERT INTO cameras (
 			id, tenant_id, name, protocol, rtsp_url, sub_stream_url,
@@ -48,9 +54,9 @@ func (r *SQLiteCameraRepository) Create(ctx context.Context, c *domain.Camera) e
 			?, ?, ?, ?
 		)
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err = r.db.ExecContext(ctx, query,
 		c.ID, c.TenantID.String(), c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
-		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, c.ONVIFPass, c.RTMPStreamKey,
+		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, encPass, c.RTMPStreamKey,
 		c.Location, string(c.Status), c.Resolution, c.FPS, c.BitrateKbps, c.Codec, c.IsActive,
 		folderIDStr, nodeIDStr, c.CreatedAt, c.UpdatedAt,
 	)
@@ -64,7 +70,7 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 	query := `
 		SELECT 
 			id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
-			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(rtmp_stream_key, ''),
+			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(onvif_pass, ''), COALESCE(rtmp_stream_key, ''),
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
 		FROM cameras
@@ -73,11 +79,11 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 	row := r.db.QueryRowContext(ctx, query, cameraID, tenantID.String())
 
 	var c domain.Camera
-	var tenantIDStr, protoStr, statusStr string
+	var tenantIDStr, protoStr, statusStr, rawPass string
 	var folderIDStr, nodeIDStr sql.NullString
 	err := row.Scan(
 		&c.ID, &tenantIDStr, &c.Name, &protoStr, &c.RTSPURL, &c.SubStreamURL,
-		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &c.RTMPStreamKey,
+		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &rawPass, &c.RTMPStreamKey,
 		&c.Location, &statusStr, &c.Resolution, &c.FPS,
 		&c.BitrateKbps, &c.Codec, &c.IsActive, &folderIDStr, &nodeIDStr, &c.CreatedAt, &c.UpdatedAt,
 	)
@@ -91,6 +97,10 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 	c.Protocol = domain.CameraProtocol(protoStr)
 	c.Status = domain.CameraStatus(statusStr)
 	c.HasPTZ = (c.Protocol == domain.ProtocolONVIF || c.ID == "cam_entrance_01" || c.ID == "cam_parking_03")
+	if rawPass != "" {
+		decrypted, _ := crypto.Decrypt(rawPass)
+		c.ONVIFPass = decrypted
+	}
 	if folderIDStr.Valid {
 		fID, _ := uuid.Parse(folderIDStr.String)
 		c.FolderID = &fID

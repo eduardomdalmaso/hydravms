@@ -5,12 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"hydravms/internal/adapters/secondary/gpu"
 	"hydravms/internal/adapters/secondary/postgres"
 )
+
+func decorateAuth(req *http.Request) {
+	if req == nil {
+		return
+	}
+	if apiKey := os.Getenv("SERVICE_API_KEY"); apiKey != "" {
+		req.Header.Set("X-API-Key", apiKey)
+	}
+	if token := os.Getenv("HYDRA_CLUSTER_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+}
 
 func probeNodeMetrics(ctx context.Context, n *postgres.ClusterNode, sys gpu.SystemMetrics, liveGPU gpu.GPUTelemetry) {
 	client := &http.Client{Timeout: 1500 * time.Millisecond}
@@ -51,6 +64,7 @@ func probeNodeMetrics(ctx context.Context, n *postgres.ClusterNode, sys gpu.Syst
 func probeEdgeNode(ctx context.Context, client *http.Client, n *postgres.ClusterNode, sys gpu.SystemMetrics, liveGPU gpu.GPUTelemetry) {
 	url := fmt.Sprintf("http://%s:%d/api/v1/telemetry/hardware", n.IPAddress, n.HTTPPort)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	decorateAuth(req)
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode == http.StatusOK {
 		defer resp.Body.Close()
@@ -96,6 +110,7 @@ func probeEdgeNode(ctx context.Context, client *http.Client, n *postgres.Cluster
 	}
 	healthURL := fmt.Sprintf("http://%s:%d/healthz", n.IPAddress, n.HTTPPort)
 	reqH, _ := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
+	decorateAuth(reqH)
 	respH, errH := client.Do(reqH)
 	if errH == nil && respH.StatusCode == http.StatusOK {
 		defer respH.Body.Close()
@@ -122,6 +137,7 @@ func probeEdgeNode(ctx context.Context, client *http.Client, n *postgres.Cluster
 func probeGPUWorkerNode(ctx context.Context, client *http.Client, n *postgres.ClusterNode, sys gpu.SystemMetrics, liveGPU gpu.GPUTelemetry) {
 	url := fmt.Sprintf("http://%s:%d/api/v1/training/telemetry", n.IPAddress, n.HTTPPort)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	decorateAuth(req)
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode == http.StatusOK {
 		defer resp.Body.Close()
@@ -162,6 +178,7 @@ func probeGPUWorkerNode(ctx context.Context, client *http.Client, n *postgres.Cl
 	}
 	healthURL := fmt.Sprintf("http://%s:%d/healthz", n.IPAddress, n.HTTPPort)
 	reqH, _ := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
+	decorateAuth(reqH)
 	respH, errH := client.Do(reqH)
 	if errH == nil && respH.StatusCode == http.StatusOK {
 		defer respH.Body.Close()
@@ -188,6 +205,7 @@ func probeGPUWorkerNode(ctx context.Context, client *http.Client, n *postgres.Cl
 func probeGenericNode(ctx context.Context, client *http.Client, n *postgres.ClusterNode) {
 	probeURL := fmt.Sprintf("http://%s:%d/api/v1/info", n.IPAddress, n.HTTPPort)
 	reqP, _ := http.NewRequestWithContext(ctx, http.MethodGet, probeURL, nil)
+	decorateAuth(reqP)
 	respP, errP := client.Do(reqP)
 	if errP == nil && respP.StatusCode == http.StatusOK {
 		defer respP.Body.Close()
@@ -196,6 +214,7 @@ func probeGenericNode(ctx context.Context, client *http.Client, n *postgres.Clus
 	}
 	healthURL := fmt.Sprintf("http://%s:%d/healthz", n.IPAddress, n.HTTPPort)
 	reqH, _ := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
+	decorateAuth(reqH)
 	respH, errH := client.Do(reqH)
 	if errH == nil && respH.StatusCode == http.StatusOK {
 		defer respH.Body.Close()

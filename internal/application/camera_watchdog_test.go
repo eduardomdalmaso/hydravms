@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -12,20 +13,42 @@ import (
 )
 
 type mockBroadcaster struct {
+	mu     sync.Mutex
 	events []*domain.CloudEvent
 }
 
 func (m *mockBroadcaster) PublishCloudEvent(ctx context.Context, event *domain.CloudEvent) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.events = append(m.events, event)
 	return nil
 }
 
+func (m *mockBroadcaster) getEvents() []*domain.CloudEvent {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copied := make([]*domain.CloudEvent, len(m.events))
+	copy(copied, m.events)
+	return copied
+}
+
 type mockWSHub struct {
+	mu         sync.Mutex
 	broadcasts []string
 }
 
 func (m *mockWSHub) BroadcastToTenant(tenantID uuid.UUID, topic string, payload []byte) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.broadcasts = append(m.broadcasts, topic)
+}
+
+func (m *mockWSHub) getBroadcasts() []string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copied := make([]string, len(m.broadcasts))
+	copy(copied, m.broadcasts)
+	return copied
 }
 
 func TestCameraWatchdog_OfflineDetection(t *testing.T) {
@@ -65,13 +88,15 @@ func TestCameraWatchdog_OfflineDetection(t *testing.T) {
 		t.Errorf("expected camera status 'offline', got '%s'", updatedCam.Status)
 	}
 
-	if len(broadcaster.events) == 0 {
+	events := broadcaster.getEvents()
+	if len(events) == 0 {
 		t.Errorf("expected CloudEvent to be published, got 0")
-	} else if broadcaster.events[0].Type != domain.TypeCameraOffline {
-		t.Errorf("expected event type '%s', got '%s'", domain.TypeCameraOffline, broadcaster.events[0].Type)
+	} else if events[0].Type != domain.TypeCameraOffline {
+		t.Errorf("expected event type '%s', got '%s'", domain.TypeCameraOffline, events[0].Type)
 	}
 
-	if len(wsHub.broadcasts) == 0 {
+	broadcasts := wsHub.getBroadcasts()
+	if len(broadcasts) == 0 {
 		t.Errorf("expected WS broadcasts, got 0")
 	}
 }

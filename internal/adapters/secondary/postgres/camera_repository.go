@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"hydravms/internal/adapters/secondary/crypto"
 	"hydravms/internal/domain"
 )
 
@@ -30,6 +31,11 @@ func (r *PostgresCameraRepository) Create(ctx context.Context, c *domain.Camera)
 		c.Codec = "H.264"
 	}
 
+	encPass, err := crypto.Encrypt(c.ONVIFPass)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt onvif password: %w", err)
+	}
+
 	query := `
 		INSERT INTO cameras (
 			id, tenant_id, name, protocol, rtsp_url, sub_stream_url,
@@ -43,9 +49,9 @@ func (r *PostgresCameraRepository) Create(ctx context.Context, c *domain.Camera)
 			$19, $20, $21, $22
 		)
 	`
-	_, err := r.pool.Exec(ctx, query,
+	_, err = r.pool.Exec(ctx, query,
 		c.ID, c.TenantID, c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
-		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, c.ONVIFPass, c.RTMPStreamKey,
+		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, encPass, c.RTMPStreamKey,
 		c.Location, string(c.Status), c.Resolution, c.FPS, c.BitrateKbps, c.Codec, c.IsActive,
 		c.FolderID, c.AssignedNodeID, c.CreatedAt, c.UpdatedAt,
 	)
@@ -59,7 +65,7 @@ func (r *PostgresCameraRepository) GetByID(ctx context.Context, tenantID uuid.UU
 	query := `
 		SELECT 
 			id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
-			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(rtmp_stream_key, ''),
+			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(onvif_pass, ''), COALESCE(rtmp_stream_key, ''),
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
 		FROM cameras
@@ -68,10 +74,10 @@ func (r *PostgresCameraRepository) GetByID(ctx context.Context, tenantID uuid.UU
 	row := r.pool.QueryRow(ctx, query, cameraID, tenantID)
 
 	var c domain.Camera
-	var protoStr, statusStr string
+	var protoStr, statusStr, rawPass string
 	err := row.Scan(
 		&c.ID, &c.TenantID, &c.Name, &protoStr, &c.RTSPURL, &c.SubStreamURL,
-		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &c.RTMPStreamKey,
+		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &rawPass, &c.RTMPStreamKey,
 		&c.Location, &statusStr, &c.Resolution, &c.FPS,
 		&c.BitrateKbps, &c.Codec, &c.IsActive, &c.FolderID, &c.AssignedNodeID, &c.CreatedAt, &c.UpdatedAt,
 	)
@@ -84,6 +90,10 @@ func (r *PostgresCameraRepository) GetByID(ctx context.Context, tenantID uuid.UU
 	c.Protocol = domain.CameraProtocol(protoStr)
 	c.Status = domain.CameraStatus(statusStr)
 	c.HasPTZ = (c.Protocol == domain.ProtocolONVIF || c.ID == "cam_entrance_01" || c.ID == "cam_parking_03")
+	if rawPass != "" {
+		decrypted, _ := crypto.Decrypt(rawPass)
+		c.ONVIFPass = decrypted
+	}
 	return &c, nil
 }
 
