@@ -1,4 +1,5 @@
 import { ref, onBeforeUnmount, type Ref } from 'vue'
+import { getStreamBaseUrl } from '../utils/streamUrls'
 
 export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
   const isPlaying = ref(false)
@@ -7,7 +8,6 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
   let pc: RTCPeerConnection | null = null
   let activeStreamId = ''
   let activeIsHero = false
-
   let activeHasSubStream = true
 
   const stop = () => {
@@ -57,12 +57,12 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
 
       const shouldUseSub = !isHero && hasSubStream
       const path = shouldUseSub ? `${streamId}_sub` : streamId
+      const base = getStreamBaseUrl()
       const endpoints = [
-        `http://localhost:8889/${path}/whep`,
-        `http://localhost:8889/${streamId}/whep`,
-        `http://localhost:8080/whep/${path}`,
-        `http://localhost:8080/api/v1/streams/${path}/whep`,
-        `http://localhost:8080/whep/${streamId}`
+        `${base}/whep/${path}`,
+        `${base}/whep/${streamId}`,
+        `${base}/api/v1/streams/${path}/whep`,
+        `${base}/api/v1/streams/${streamId}/whep`
       ]
 
       let answerSdp = ''
@@ -78,7 +78,7 @@ export function useWebRTCPlayer(videoRef: Ref<HTMLVideoElement | null>) {
             if (answerSdp) break
           }
         } catch (_) {
-          // Network error or connection refused on this candidate port, try next
+          // Network error on this candidate endpoint, try next
         }
       }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onBeforeUnmount } from "vue"
 import type { WorkspaceSlot, CameraStreamInfo } from "../../types/mosaic"
-import { useWebRTCPlayer } from "../../composables/useWebRTCPlayer"
+import { useWSPCanvasPlayer } from "../../composables/useWSPCanvasPlayer"
 import { useTimelinePlayback } from "../../composables/useTimelinePlayback"
 import { useBranding } from "../../composables/useBranding"
 import { getCameraMjpegUrl } from "../../utils/streamUrls"
@@ -11,23 +11,18 @@ const props = defineProps<{ slot: WorkspaceSlot; isActive?: boolean; isHero?: bo
 const emit = defineEmits<{ (e: "selectCamera", cam: CameraStreamInfo): void; (e: "clear", idx: number): void }>()
 const { branding } = useBranding()
 const { getDetections } = useLiveDetections()
+const canvasRef = ref<HTMLCanvasElement | null>(null), imgRef = ref<HTMLImageElement | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null), isGearOpen = ref(false)
-const decoderMode = ref<"MSE" | "H264">("MSE"), retryKey = ref(Date.now()), isImgLoading = ref(true)
-const { start: startLive, stop: stopLive, error: rtcError, isPlaying: isLivePlaying, isConnecting: isLiveConnecting } = useWebRTCPlayer(videoRef)
+const savedMode = (typeof localStorage !== 'undefined' && localStorage.getItem('vms_decoder_mode')) as "H264" | "MJPEG" | null
+const decoderMode = ref<"H264" | "MJPEG">(savedMode || "MJPEG"), retryKey = ref(Date.now()), isImgLoading = ref(true)
+const { start: startWsp, stop: stopWsp, isPlaying: isWspPlaying, isConnecting: isWspConnecting } = useWSPCanvasPlayer(canvasRef)
 const { isLive, currentTime, isPlaying, playbackSpeed, activePlaybackCameraId, seekTrigger } = useTimelinePlayback()
 
 const cameraDetections = computed(() => {
   if (props.slot.type === 'camera' && props.slot.data) {
-    const camId = (props.slot.data as CameraStreamInfo).id
-    return getDetections(camId).value
+    return getDetections((props.slot.data as CameraStreamInfo).id).value
   }
   return []
-})
-
-watch(rtcError, (err) => {
-  if (err && decoderMode.value === 'MSE') {
-    decoderMode.value = 'H264'
-  }
 })
 
 const isPlayback = computed(() => {
@@ -36,27 +31,55 @@ const isPlayback = computed(() => {
 })
 
 const isStreamBuffering = computed(() => {
-  if (decoderMode.value === 'H264') return isImgLoading.value
   if (isPlayback.value) return !isPlaying.value
-  return !isLivePlaying.value || isLiveConnecting.value
+  if (decoderMode.value === 'MJPEG') return isImgLoading.value
+  return !isWspPlaying.value || isWspConnecting.value
 })
+
+const checkMjpegFrame = () => {
+  let attempts = 0
+  const poll = () => {
+    attempts++
+    if (imgRef.value && imgRef.value.naturalWidth > 0) {
+      isImgLoading.value = false
+      return
+    }
+    if (attempts < 25) setTimeout(poll, 150)
+    else isImgLoading.value = false
+  }
+  setTimeout(poll, 200)
+}
+
+const toggleDecoder = () => {
+  if (decoderMode.value === 'MJPEG' && imgRef.value) {
+    imgRef.value.src = ''
+  }
+  decoderMode.value = decoderMode.value === 'H264' ? 'MJPEG' : 'H264'
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('vms_decoder_mode', decoderMode.value)
+  }
+}
 
 const handleSeekOrSwitch = () => {
   if (isPlayback.value && videoRef.value) {
-    stopLive()
+    stopWsp()
     const cam = props.slot.data as CameraStreamInfo
     videoRef.value.src = `http://localhost:8083/api/v1/cameras/${cam.id}/recordings/stream?t=${currentTime.value}`
     videoRef.value.playbackRate = playbackSpeed.value
     if (isPlaying.value) videoRef.value.play().catch(() => {})
     else videoRef.value.pause()
-  } else if (!isPlayback.value && props.slot.type === 'camera' && props.slot.data && decoderMode.value === 'MSE') {
-    if (videoRef.value?.src.includes('recordings')) videoRef.value.src = ''
+  } else if (!isPlayback.value && props.slot.type === 'camera' && props.slot.data) {
     const cam = props.slot.data as CameraStreamInfo
-    const hasSub = cam.protocol !== 'RTMP' && (cam.sub_stream_url !== undefined ? Boolean(cam.sub_stream_url) : true)
-    startLive(cam.id, props.isHero, hasSub)
-  } else if (decoderMode.value === 'H264') {
-    stopLive()
-    retryKey.value = Date.now()
+    const hasSub = cam.protocol !== 'RTMP' && Boolean(cam.sub_stream_url)
+    if (decoderMode.value === 'H264') {
+      if (imgRef.value) imgRef.value.src = ''
+      startWsp(cam.id, props.isHero, hasSub)
+    } else {
+      stopWsp()
+      isImgLoading.value = true
+      retryKey.value = Date.now()
+      checkMjpegFrame()
+    }
   }
 }
 
@@ -69,15 +92,20 @@ const syncStream = () => {
   } else { handleSeekOrSwitch() }
 }
 
-const retryImg = () => setTimeout(() => { retryKey.value = Date.now() }, 1500)
+const retryImg = () => setTimeout(() => { retryKey.value = Date.now(); checkMjpegFrame() }, 1500)
 const handleVis = () => { if (!document.hidden) { retryKey.value = Date.now(); handleSeekOrSwitch() } }
 document.addEventListener('visibilitychange', handleVis)
 window.addEventListener('focus', handleVis)
-onBeforeUnmount(() => { document.removeEventListener('visibilitychange', handleVis); window.removeEventListener('focus', handleVis) })
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', handleVis)
+  window.removeEventListener('focus', handleVis)
+  if (imgRef.value) imgRef.value.src = ''
+  stopWsp()
+})
 
 watch(() => [isPlayback.value, seekTrigger.value], handleSeekOrSwitch)
 watch(() => [props.slot.data, props.isHero, decoderMode.value, isPlaying.value, playbackSpeed.value], syncStream, { deep: true })
-onMounted(handleSeekOrSwitch)
+onMounted(() => { handleSeekOrSwitch(); if (decoderMode.value === 'MJPEG') checkMjpegFrame() })
 </script>
 
 <template>
@@ -87,8 +115,9 @@ onMounted(handleSeekOrSwitch)
     </button>
     <template v-if="slot.type === 'camera' && slot.data">
       <div class="vms-slot-video" style="background: #000; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow: hidden;">
-        <video v-show="decoderMode === 'MSE' && (!isPlayback || isPlaying)" ref="videoRef" playsinline muted autoplay style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
-        <img v-if="decoderMode === 'H264'" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id)}?k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <canvas v-show="!isPlayback && decoderMode === 'H264'" ref="canvasRef" style="width: 100%; height: 100%; object-fit: contain; display: block;"></canvas>
+        <img v-if="!isPlayback && decoderMode === 'MJPEG'" ref="imgRef" :src="`${getCameraMjpegUrl((slot.data as CameraStreamInfo).id, 4, 20)}&k=${retryKey}`" alt="" style="width: 100%; height: 100%; object-fit: contain; display: block;" @load="isImgLoading = false" @error="retryImg" />
+        <video v-if="isPlayback" ref="videoRef" playsinline muted autoplay style="width: 100%; height: 100%; object-fit: contain; display: block;" @ended="handleSeekOrSwitch"></video>
         <svg v-if="cameraDetections.length > 0" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
           <rect
             v-for="b in cameraDetections"
@@ -109,7 +138,7 @@ onMounted(handleSeekOrSwitch)
           <span class="vms-badge" style="background: rgba(15, 23, 42, 0.9); color: #fff; font-size: 11px;">{{ (slot.data as CameraStreamInfo).name }}</span>
           <div class="vms-gear-wrapper" style="position: relative;" @mouseenter="isGearOpen = true" @mouseleave="isGearOpen = false">
             <button class="vms-gear-btn" title="Informacoes tecnicas" @click.stop="isGearOpen = !isGearOpen">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83-2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
             <div v-if="isGearOpen" class="vms-gear-popover">
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-neu-accent-orange);">CODEC: {{ (slot.data as CameraStreamInfo).codec || 'H.264' }}</span>
@@ -119,7 +148,7 @@ onMounted(handleSeekOrSwitch)
               <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-muted);">PROTOCOLO: {{ ((slot.data as CameraStreamInfo).protocol || 'RTSP').toUpperCase() }}</span>
             </div>
           </div>
-          <button class="vms-decoder-pill-btn" title="Alternar decodificador" @click.stop="decoderMode = decoderMode === 'MSE' ? 'H264' : 'MSE'">[{{ decoderMode }}]</button>
+          <button class="vms-decoder-pill-btn" :title="'Alternar decodificador (' + decoderMode + ')'" @click.stop="toggleDecoder">[{{ decoderMode }}]</button>
         </div>
       </div>
     </template>

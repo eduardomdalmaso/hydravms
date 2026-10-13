@@ -11,13 +11,20 @@ export const getStreamBaseUrl = (): string => {
   return 'http://localhost:8080'
 }
 
+export const getStreamWspUrl = (cameraId: string, isHero = false, hasSub = true): string => {
+  const host = typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost'
+  const wspPort = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WSP_PORT) || '8086'
+  const targetId = (!isHero && hasSub) ? `${cameraId}_sub` : cameraId
+  return `ws://${host}:${wspPort}/live/${encodeURIComponent(targetId)}`
+}
+
 export const getCameraSnapshotUrl = (cameraId: string, refresh = false): string => {
   const base = getStreamBaseUrl()
   const q = refresh ? `?refresh=true&t=${Date.now()}` : `?t=${Date.now()}`
   return `${base}/api/v1/streams/${encodeURIComponent(cameraId)}/snapshot.jpg${q}`
 }
 
-export const getCameraMjpegUrl = (cameraId: string): string => {
+export const getCameraMjpegUrl = (cameraId: string, quality = 4, fps = 20): string => {
   const base = getStreamBaseUrl()
-  return `${base}/api/v1/streams/${encodeURIComponent(cameraId)}/mjpeg`
+  return `${base}/api/v1/streams/${encodeURIComponent(cameraId)}/mjpeg?q=${quality}&fps=${fps}`
 }
