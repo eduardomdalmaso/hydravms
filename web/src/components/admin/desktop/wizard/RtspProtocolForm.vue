@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { RTSP_PRESETS, buildRtspUrl, detectPreset, parseRtspUrl, type RtspPreset } from '../../../../constants/rtspPresets'
 
 interface Props { url?: string; ip?: string; port?: number; path?: string; user?: string; pass?: string }
-const props = withDefaults(defineProps<Props>(), { url: 'rtsp://192.168.1.100:554/live', ip: '192.168.1.100', port: 554, path: '/live', user: 'admin', pass: '' })
+const props = withDefaults(defineProps<Props>(), { url: '', ip: '', port: 554, path: '', user: '', pass: '' })
 const emit = defineEmits<{
   (e: 'update:url', val: string): void; (e: 'update:ip', val: string): void; (e: 'update:port', val: number): void
   (e: 'update:path', val: string): void; (e: 'update:user', val: string): void; (e: 'update:pass', val: string): void
@@ -48,10 +48,10 @@ const onPass = (e: Event) => { const v = (e.target as HTMLInputElement).value; e
   <div class="vms-flex-col" style="min-height: 180px; gap: 0.45rem; box-sizing: border-box;">
     <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
       <div class="vms-form-group" style="flex: 1 1 180px; min-width: 140px;">
-        <label class="vms-label">Fabricante / Template RTSP</label>
+        <label class="vms-label">Fabricante</label>
         <select v-model="selectedPresetLabel" class="vms-auth-input" @change="onPresetChange">
-          <option value="">[AUTO / SELECIONAR FABRICANTE]</option>
-          <option v-for="p in RTSP_PRESETS" :key="p.label" :value="p.label">{{ p.label }}</option>
+          <option value="">[SELECIONAR FABRICANTE]</option>
+          <option v-for="p in RTSP_PRESETS" :key="p.label" :value="p.label">{{ p.brandName || p.brand }}</option>
         </select>
       </div>
       <div class="vms-form-group" style="flex: 1.2 1 200px; min-width: 160px;">

@@ -3,7 +3,7 @@ interface Props {
   ip?: string; port?: number; user?: string; pass?: string
 }
 const props = withDefaults(defineProps<Props>(), {
-  ip: '192.168.1.145', port: 80, user: 'admin', pass: ''
+  ip: '', port: 80, user: '', pass: ''
 })
 
 const emit = defineEmits<{

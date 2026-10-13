@@ -1,5 +1,6 @@
 export interface RtspPreset {
   brand: string
+  brandName: string
   label: string
   path: string
   queryAuth?: boolean
@@ -7,19 +8,19 @@ export interface RtspPreset {
 }
 
 export const RTSP_PRESETS: RtspPreset[] = [
-  { brand: 'Intelbras', label: '[INTELBRAS] /cam/realmonitor?channel=1&subtype=0', path: '/cam/realmonitor?channel=1&subtype=0', pattern: /realmonitor/i },
-  { brand: 'Intelbras', label: '[INTELBRAS] Query Auth (.sdp)', path: '/user={USER}&password={PASS}&channel=1&stream=0.sdp', queryAuth: true, pattern: /channel=\d+&stream=0\.sdp/i },
-  { brand: 'Hikvision', label: '[HIKVISION] /Streaming/Channels/101', path: '/Streaming/Channels/101', pattern: /Streaming\/Channels/i },
-  { brand: 'Hikvision', label: '[HIKVISION / JFL] /h264/ch1/main/av_stream', path: '/h264/ch1/main/av_stream', pattern: /h264\/ch\d+/i },
-  { brand: 'Tecvoz', label: '[TECVOZ] Linha TW IP (/profile1)', path: '/profile1', pattern: /profile1/i },
-  { brand: 'Tecvoz', label: '[TECVOZ] DVR Linha TW', path: '/chID=1&streamType=main&linkType=tcpa', pattern: /streamType=main/i },
-  { brand: 'Axis', label: '[AXIS] /axis-media/media.amp', path: '/axis-media/media.amp?videocodec=h264', pattern: /axis-media/i },
-  { brand: 'Vivotek', label: '[VIVOTEK] /live.sdp', path: '/live.sdp', pattern: /live\.sdp/i },
-  { brand: 'Reolink', label: '[REOLINK] /Preview_01_main', path: '/Preview_01_main', pattern: /Preview_\d+/i },
-  { brand: 'Tapo', label: '[TAPO / TP-LINK] /stream1', path: '/stream1', pattern: /stream[12]/i },
-  { brand: 'Multilaser', label: '[MULTILASER] /H264?ch=1&subtype=0', path: '/H264?ch=1&subtype=0', pattern: /H264\?ch=/i },
-  { brand: 'Foscam', label: '[FOSCAM] /videoMain', path: '/videoMain', pattern: /videoMain/i },
-  { brand: 'Generic', label: '[GENERIC] /live (Padrão)', path: '/live', pattern: /^\/live$/i }
+  { brand: 'Intelbras', brandName: 'Intelbras', label: '[INTELBRAS] /cam/realmonitor?channel=1&subtype=0', path: '/cam/realmonitor?channel=1&subtype=0', pattern: /realmonitor/i },
+  { brand: 'Intelbras', brandName: 'Intelbras (Query Auth)', label: '[INTELBRAS] Query Auth (.sdp)', path: '/user={USER}&password={PASS}&channel=1&stream=0.sdp', queryAuth: true, pattern: /channel=\d+&stream=0\.sdp/i },
+  { brand: 'Hikvision', brandName: 'Hikvision', label: '[HIKVISION] /Streaming/Channels/101', path: '/Streaming/Channels/101', pattern: /Streaming\/Channels/i },
+  { brand: 'Hikvision', brandName: 'Hikvision / JFL', label: '[HIKVISION / JFL] /h264/ch1/main/av_stream', path: '/h264/ch1/main/av_stream', pattern: /h264\/ch\d+/i },
+  { brand: 'Tecvoz', brandName: 'Tecvoz (Linha IP)', label: '[TECVOZ] Linha TW IP (/profile1)', path: '/profile1', pattern: /profile1/i },
+  { brand: 'Tecvoz', brandName: 'Tecvoz (Linha DVR)', label: '[TECVOZ] DVR Linha TW', path: '/chID=1&streamType=main&linkType=tcpa', pattern: /streamType=main/i },
+  { brand: 'Axis', brandName: 'Axis', label: '[AXIS] /axis-media/media.amp', path: '/axis-media/media.amp?videocodec=h264', pattern: /axis-media/i },
+  { brand: 'Vivotek', brandName: 'Vivotek', label: '[VIVOTEK] /live.sdp', path: '/live.sdp', pattern: /live\.sdp/i },
+  { brand: 'Reolink', brandName: 'Reolink', label: '[REOLINK] /Preview_01_main', path: '/Preview_01_main', pattern: /Preview_\d+/i },
+  { brand: 'Tapo', brandName: 'TP-Link / Tapo', label: '[TAPO / TP-LINK] /stream1', path: '/stream1', pattern: /stream[12]/i },
+  { brand: 'Multilaser', brandName: 'Multilaser', label: '[MULTILASER] /H264?ch=1&subtype=0', path: '/H264?ch=1&subtype=0', pattern: /H264\?ch=/i },
+  { brand: 'Foscam', brandName: 'Foscam', label: '[FOSCAM] /videoMain', path: '/videoMain', pattern: /videoMain/i },
+  { brand: 'Generic', brandName: 'Genérico / Padrão', label: '[GENERIC] /live (Padrão)', path: '/live', pattern: /^\/live$/i }
 ]
 
 export function detectPreset(input: string): RtspPreset | undefined {
