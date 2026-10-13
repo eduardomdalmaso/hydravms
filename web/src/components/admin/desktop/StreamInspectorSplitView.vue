@@ -4,12 +4,12 @@ import StreamDetailLeftPane from './StreamDetailLeftPane.vue'
 import StreamRecordingRightPane from './StreamRecordingRightPane.vue'
 
 defineProps<{ stream: StreamItem }>()
-const emit = defineEmits<{ (e: 'saved', msg: string): void }>()
+const emit = defineEmits<{ (e: 'saved', msg: string): void; (e: 'edit', stream: StreamItem): void }>()
 </script>
 
 <template>
   <div class="vms-desktop-split-layout">
-    <StreamDetailLeftPane :stream="stream" />
+    <StreamDetailLeftPane :stream="stream" @edit="(s) => emit('edit', s)" />
     <StreamRecordingRightPane :stream="stream" @saved="(msg) => emit('saved', msg)" />
   </div>
 </template>

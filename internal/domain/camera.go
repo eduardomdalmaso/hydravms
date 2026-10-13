@@ -46,6 +46,13 @@ type Camera struct {
 	Codec          string         `json:"codec"`
 	HasPTZ         bool           `json:"has_ptz"`
 	IsActive       bool           `json:"is_active"`
+	Brand          string         `json:"brand,omitempty"`
+	Model          string         `json:"model,omitempty"`
+	SerialNumber   string         `json:"serial_number,omitempty"`
+	Firmware       string         `json:"firmware,omitempty"`
+	MACAddress     string         `json:"mac_address,omitempty"`
+	Latitude       float64        `json:"latitude,omitempty"`
+	Longitude      float64        `json:"longitude,omitempty"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
 }

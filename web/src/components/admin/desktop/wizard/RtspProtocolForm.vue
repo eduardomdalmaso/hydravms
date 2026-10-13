@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RTSP_PRESETS, buildRtspUrl, detectPreset, parseRtspUrl, type RtspPreset } from '../../../../constants/rtspPresets'
+import { buildRtspUrl, parseRtspUrl } from '../../../../constants/rtspPresets'
 
 interface Props { url?: string; ip?: string; port?: number; path?: string; user?: string; pass?: string }
 const props = withDefaults(defineProps<Props>(), { url: '', ip: '', port: 554, path: '', user: '', pass: '' })
@@ -9,16 +8,8 @@ const emit = defineEmits<{
   (e: 'update:path', val: string): void; (e: 'update:user', val: string): void; (e: 'update:pass', val: string): void
 }>()
 
-const selectedPresetLabel = ref('')
-let currentPreset: RtspPreset | undefined = undefined
-
 const sync = (ipVal = props.ip, portVal = props.port, pathVal = props.path, userVal = props.user, passVal = props.pass) => {
-  emit('update:url', buildRtspUrl(currentPreset, ipVal, portVal, pathVal, userVal, passVal))
-}
-
-const onPresetChange = () => {
-  currentPreset = RTSP_PRESETS.find(p => p.label === selectedPresetLabel.value)
-  if (currentPreset) { emit('update:path', currentPreset.path); sync(props.ip, props.port, currentPreset.path, props.user, props.pass) }
+  emit('update:url', buildRtspUrl(undefined, ipVal, portVal, pathVal, userVal, passVal))
 }
 
 const onUrlInput = (e: Event) => {
@@ -28,13 +19,11 @@ const onUrlInput = (e: Event) => {
     if (parsed.ip) emit('update:ip', parsed.ip); if (parsed.port) emit('update:port', parsed.port)
     if (parsed.path) emit('update:path', parsed.path); if (parsed.user) emit('update:user', parsed.user)
     if (parsed.pass) emit('update:pass', parsed.pass)
-    const matched = detectPreset(v); if (matched) { selectedPresetLabel.value = matched.label; currentPreset = matched }
   }
 }
 
 const onPath = (e: Event) => {
   const v = (e.target as HTMLInputElement).value; emit('update:path', v)
-  const matched = detectPreset(v); if (matched) { selectedPresetLabel.value = matched.label; currentPreset = matched }
   sync(props.ip, props.port, v, props.user, props.pass)
 }
 
@@ -45,19 +34,10 @@ const onPass = (e: Event) => { const v = (e.target as HTMLInputElement).value; e
 </script>
 
 <template>
-  <div class="vms-flex-col" style="min-height: 180px; gap: 0.45rem; box-sizing: border-box;">
-    <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
-      <div class="vms-form-group" style="flex: 1 1 180px; min-width: 140px;">
-        <label class="vms-label">Fabricante</label>
-        <select v-model="selectedPresetLabel" class="vms-auth-input" @change="onPresetChange">
-          <option value="">[SELECIONAR FABRICANTE]</option>
-          <option v-for="p in RTSP_PRESETS" :key="p.label" :value="p.label">{{ p.brandName || p.brand }}</option>
-        </select>
-      </div>
-      <div class="vms-form-group" style="flex: 1.2 1 200px; min-width: 160px;">
-        <label class="vms-label">URL RTSP Principal</label>
-        <input :value="url" class="vms-auth-input vms-text-mono" placeholder="rtsp://admin:pass@192.168.1.100:554/live" @input="onUrlInput" />
-      </div>
+  <div class="vms-flex-col" style="min-height: 180px; gap: 0.55rem; box-sizing: border-box;">
+    <div class="vms-form-group" style="width: 100%;">
+      <label class="vms-label">URL RTSP Principal</label>
+      <input :value="url" class="vms-auth-input vms-text-mono" placeholder="rtsp://admin:pass@192.168.1.100:554/live" @input="onUrlInput" />
     </div>
     <div class="vms-flex-row" style="gap: 0.5rem; flex-wrap: wrap;">
       <div class="vms-form-group" style="flex: 1.1 1 130px; min-width: 110px;">

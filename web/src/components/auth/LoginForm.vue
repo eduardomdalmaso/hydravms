@@ -5,7 +5,7 @@ import type { LoginCredentials } from '../../types/auth'
 const props = defineProps<{ isLoading: boolean; errorMessage?: string | null }>()
 const emit = defineEmits<{ (e: 'submit', creds: LoginCredentials): void }>()
 
-const username = ref('admin')
+const username = ref('')
 const password = ref('')
 const rememberMe = ref(true)
 
@@ -18,7 +18,7 @@ const handleSubmit = () => {
   <form class="vms-flex-col" style="gap: 1.25rem;" @submit.prevent="handleSubmit">
     <div class="vms-form-group">
       <label class="vms-label">Usuário</label>
-      <input v-model="username" type="text" required class="vms-auth-input" placeholder="admin" autofocus />
+      <input v-model="username" type="text" required class="vms-auth-input" placeholder="Usuário ou e-mail" autofocus />
     </div>
     <div class="vms-form-group">
       <div class="vms-flex-between">

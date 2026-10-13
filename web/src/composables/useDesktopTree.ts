@@ -78,18 +78,35 @@ export function useDesktopTree() {
   }
 
   const handleSaveStream = async (stream: Partial<StreamItem>, folderId?: string) => {
-    const newStream = createNewStreamItem(stream, totalStreams.value + 1)
+    const isEdit = !!stream.id && (rootStreams.value.some(s => s.id === stream.id) || folders.value.some(f => f.streams.some(s => s.id === stream.id)))
+    const item = createNewStreamItem(stream, totalStreams.value + 1)
+    if (stream.id) item.id = stream.id
+
     const saved = await createRemoteCamera({
-      id: newStream.id, name: newStream.name, protocol: newStream.protocol?.toLowerCase() || 'rtsp',
-      rtsp_url: newStream.url, onvif_ip: newStream.ip, onvif_port: newStream.port, location: newStream.locationName || '',
-      status: 'online', resolution: newStream.resolution || '1920x1080', fps: newStream.fps || 30.0,
-      bitrate_kbps: 4096, codec: newStream.codec || 'H.265', has_ptz: !!newStream.has_ptz,
+      id: item.id, name: item.name, protocol: item.protocol?.toLowerCase() || 'rtsp',
+      rtsp_url: item.url, onvif_ip: item.ip, onvif_port: item.port, location: item.locationName || '',
+      status: 'online', resolution: item.resolution || '1920x1080', fps: item.fps || 30.0,
+      bitrate_kbps: 4096, codec: item.codec || 'H.265', has_ptz: !!item.has_ptz,
+      brand: item.brand, model: item.model, serial_number: item.serialNumber,
+      firmware: item.firmware, mac_address: item.macAddress, latitude: item.latitude, longitude: item.longitude,
       folder_id: (folderId && folderId.includes('-')) ? folderId : undefined
     })
-    if (saved) newStream.id = saved.id
-    const target = folders.value.find(f => f.id === folderId)
-    if (target) target.streams.push(newStream); else rootStreams.value.push(newStream)
-    selectedStream.value = newStream; showNotification('Fluxo salvo com sucesso.')
+    if (saved) item.id = saved.id
+
+    if (isEdit) {
+      const rIdx = rootStreams.value.findIndex(s => s.id === item.id)
+      if (rIdx !== -1) rootStreams.value[rIdx] = { ...rootStreams.value[rIdx], ...item }
+      folders.value.forEach(f => {
+        const fIdx = f.streams.findIndex(s => s.id === item.id)
+        if (fIdx !== -1) f.streams[fIdx] = { ...f.streams[fIdx], ...item }
+      })
+      if (selectedStream.value?.id === item.id) selectedStream.value = { ...selectedStream.value, ...item }
+      showNotification(`Fluxo "${item.name}" atualizado com sucesso.`)
+    } else {
+      const target = folders.value.find(f => f.id === folderId)
+      if (target) target.streams.push(item); else rootStreams.value.push(item)
+      selectedStream.value = item; showNotification(`Fluxo "${item.name}" cadastrado com sucesso.`)
+    }
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vms:camera-updated'))
   }
 

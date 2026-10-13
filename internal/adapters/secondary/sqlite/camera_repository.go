@@ -46,12 +46,14 @@ func (r *SQLiteCameraRepository) Create(ctx context.Context, c *domain.Camera) e
 			id, tenant_id, name, protocol, rtsp_url, sub_stream_url,
 			onvif_ip, onvif_port, onvif_user, onvif_pass, rtmp_stream_key,
 			location, status, resolution, fps, bitrate_kbps, codec, is_active,
-			folder_id, assigned_node_id, created_at, updated_at
+			folder_id, assigned_node_id, created_at, updated_at,
+			brand, model, serial_number, firmware, mac_address, latitude, longitude
 		) VALUES (
 			?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?, ?, ?,
-			?, ?, ?, ?
+			?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?
 		)
 	`
 	_, err = r.db.ExecContext(ctx, query,
@@ -59,6 +61,7 @@ func (r *SQLiteCameraRepository) Create(ctx context.Context, c *domain.Camera) e
 		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, encPass, c.RTMPStreamKey,
 		c.Location, string(c.Status), c.Resolution, c.FPS, c.BitrateKbps, c.Codec, c.IsActive,
 		folderIDStr, nodeIDStr, c.CreatedAt, c.UpdatedAt,
+		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert camera: %w", err)
@@ -72,7 +75,9 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 			id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
 			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(onvif_pass, ''), COALESCE(rtmp_stream_key, ''),
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
-			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
+			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at,
+			COALESCE(brand, ''), COALESCE(model, ''), COALESCE(serial_number, ''), COALESCE(firmware, ''), COALESCE(mac_address, ''),
+			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0)
 		FROM cameras
 		WHERE id = ? AND tenant_id = ?
 	`
@@ -86,6 +91,7 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &rawPass, &c.RTMPStreamKey,
 		&c.Location, &statusStr, &c.Resolution, &c.FPS,
 		&c.BitrateKbps, &c.Codec, &c.IsActive, &folderIDStr, &nodeIDStr, &c.CreatedAt, &c.UpdatedAt,
+		&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -116,29 +122,22 @@ func (r *SQLiteCameraRepository) List(ctx context.Context, tenantID uuid.UUID, f
 	var query string
 	var args []any
 
+	baseQuery := `
+		SELECT 
+			id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
+			COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(rtmp_stream_key, ''),
+			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
+			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at,
+			COALESCE(brand, ''), COALESCE(model, ''), COALESCE(serial_number, ''), COALESCE(firmware, ''), COALESCE(mac_address, ''),
+			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0)
+		FROM cameras
+	`
+
 	if folderID != nil {
-		query = `
-			SELECT 
-				id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
-				COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(rtmp_stream_key, ''),
-				COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
-				COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
-			FROM cameras
-			WHERE tenant_id = ? AND folder_id = ?
-			ORDER BY id ASC
-		`
+		query = baseQuery + ` WHERE tenant_id = ? AND folder_id = ? ORDER BY id ASC`
 		args = []any{tenantID.String(), folderID.String()}
 	} else {
-		query = `
-			SELECT 
-				id, tenant_id, name, protocol, COALESCE(rtsp_url, ''), COALESCE(sub_stream_url, ''),
-				COALESCE(onvif_ip, ''), COALESCE(onvif_port, 80), COALESCE(onvif_user, ''), COALESCE(rtmp_stream_key, ''),
-				COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
-				COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at
-			FROM cameras
-			WHERE tenant_id = ?
-			ORDER BY id ASC
-		`
+		query = baseQuery + ` WHERE tenant_id = ? ORDER BY id ASC`
 		args = []any{tenantID.String()}
 	}
 
@@ -158,6 +157,7 @@ func (r *SQLiteCameraRepository) List(ctx context.Context, tenantID uuid.UUID, f
 			&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &c.RTMPStreamKey,
 			&c.Location, &statusStr, &c.Resolution, &c.FPS,
 			&c.BitrateKbps, &c.Codec, &c.IsActive, &folderIDStr, &nodeIDStr, &c.CreatedAt, &c.UpdatedAt,
+			&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan camera row: %w", err)
 		}
@@ -197,14 +197,16 @@ func (r *SQLiteCameraRepository) Update(ctx context.Context, c *domain.Camera) e
 		UPDATE cameras
 		SET 
 			name = ?, protocol = ?, rtsp_url = ?, sub_stream_url = ?,
-			location = ?, resolution = ?, fps = ?, bitrate_kbps = ?,
-			codec = ?, folder_id = ?, assigned_node_id = ?, status = ?, updated_at = ?
+			onvif_ip = ?, onvif_port = ?, location = ?, resolution = ?, fps = ?, bitrate_kbps = ?,
+			codec = ?, folder_id = ?, assigned_node_id = ?, status = ?, updated_at = ?,
+			brand = ?, model = ?, serial_number = ?, firmware = ?, mac_address = ?, latitude = ?, longitude = ?
 		WHERE id = ? AND tenant_id = ?
 	`
 	res, err := r.db.ExecContext(ctx, query,
 		c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
-		c.Location, c.Resolution, c.FPS, c.BitrateKbps,
+		c.ONVIFIP, c.ONVIFPort, c.Location, c.Resolution, c.FPS, c.BitrateKbps,
 		c.Codec, folderIDStr, nodeIDStr, string(c.Status), c.UpdatedAt,
+		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude,
 		c.ID, c.TenantID.String(),
 	)
 	if err != nil {

@@ -89,6 +89,11 @@ export function useAdminCameraActions(
       if (!s) { for (const f of folders.value) { s = f.streams.find(item => item.id === target.id); if (s) break } }
       if (s) selectedStream.value = s
     }
+    else if (action === 'edit-stream' && target.id) {
+      let s = displayedStreams.value.find(item => item.id === target.id)
+      if (!s) { for (const f of folders.value) { s = f.streams.find(item => item.id === target.id); if (s) break } }
+      if (s) handleOpenNewWizard(s)
+    }
     else if (action === 'delete-folder' && target.id) requestDeleteFolder(target.id)
     else if (action === 'delete-stream' && target.id) requestDeleteStream(target.id, target.name)
     else if (action === 'move-stream' && target.id) moveStreamToFolder(target.id, extra)

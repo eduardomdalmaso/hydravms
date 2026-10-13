@@ -5,7 +5,7 @@ interface Props {
   streamKey?: string
 }
 const props = withDefaults(defineProps<Props>(), {
-  streamKey: 'stream_alpha_01'
+  streamKey: ''
 })
 const emit = defineEmits<{ (e: 'update:streamKey', val: string): void }>()
 

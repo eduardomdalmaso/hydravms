@@ -31,11 +31,17 @@ export interface RegisteredCamera {
   group?: string
   protocol?: string
   location?: string
+  brand?: string
+  model?: string
+  serial_number?: string
+  firmware?: string
+  mac_address?: string
+  latitude?: number
+  longitude?: number
   bitrate_kbps?: number
   sub_bitrate_kbps?: number
   folder_id?: string
 }
-
 
 export interface AdminUser {
   id: string

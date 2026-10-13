@@ -46,6 +46,7 @@ const handleAction = (action: string, target: ContextMenuTarget, extra?: any) =>
       <div v-else-if="target.type === 'stream'" class="vms-flex-col">
         <div class="vms-context-menu-section-title">// FLUXO: {{ target.name }}</div>
         <button class="vms-context-item" @click="handleAction('inspect-stream', target)">[INSPECIONAR / DETALHES]</button>
+        <button class="vms-context-item" @click="handleAction('edit-stream', target)">[ALTERAR CADASTRO]</button>
         <button class="vms-context-item" @click="handleAction('test-stream', target)">[TESTAR CONEXAO RTSP]</button>
         
         <!-- Enviar para pasta com submenu lateral aberto no hover -->

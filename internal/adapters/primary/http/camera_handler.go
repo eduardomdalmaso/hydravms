@@ -57,16 +57,26 @@ func (h *CameraHandler) HandleCameras(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		cam.TenantID = tenantID
-		created, err := h.service.CreateCamera(r.Context(), &cam)
+
+		var result *domain.Camera
+		var err error
+		if strings.TrimSpace(cam.ID) != "" {
+			if existing, _ := h.service.GetCamera(r.Context(), tenantID, cam.ID); existing != nil {
+				result, err = h.service.UpdateCamera(r.Context(), &cam)
+			}
+		}
+		if result == nil {
+			result, err = h.service.CreateCamera(r.Context(), &cam)
+		}
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		// Asynchronously register/sync stream with HydraStream Data Plane
-		go syncCameraWithHydraStream(created)
+		go syncCameraWithHydraStream(result)
 
-		writeJSON(w, http.StatusCreated, created)
+		writeJSON(w, http.StatusOK, result)
 
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -125,6 +135,22 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		}
 		writeJSON(w, http.StatusOK, cam)
 
+	case http.MethodPut, http.MethodPatch:
+		var cam domain.Camera
+		if err := json.NewDecoder(r.Body).Decode(&cam); err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid camera payload: "+err.Error())
+			return
+		}
+		cam.TenantID = tenantID
+		cam.ID = rawID
+		updated, err := h.service.UpdateCamera(r.Context(), &cam)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		go syncCameraWithHydraStream(updated)
+		writeJSON(w, http.StatusOK, updated)
+
 	case http.MethodDelete:
 		if err := h.service.DeleteCamera(r.Context(), tenantID, rawID); err != nil {
 			writeError(w, http.StatusInternalServerError, err.Error())
@@ -146,4 +172,3 @@ func (h *CameraHandler) handleRecordingProfiles(w http.ResponseWriter, r *http.R
 	}
 	h.handleCameraProfiles(w, r, tenantID, camID, subPath)
 }
-

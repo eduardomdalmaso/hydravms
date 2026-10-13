@@ -20,11 +20,15 @@ export interface StreamItem {
   latitude?: number
   longitude?: number
   locationName?: string
+  brand?: string
+  model?: string
+  serialNumber?: string
+  firmware?: string
+  macAddress?: string
   snapshotUrl?: string
   analyticsCount?: number
   eventsCount?: number
 }
-
 
 export interface FolderNode {
   id: string

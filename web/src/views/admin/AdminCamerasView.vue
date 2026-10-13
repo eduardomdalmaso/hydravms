@@ -66,7 +66,7 @@ const {
     <DesktopBreadcrumb :current-folder="currentFolder" :selected-stream="selectedStream" :total-folders="folders.length" :total-streams="totalStreams" :current-folder-streams-count="currentFolder?.streams.length" @back="selectedStream ? (selectedStream = null) : (currentFolderId = null)" @navigate-root="currentFolderId = null; selectedStream = null" @navigate-folder="selectedStream = null" />
 
     <div class="vms-desktop-container">
-      <StreamInspectorSplitView v-if="selectedStream" :stream="selectedStream" @saved="(msg) => showNotification(msg)" />
+      <StreamInspectorSplitView v-if="selectedStream" :stream="selectedStream" @saved="(msg) => showNotification(msg)" @edit="(s) => handleOpenNewWizard(s)" />
       <div v-else class="vms-desktop-canvas" @contextmenu.prevent="openContextMenu($event, { type: 'canvas' })">
         <div v-if="!currentFolder" class="vms-flex-col" style="gap: 0.65rem;">
           <div class="vms-desktop-grid">

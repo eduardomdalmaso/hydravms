@@ -5,7 +5,7 @@ import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
 import { formatChannelId } from '../../../utils/idFormatter'
 
 const props = defineProps<{ stream: StreamItem }>()
-const emit = defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<{ (e: 'close'): void; (e: 'edit', stream: StreamItem): void }>()
 const refreshKey = ref(Date.now()), isRefreshing = ref(false), hasImageError = ref(false)
 const activeStreamType = ref<'main' | 'sub'>('main')
 
@@ -41,8 +41,8 @@ const refreshSnapshot = async () => {
 
 <template>
   <div class="vms-split-pane">
-    <!-- Header with Stream Selector -->
-    <div class="vms-split-header">
+    <!-- Header with Stream Selector and Edit Action -->
+    <div class="vms-split-header" style="display: flex; justify-content: space-between; align-items: center;">
       <div class="vms-flex-row" style="gap: 0.75rem; align-items: center;">
         <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 94, 58, 0.15); border: 1px solid rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center;">
           <svg width="18" height="18" viewBox="0 0 576 512" fill="#ff5e3a"><path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-112-74.7c-9.8-6.5-16.1-17.4-16.1-29.9V205.1c0-12.5 6.3-23.4 16.1-29.9l112-74.7c9.9-6.6 22.5-7.3 32.9-1.6z"/></svg>
@@ -85,6 +85,19 @@ const refreshSnapshot = async () => {
           <span class="vms-text-mono vms-text-2xs vms-text-dim">{{ currentStreamUrl }}</span>
         </div>
       </div>
+      <button
+        type="button"
+        class="vms-btn vms-btn-secondary"
+        style="height: 28px; padding: 0 10px; font-size: 11px; gap: 5px;"
+        title="Alterar Cadastro da Câmera"
+        @click="emit('edit', stream)"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        <span>ALTERAR CADASTRO</span>
+      </button>
     </div>
 
     <!-- Snapshot / Preview Box -->

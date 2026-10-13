@@ -258,5 +258,8 @@ func initSchema(db *sql.DB) error {
 		return err
 	}
 	_, _ = db.Exec("ALTER TABLE camera_recording_profiles ADD COLUMN stream_type TEXT NOT NULL DEFAULT 'main'")
+	for _, col := range []string{"brand TEXT", "model TEXT", "serial_number TEXT", "firmware TEXT", "mac_address TEXT", "latitude REAL", "longitude REAL"} {
+		_, _ = db.Exec("ALTER TABLE cameras ADD COLUMN " + col)
+	}
 	return nil
 }
