@@ -57,20 +57,41 @@ if (Test-Path $ForgeDir) {
 # 4. FFmpeg Tooling Check
 Write-Host "`n[4/6] Verificando FFmpeg & Codecs de Vídeo..." -ForegroundColor Yellow
 $ffmpegCmd = Get-Command ffmpeg -ErrorAction SilentlyContinue
-if (-not $ffmpegCmd) {
+$resolvedFfmpeg = ""
+if ($ffmpegCmd) {
+    $resolvedFfmpeg = $ffmpegCmd.Source
+    Write-Host "  -> FFmpeg pronto no PATH ($resolvedFfmpeg)." -ForegroundColor Green
+} else {
     $wingetFfmpeg = Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter "ffmpeg.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
     if (-not $wingetFfmpeg) {
         Write-Host "  -> FFmpeg não encontrado. Auto-instalando via winget..." -ForegroundColor Gray
         winget install Gyan.FFmpeg --accept-source-agreements --accept-package-agreements | Out-Null
+        $wingetFfmpeg = Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter "ffmpeg.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
         Write-Host "  -> FFmpeg instalado com sucesso!" -ForegroundColor Green
-    } else {
-        Write-Host "  -> FFmpeg localizado em: $wingetFfmpeg" -ForegroundColor Green
     }
-} else {
-    Write-Host "  -> FFmpeg pronto no PATH." -ForegroundColor Green
+    $resolvedFfmpeg = $wingetFfmpeg
+    Write-Host "  -> FFmpeg localizado em: $resolvedFfmpeg" -ForegroundColor Green
+}
+
+# Auto-provision binaries directly into HydraStream/bin for standalone zero-config execution
+$streamBinDir = Join-Path $StreamDir "bin"
+if (Test-Path $StreamDir) {
+    if (-not (Test-Path $streamBinDir)) { New-Item -ItemType Directory -Path $streamBinDir -Force | Out-Null }
+    if ($resolvedFfmpeg -and (Test-Path $resolvedFfmpeg)) {
+        if (-not (Test-Path "$streamBinDir\ffmpeg.exe")) {
+            Copy-Item $resolvedFfmpeg "$streamBinDir\ffmpeg.exe" -Force
+            Write-Host "  -> ffmpeg.exe vinculado a $streamBinDir" -ForegroundColor Green
+        }
+        $ffprobeCandidate = Join-Path (Split-Path $resolvedFfmpeg -Parent) "ffprobe.exe"
+        if ((Test-Path $ffprobeCandidate) -and (-not (Test-Path "$streamBinDir\ffprobe.exe"))) {
+            Copy-Item $ffprobeCandidate "$streamBinDir\ffprobe.exe" -Force
+            Write-Host "  -> ffprobe.exe vinculado a $streamBinDir" -ForegroundColor Green
+        }
+    }
 }
 
 # 5. Frontend Dependencies
+
 Write-Host "`n[5/6] Verificando dependências do Frontend..." -ForegroundColor Yellow
 if (-not (Test-Path "$RootDir\web\node_modules")) {
     Write-Host "  -> Instalando dependências npm no frontend..." -ForegroundColor Gray
