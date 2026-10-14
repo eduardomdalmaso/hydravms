@@ -7,7 +7,7 @@ import StreamWizardDevicePane from './desktop/StreamWizardDevicePane.vue'; impor
 
 const props = defineProps<{ isOpen: boolean; targetFolderId?: string; folders: FolderNode[]; initialData?: Partial<StreamItem> }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'save', stream: Partial<StreamItem>, folderId: string): void }>()
-const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), snapshotUrl = ref<string | undefined>(undefined), authRequired = ref(false), testError = ref<string | null>(null)
+const step = ref(1), isTesting = ref(false), hasSnapshot = ref(false), snapshotUrl = ref<string | undefined>(undefined), authRequired = ref(false), testError = ref<string | null>(null), saveAlertError = ref<string | null>(null)
 const detectedCodec = ref('H.265'), detectedRes = ref('1920x1080 Full HD'), detectedFps = ref(30), latency = ref(1)
 const channels = ref<ChannelItem[]>([{ id: 1, name: 'Canal 01 (Principal)', path: '/stream1', subPath: '/stream2', status: 'online' }])
 const form = ref({
@@ -27,7 +27,7 @@ const totalSteps = computed(() => wizardSteps.value.length)
 
 watch(() => props.isOpen, (open) => {
   if (open) {
-    step.value = 1; isTesting.value = false; hasSnapshot.value = false; snapshotUrl.value = undefined; authRequired.value = false; testError.value = null
+    step.value = 1; isTesting.value = false; hasSnapshot.value = false; snapshotUrl.value = undefined; authRequired.value = false; testError.value = null; saveAlertError.value = null
     const init = props.initialData as any
     const parsed = (init?.url && init.protocol !== 'LOOP' && init.protocol !== 'RTMP') ? parseRtspUrl(init.url) : null
     form.value.name = init?.name || ''
@@ -50,7 +50,6 @@ watch(() => props.isOpen, (open) => {
     form.value.folderId = props.targetFolderId || init?.folderId || (props.folders[0]?.id || '')
     const chPaths = generateChannelPaths(form.value.path || '/stream1', 1)
     channels.value = [{ id: 1, name: `${form.value.name || 'Canal 01'} (Principal)`, path: chPaths.main, subPath: chPaths.sub, status: 'online' }]
-    if (init && (init.url || init.ip)) fetchSnapshot()
   }
 })
 
@@ -89,15 +88,28 @@ const fetchSnapshot = async (): Promise<boolean> => {
 }
 
 const handleNext = async () => {
+  saveAlertError.value = null
   if (!form.value.name.trim()) form.value.name = form.value.protocol === 'LOOP' ? `Fluxo Loop ${form.value.url.split('/').pop() || 'Video'}` : `Camera ${form.value.protocol} ${form.value.ip}`
   if (currentStepKey.value === 'network') {
-    const ch = generateChannelPaths(form.value.path || '/stream1', 1); channels.value = [{ id: 1, name: `${form.value.name} (Principal)`, path: ch.main, subPath: ch.sub, status: 'online' }]
-    if (!hasSnapshot.value) { const ok = await fetchSnapshot(); if (!ok) return }
+    const ch = generateChannelPaths(form.value.path || '/stream1', 1)
+    channels.value = [{ id: 1, name: `${form.value.name} (Principal)`, path: ch.main, subPath: ch.sub, status: 'online' }]
   }
   step.value++
+  if (currentStepKey.value === 'geo' && !hasSnapshot.value && !isTesting.value) {
+    fetchSnapshot()
+  }
 }
 
-const finish = () => {
+const finish = async () => {
+  if (isTesting.value) return
+  saveAlertError.value = null
+  if (!hasSnapshot.value || !snapshotUrl.value) {
+    const ok = await fetchSnapshot()
+    if (!ok || !snapshotUrl.value) {
+      saveAlertError.value = testError.value || 'Não foi possível conectar com a câmera e obter o snapshot do fluxo.'
+      return
+    }
+  }
   if (!form.value.name.trim()) form.value.name = form.value.protocol === 'LOOP' ? `Fluxo Loop ${form.value.url.split('/').pop() || 'Video'}` : `Camera ${form.value.protocol} ${form.value.ip}`
   let finalUrl = form.value.protocol === 'RTMP' ? `rtmp://localhost:1935/live/${form.value.streamKey}` : (form.value.protocol === 'LOOP' ? (form.value.url.startsWith('file://') ? form.value.url : `file://${form.value.url}`) : form.value.url)
   if (form.value.user && !finalUrl.includes('@') && form.value.protocol !== 'LOOP') finalUrl = finalUrl.replace('rtsp://', `rtsp://${form.value.user}:${form.value.pass}@`)
@@ -121,15 +133,28 @@ const finish = () => {
         <span v-for="(st, idx) in wizardSteps" :key="st.key" class="vms-text-mono vms-text-2xs" :style="{ color: step >= (idx + 1) ? 'var(--vms-neu-accent-orange)' : 'var(--vms-text-dim)' }">{{ st.title }}</span>
       </div>
       <div class="vms-modal-body" style="padding: 1.15rem; min-height: 400px; max-height: calc(85vh - 120px); overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
-        <StreamWizardNetworkPane v-if="currentStepKey === 'network'" :form="form" :folders="folders" :is-testing="isTesting" :has-snapshot="hasSnapshot" :snapshot-url="snapshotUrl" :auth-required="authRequired" :test-error="testError" :detected-codec="detectedCodec" :detected-resolution="detectedRes" :detected-fps="detectedFps" :latency-ms="latency" @test="fetchSnapshot" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined; authRequired = false; testError = null" />
+        <StreamWizardNetworkPane v-if="currentStepKey === 'network'" :form="form" :folders="folders" @reset-snapshot="hasSnapshot = false; snapshotUrl = undefined; authRequired = false; testError = null" />
         <StreamWizardChannelsPane v-else-if="currentStepKey === 'channels'" v-model:channels="channels" :base-path="form.path" :is-onvif="form.protocol === 'ONVIF'" />
         <StreamWizardDevicePane v-else-if="currentStepKey === 'device'" v-model:brand="form.brand" v-model:model="form.model" v-model:serial-number="form.serialNumber" v-model:firmware="form.firmware" v-model:mac-address="form.macAddress" />
-        <StreamWizardGeoPane v-else-if="currentStepKey === 'geo'" v-model:latitude="form.latitude" v-model:longitude="form.longitude" v-model:location-name="form.locationName" />
+        <StreamWizardGeoPane 
+          v-else-if="currentStepKey === 'geo'" 
+          v-model:latitude="form.latitude" 
+          v-model:longitude="form.longitude" 
+          v-model:location-name="form.locationName"
+        />
+      </div>
+      <!-- Error Alert Banner -->
+      <div v-if="saveAlertError" style="margin: 0 1.15rem 0.5rem; padding: 0.65rem 1rem; background: rgba(255, 0, 60, 0.15); border: 1px solid #ff003c; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+        <div class="vms-flex-row" style="gap: 0.5rem; align-items: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff003c" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="vms-text-mono vms-text-2xs" style="color: #ff8899; font-weight: 600;">{{ saveAlertError }}</span>
+        </div>
+        <button class="vms-btn vms-btn-ghost vms-btn-xs" style="color: #fff; padding: 2px 6px;" @click="saveAlertError = null">FECHAR</button>
       </div>
       <div class="vms-modal-footer">
-        <button v-if="step > 1" class="vms-btn vms-btn-secondary" @click="step--">ANTERIOR</button>
-        <button v-if="step < totalSteps" class="vms-btn vms-btn-primary" :disabled="isTesting" @click="handleNext"><span v-if="isTesting">VALIDANDO...</span><span v-else>PROXIMO</span></button>
-        <button v-else class="vms-btn vms-btn-primary" @click="finish">SALVAR</button>
+        <button v-if="step > 1" class="vms-btn vms-btn-secondary" :disabled="isTesting" @click="step--; saveAlertError = null">ANTERIOR</button>
+        <button v-if="step < totalSteps" class="vms-btn vms-btn-primary" :disabled="isTesting" @click="handleNext">PROXIMO</button>
+        <button v-else class="vms-btn vms-btn-primary" :disabled="isTesting" @click="finish"><span v-if="isTesting">CONECTANDO...</span><span v-else>SALVAR</span></button>
       </div>
     </div>
   </div>
