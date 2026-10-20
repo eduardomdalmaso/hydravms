@@ -84,12 +84,21 @@ func (h *LayoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		l.TenantID = tenantID
-		if l.ID == uuid.Nil {
-			l.ID = uuid.New()
-		}
 
 		if h.repo != nil {
-			_ = h.repo.Create(r.Context(), &l)
+			var updated bool
+			if l.ID != uuid.Nil {
+				if existing, _ := h.repo.GetByID(r.Context(), tenantID, l.ID); existing != nil {
+					_ = h.repo.Update(r.Context(), &l)
+					updated = true
+				}
+			}
+			if !updated {
+				if l.ID == uuid.Nil {
+					l.ID = uuid.New()
+				}
+				_ = h.repo.Create(r.Context(), &l)
+			}
 		}
 		writeJSON(w, http.StatusCreated, l)
 

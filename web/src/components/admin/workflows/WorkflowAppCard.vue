@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import type { EnterpriseWorkflowItem } from '../../../types/workflowTree'
 
-defineProps<{ workflow: EnterpriseWorkflowItem }>()
+const props = defineProps<{ workflow: EnterpriseWorkflowItem }>()
 const emit = defineEmits<{
   (e: 'open', w: EnterpriseWorkflowItem): void
   (e: 'dragStart', w: EnterpriseWorkflowItem): void
 }>()
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.workflow.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragStart', props.workflow)
+}
 </script>
 
 <template>
@@ -13,7 +21,7 @@ const emit = defineEmits<{
     class="vms-desktop-app-card"
     draggable="true"
     style="position: relative;"
-    @dragstart="emit('dragStart', workflow)"
+    @dragstart="onDragStart"
     @click="emit('open', workflow)"
   >
     <!-- Lock Indicator -->

@@ -74,6 +74,38 @@ export function useLiveWorkspace(username: string = 'operador') {
     }
   }
 
+  const purgeCamera = (camId: string) => {
+    layoutMgr.purgeCameraFromLayouts(camId)
+    workspaceTabs.purgeCameraFromTabs(camId)
+  }
+
+  const syncValidCameras = (validIds: Set<string>) => {
+    layoutMgr.layouts.value.forEach(l => {
+      l.slots?.forEach(s => {
+        if (s.type === 'camera' && s.data && !validIds.has((s.data as any).id)) {
+          s.data = undefined
+        }
+      })
+    })
+    workspaceTabs.openTabs.value.forEach(tab => {
+      tab.slots.forEach(s => {
+        if (s.type === 'camera' && s.data && !validIds.has((s.data as any).id)) {
+          s.data = undefined
+        }
+      })
+    })
+    layoutMgr.saveOperatorLayouts()
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('vms:camera-deleted', ((e: CustomEvent<{ id: string }>) => {
+      if (e.detail?.id) purgeCamera(e.detail.id)
+    }) as EventListener)
+    window.addEventListener('vms:cameras-loaded', ((e: CustomEvent<{ ids: string[] }>) => {
+      if (Array.isArray(e.detail?.ids)) syncValidCameras(new Set(e.detail.ids))
+    }) as EventListener)
+  }
+
   return {
     layoutMgr,
     workspaceTabs,
@@ -86,6 +118,8 @@ export function useLiveWorkspace(username: string = 'operador') {
     addCarouselToNextFreeSlot,
     clearSlot,
     swapSlots,
-    selectLayout
+    selectLayout,
+    purgeCamera,
+    syncValidCameras
   }
 }

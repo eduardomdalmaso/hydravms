@@ -29,8 +29,11 @@ export function detectPreset(input: string): RtspPreset | undefined {
 }
 
 export function generateChannelPaths(basePath: string, ch: number): { main: string; sub: string } {
-  const num = ch || 1
-  if (/Streaming\/Channels/i.test(basePath)) return { main: `/Streaming/Channels/${num}01`, sub: `/Streaming/Channels/${num}02` }
+  const hikMatch = basePath.match(/Streaming\/[Cc]hannels\/(\d+)01/i)
+  const baseNum = hikMatch ? parseInt(hikMatch[1]) : 0
+  const num = baseNum > 0 ? (ch === 1 ? baseNum : (baseNum + ch - 1)) : (ch || 1)
+
+  if (/Streaming\/[Cc]hannels/i.test(basePath)) return { main: `/Streaming/channels/${num}01`, sub: `/Streaming/channels/${num}02` }
   if (/realmonitor/i.test(basePath)) return { main: `/cam/realmonitor?channel=${num}&subtype=0`, sub: `/cam/realmonitor?channel=${num}&subtype=1` }
   if (/channel=\d+/i.test(basePath)) return { main: basePath.replace(/channel=\d+/, `channel=${num}`), sub: basePath.replace(/channel=\d+/, `channel=${num}`).replace(/stream=0/, 'stream=1') }
   if (/Preview_\d+/i.test(basePath)) { const pad = num.toString().padStart(2, '0'); return { main: `/Preview_${pad}_main`, sub: `/Preview_${pad}_sub` } }
@@ -68,6 +71,47 @@ export function buildRtspUrl(preset: RtspPreset | undefined, ip: string, port: n
     return `rtsp://${host}:${p}${filled.startsWith('/') ? filled : '/' + filled}`
   }
   const cleanPath = path ? (path.startsWith('/') ? path : '/' + path) : '/live'
-  const auth = user ? (pass ? `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@` : `${encodeURIComponent(user)}@`) : ''
+  const auth = user ? (pass ? `${user}:${pass}@` : `${user}@`) : ''
   return `rtsp://${auth}${host}:${p}${cleanPath}`
 }
+
+export function deriveSubStreamUrl(mainUrl: string): string {
+  if (!mainUrl) return ''
+  // 1. Hikvision: /Streaming/Channels/X01 -> /Streaming/Channels/X02
+  if (/Streaming\/[Cc]hannels\/\d+01/i.test(mainUrl)) {
+    return mainUrl.replace(/(Streaming\/[Cc]hannels\/\d+)01/i, '$102')
+  }
+  // 2. Intelbras / Dahua: subtype=0 -> subtype=1
+  if (/subtype=0/i.test(mainUrl)) {
+    return mainUrl.replace(/subtype=0/i, 'subtype=1')
+  }
+  // 3. Tapo: /stream1 -> /stream2
+  if (/\/stream1(\b|$)/i.test(mainUrl)) {
+    return mainUrl.replace(/\/stream1(\b|$)/i, '/stream2$1')
+  }
+  // 4. Reolink: _main -> _sub
+  if (/_main(\b|$)/i.test(mainUrl)) {
+    return mainUrl.replace(/_main(\b|$)/i, '_sub$1')
+  }
+  // 5. Generic /main -> /sub
+  if (/\/main(\b|$)/i.test(mainUrl)) {
+    return mainUrl.replace(/\/main(\b|$)/i, '/sub$1')
+  }
+  // 6. Generic /profile1 -> /profile2
+  if (/profile1/i.test(mainUrl)) {
+    return mainUrl.replace(/profile1/i, 'profile2')
+  }
+  return `${mainUrl}_sub`
+}
+
+export function detectBrandFromUrl(urlOrPath: string): { brand: string; model?: string } {
+  if (!urlOrPath) return { brand: '' }
+  if (/Streaming\/[Cc]hannels/i.test(urlOrPath)) return { brand: 'Hikvision', model: 'IP Camera Series' }
+  if (/realmonitor/i.test(urlOrPath)) return { brand: 'Intelbras', model: 'VIP Series' }
+  if (/stream[12]/i.test(urlOrPath)) return { brand: 'TP-Link Tapo', model: 'Tapo Series' }
+  if (/Preview_\d+/i.test(urlOrPath) || /h264Preview_/i.test(urlOrPath)) return { brand: 'Reolink', model: 'RLC Series' }
+  if (/axis-media/i.test(urlOrPath)) return { brand: 'Axis Communications', model: 'M/P Series' }
+  if (/profile1/i.test(urlOrPath)) return { brand: 'Tecvoz', model: 'TW Series' }
+  return { brand: '' }
+}
+

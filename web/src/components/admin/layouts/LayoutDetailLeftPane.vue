@@ -95,15 +95,8 @@ const toggleLock = () => {
     <div class="vms-form-group">
       <label class="vms-label">MONITOR ALVO (MULTI-TELA / VIDEO WALL)</label>
       <select v-model="localTargetMonitor" class="vms-auth-input" style="font-size: 11px; padding: 4px 6px;">
-        <option :value="0">[LIVRE] // QUALQUER MONITOR ATIVO</option>
-        <option :value="1">[MONITOR 01] // TELA PRINCIPAL (CONTROL ROOM)</option>
-        <option :value="2">[MONITOR 02] // MONITOR SECUNDÁRIO (POP-OUT)</option>
-        <option :value="3">[MONITOR 03] // VIDEO WALL 01 (PERÍMETRO)</option>
-        <option :value="4">[MONITOR 04] // VIDEO WALL 02 (ALARMES & IA)</option>
-        <option :value="5">[MONITOR 05] // VIDEO WALL 03 (SUPERVISÃO)</option>
-        <option :value="6">[MONITOR 06] // VIDEO WALL 04 (DOCAS & CARGA)</option>
-        <option :value="7">[MONITOR 07] // VIDEO WALL 05 (ESTACIONAMENTO)</option>
-        <option :value="8">[MONITOR 08] // VIDEO WALL 06 (PORTARIA)</option>
+        <option :value="0">[LIVRE] // QUALQUER MONITOR</option>
+        <option v-for="m in 8" :key="m" :value="m">[MONITOR 0{{ m }}]</option>
       </select>
     </div>
 

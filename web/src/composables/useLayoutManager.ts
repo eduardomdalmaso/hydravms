@@ -52,7 +52,24 @@ export function useLayoutManager(username: string = "operador") {
 
   const duplicateLayout = (layout: CustomLayout) => { createOperatorLayout(layout.grid, layout.slots || []) }
 
+  const purgeCameraFromLayouts = (cameraId: string) => {
+    let changed = false
+    layouts.value.forEach(l => {
+      if (l.slots) {
+        l.slots.forEach(s => {
+          if (s.type === 'camera' && (s.data as any)?.id === cameraId) {
+            s.data = undefined
+            changed = true
+          }
+        })
+      }
+    })
+    if (changed) {
+      saveOperatorLayouts()
+    }
+  }
+
   return {
-    layouts, activeLayoutId, activeLayout, createOperatorLayout, renameLayout, deleteLayout, duplicateLayout, saveOperatorLayouts
+    layouts, activeLayoutId, activeLayout, createOperatorLayout, renameLayout, deleteLayout, duplicateLayout, saveOperatorLayouts, purgeCameraFromLayouts
   }
 }

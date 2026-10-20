@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import type { WorkflowFolderNode, EnterpriseWorkflowItem } from '../types/workflowTree'
 import { initialWorkflowFolders, initialRootWorkflows } from '../data/mockWorkflowFolders'
+import { createRemoteFolder } from '../services/api'
 
 export function useDesktopWorkflows() {
   const searchQuery = ref(''), folders = ref<WorkflowFolderNode[]>(initialWorkflowFolders)
@@ -33,8 +34,10 @@ export function useDesktopWorkflows() {
     draggedWorkflow.value = null
   }
 
-  const handleCreateFolder = (name: string, clientType: 'company' | 'final_client') => {
-    folders.value.push({ id: `wff_${Date.now()}`, name, clientType, isExpanded: true, workflows: [] })
+  const handleCreateFolder = async (name: string, clientType: 'company' | 'final_client') => {
+    const f = await createRemoteFolder('workflows', name)
+    const id = f ? f.id : `wff_${Date.now()}`
+    folders.value.push({ id, name: f ? f.name : name, clientType, isExpanded: true, workflows: [] })
     isFolderModalOpen.value = false; showNotification(`[PASTA] "${name}" criada com sucesso`)
   }
 

@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import type { EnterpriseMapItem } from '../../../types/mapTree'
 
-defineProps<{ mapItem: EnterpriseMapItem }>()
+const props = defineProps<{ mapItem: EnterpriseMapItem }>()
 const emit = defineEmits<{
   (e: 'open', m: EnterpriseMapItem): void
   (e: 'dragStart', m: EnterpriseMapItem): void
 }>()
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.mapItem.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragStart', props.mapItem)
+}
 </script>
 
 <template>
@@ -13,7 +21,7 @@ const emit = defineEmits<{
     class="vms-desktop-app-card"
     draggable="true"
     style="position: relative;"
-    @dragstart="emit('dragStart', mapItem)"
+    @dragstart="onDragStart"
     @click="emit('open', mapItem)"
   >
     <!-- Lock Indicator -->

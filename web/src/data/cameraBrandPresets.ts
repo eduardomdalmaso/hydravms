@@ -97,7 +97,7 @@ export function buildPresetRTSP(
 
   const cleanIP = ip.trim() || '192.168.1.100'
   const cleanPort = port > 0 ? port : 554
-  const auth = user ? (pass ? `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@` : `${encodeURIComponent(user)}@`) : ''
+  const auth = user ? (pass ? `${user}:${pass}@` : `${user}@`) : ''
 
   const formatTemplate = (template: string) => {
     if (!template) return ''

@@ -95,7 +95,7 @@ export async function createRemoteLayout(l: Partial<EnterpriseLayoutItem>): Prom
   try {
     const payload = {
       id: l.id?.includes('-') ? l.id : undefined,
-      name: l.name, folder_id: l.folderId, grid_type: l.grid || '2x2',
+      name: l.name, folder_id: l.folderId || null, grid_type: l.grid || '2x2',
       is_locked: !!l.is_locked, target_monitor: l.target_monitor || 0,
       allowed_user_ids: l.allowedUserIds || [],
       slots_config: (l.slots || []).map(s => ({
@@ -142,7 +142,7 @@ export async function probeCameraSnapshot(p: { ip?: string; port?: number; user?
     const payload = { url: p.url, ip_address: p.ip, port: p.port, username: p.user || '', password: p.password || '', protocol: p.protocol || 'RTSP', stream_id: p.stream_id }
     const r = await fetch(`${getStreamBaseUrl()}/api/v1/streams/probe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload), signal: AbortSignal.timeout(8000)
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(15000)
     })
     if (r.ok) return await r.json()
     const errJson = await r.json().catch(() => ({}))

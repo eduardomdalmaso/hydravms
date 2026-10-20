@@ -45,10 +45,10 @@ const menuPos = computed(() => {
         </div>
 
         <button class="vms-context-item" @click="emit('popout', layout)">
-          <span>[ ↗ ABRIR EM NOVA JANELA / MONITOR ]</span>
+          <span>[ ABRIR EM NOVA JANELA / MONITOR ]</span>
         </button>
         <button v-if="layout.target_monitor && layout.target_monitor > 0" class="vms-context-item" @click="emit('dispatch', layout)">
-          <span>[ 📺 LANÇAR NO MONITOR {{ layout.target_monitor }} ]</span>
+          <span>[ LANÇAR NO MONITOR {{ layout.target_monitor }} ]</span>
         </button>
         <button v-if="!layout.is_system" class="vms-context-item" @click="emit('rename', layout)">
           <span>[RENOMEAR LAYOUT]</span>

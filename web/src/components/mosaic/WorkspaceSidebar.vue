@@ -28,11 +28,15 @@ const liveCarousels = ref<CarouselConfig[]>([])
 const loadCameras = async () => {
   try {
     const remote = await fetchCameras()
-    if (remote && remote.length > 0) {
+    if (Array.isArray(remote)) {
       cameras.value = remote.map(c => ({
         id: c.id, name: c.name, location: c.location || 'Local', status: (c.status || 'online') as any,
-        protocol: (c.protocol?.toUpperCase() as any) || 'RTSP', has_ptz: c.has_ptz, fps: c.fps || 30, resolution: c.resolution || '1080P'
+        protocol: (c.protocol?.toUpperCase() as any) || 'RTSP', has_ptz: c.has_ptz, fps: c.fps || 30, resolution: c.resolution || '1080P',
+        main_stream_url: c.rtsp_url, sub_stream_url: c.sub_stream_url, codec: c.codec || 'H.264'
       }))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('vms:cameras-loaded', { detail: { ids: cameras.value.map(c => c.id) } }))
+      }
     }
   } catch {}
 }
@@ -54,6 +58,7 @@ onMounted(() => {
   loadCameras()
   if (typeof window !== 'undefined') {
     window.addEventListener('vms:camera-updated', loadCameras)
+    window.addEventListener('vms:camera-deleted', loadCameras)
     window.addEventListener('focus', loadCameras)
   }
 })

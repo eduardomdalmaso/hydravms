@@ -2,7 +2,7 @@
 import type { FolderNode, StreamItem } from '../types/streamTree'
 import type { RegisteredCamera } from '../types/admin'
 import type { ApiFolder } from '../services/api'
-import { parseRtspUrl } from '../constants/rtspPresets'
+import { parseRtspUrl, deriveSubStreamUrl } from '../constants/rtspPresets'
 
 export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCamera[]): { folders: FolderNode[]; rootStreams: StreamItem[] } {
   const folderMap = new Map<string, FolderNode>()
@@ -12,7 +12,7 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
 
   const rootStreams: StreamItem[] = []
   dbCameras.forEach(c => {
-    const subUrl = c.sub_stream_url || (c.rtsp_url && c.rtsp_url.includes('/stream1') ? c.rtsp_url.replace('/stream1', '/stream2') : '')
+    const subUrl = c.sub_stream_url || (c.rtsp_url ? deriveSubStreamUrl(c.rtsp_url) : '')
     const parsed = c.rtsp_url ? parseRtspUrl(c.rtsp_url) : null
     const item: StreamItem = {
       id: c.id,
@@ -42,6 +42,8 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
       longitude: c.longitude,
       locationName: c.location || '',
       snapshotUrl: (c as any).snapshot_url || `http://localhost:8083/api/v1/cameras/${c.id}/snapshot`,
+      timezone: (c as any).timezone || 'America/Sao_Paulo',
+      folderId: c.folder_id || undefined,
       analyticsCount: 0,
       eventsCount: 0
     }
@@ -58,7 +60,7 @@ export function buildStreamTree(dbFolders: ApiFolder[], dbCameras: RegisteredCam
 export function createNewStreamItem(stream: Partial<StreamItem>, index: number): StreamItem {
   const id = stream.id || `cam_${index.toString().padStart(2, '0')}`
   const url = stream.url || 'rtsp://'
-  const subUrl = stream.subUrl || (url.includes('/stream1') ? url.replace('/stream1', '/stream2') : '')
+  const subUrl = stream.subUrl || (url ? deriveSubStreamUrl(url) : '')
   return {
     id,
     name: stream.name || 'Nova Camera',

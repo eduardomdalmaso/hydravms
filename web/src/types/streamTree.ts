@@ -1,5 +1,6 @@
 export interface StreamItem {
   id: string
+  folderId?: string
   name: string
   protocol: 'RTSP' | 'RTMP' | 'ONVIF' | 'LOOP'
   url: string
@@ -20,6 +21,7 @@ export interface StreamItem {
   latitude?: number
   longitude?: number
   locationName?: string
+  timezone?: string
   brand?: string
   model?: string
   serialNumber?: string

@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -51,15 +52,22 @@ func (h *CameraHandler) HandleCameras(w http.ResponseWriter, r *http.Request) {
 		})
 
 	case http.MethodPost:
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Failed to read payload: "+err.Error())
+			return
+		}
 		var cam domain.Camera
-		if err := json.NewDecoder(r.Body).Decode(&cam); err != nil {
+		if err := json.Unmarshal(bodyBytes, &cam); err != nil {
 			writeError(w, http.StatusBadRequest, "Invalid camera payload: "+err.Error())
 			return
 		}
 		cam.TenantID = tenantID
 
+		var rawMap map[string]interface{}
+		_ = json.Unmarshal(bodyBytes, &rawMap)
+
 		var result *domain.Camera
-		var err error
 		if strings.TrimSpace(cam.ID) != "" {
 			if existing, _ := h.service.GetCamera(r.Context(), tenantID, cam.ID); existing != nil {
 				result, err = h.service.UpdateCamera(r.Context(), &cam)
@@ -71,6 +79,19 @@ func (h *CameraHandler) HandleCameras(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
+		}
+
+		if _, ok := rawMap["folder_id"]; ok && result != nil {
+			var fUUID *uuid.UUID
+			if rawMap["folder_id"] != nil {
+				if fStr, ok := rawMap["folder_id"].(string); ok && fStr != "" {
+					if parsed, err := uuid.Parse(fStr); err == nil {
+						fUUID = &parsed
+					}
+				}
+			}
+			_ = h.service.UpdateCameraFolder(r.Context(), tenantID, result.ID, fUUID)
+			result.FolderID = fUUID
 		}
 
 		// Asynchronously register/sync stream with HydraStream Data Plane
@@ -136,18 +157,41 @@ func (h *CameraHandler) HandleCameraByID(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusOK, cam)
 
 	case http.MethodPut, http.MethodPatch:
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Failed to read payload: "+err.Error())
+			return
+		}
 		var cam domain.Camera
-		if err := json.NewDecoder(r.Body).Decode(&cam); err != nil {
+		if err := json.Unmarshal(bodyBytes, &cam); err != nil {
 			writeError(w, http.StatusBadRequest, "Invalid camera payload: "+err.Error())
 			return
 		}
 		cam.TenantID = tenantID
 		cam.ID = rawID
+
+		var rawMap map[string]interface{}
+		_ = json.Unmarshal(bodyBytes, &rawMap)
+
 		updated, err := h.service.UpdateCamera(r.Context(), &cam)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		if _, ok := rawMap["folder_id"]; ok {
+			var fUUID *uuid.UUID
+			if rawMap["folder_id"] != nil {
+				if fStr, ok := rawMap["folder_id"].(string); ok && fStr != "" {
+					if parsed, err := uuid.Parse(fStr); err == nil {
+						fUUID = &parsed
+					}
+				}
+			}
+			_ = h.service.UpdateCameraFolder(r.Context(), tenantID, rawID, fUUID)
+			updated.FolderID = fUUID
+		}
+
 		go syncCameraWithHydraStream(updated)
 		writeJSON(w, http.StatusOK, updated)
 

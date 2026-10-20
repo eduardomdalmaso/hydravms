@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { StreamItem } from '../../../types/streamTree'
-import { getCameraSnapshotUrl } from '../../../utils/streamUrls'
+import { getCameraSnapshotUrl, getStreamRelayRtspUrl, copyToClipboard } from '../../../utils/streamUrls'
 
 const props = defineProps<{ stream: StreamItem }>()
 const emit = defineEmits<{
@@ -10,19 +10,46 @@ const emit = defineEmits<{
   (e: 'delete', id: string): void
 }>()
 
-const refreshKey = ref(Date.now()), isRefreshing = ref(false), hasImageError = ref(false)
+const refreshKey = ref(Date.now()), isRefreshing = ref(false), hasImageError = ref(false), copiedRelay = ref(false)
+let refreshSafetyTimer: number | null = null
+
+const copyRelay = async () => {
+  if (await copyToClipboard(getStreamRelayRtspUrl(props.stream.id))) {
+    copiedRelay.value = true
+    setTimeout(() => { copiedRelay.value = false }, 1800)
+  }
+}
+
+const onImageLoad = () => {
+  hasImageError.value = false
+  isRefreshing.value = false
+  if (refreshSafetyTimer) { clearTimeout(refreshSafetyTimer); refreshSafetyTimer = null }
+}
+
+const onImageError = () => {
+  hasImageError.value = true
+  isRefreshing.value = false
+  if (refreshSafetyTimer) { clearTimeout(refreshSafetyTimer); refreshSafetyTimer = null }
+}
+
 const refreshSnapshot = async () => {
   if (isRefreshing.value) return
   isRefreshing.value = true
   hasImageError.value = false
+  if (refreshSafetyTimer) clearTimeout(refreshSafetyTimer)
+  refreshSafetyTimer = window.setTimeout(() => { isRefreshing.value = false }, 12000)
   try {
     const res = await fetch(getCameraSnapshotUrl(props.stream.id, true))
-    if (!res.ok) hasImageError.value = true
-    refreshKey.value = Date.now()
+    if (res.ok) {
+      refreshKey.value = Date.now()
+    } else {
+      isRefreshing.value = false
+      hasImageError.value = true
+    }
   } catch {
+    isRefreshing.value = false
     hasImageError.value = true
   }
-  finally { setTimeout(() => { isRefreshing.value = false }, 500) }
 }
 </script>
 
@@ -43,14 +70,18 @@ const refreshSnapshot = async () => {
     <div class="vms-flex-col" style="padding: 1rem; gap: 1rem;">
       <!-- Mini Preview -->
       <div style="height: 140px; background: #000000; border: 1px solid var(--vms-border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; position: relative; overflow: hidden;">
-        <img v-if="!hasImageError" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" @error="hasImageError = true" @load="hasImageError = false" />
+        <img v-if="!hasImageError" :src="`${getCameraSnapshotUrl(stream.id)}&k=${refreshKey}`" alt="Snapshot" style="width: 100%; height: 100%; object-fit: contain; display: block;" @error="onImageError" @load="onImageLoad" />
         <template v-else>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1.5"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
           <span class="vms-text-mono vms-text-2xs" style="color: var(--vms-text-regular);">// {{ stream.resolution }} @ {{ stream.fps }} FPS</span>
         </template>
+        <div v-if="isRefreshing" style="position: absolute; inset: 0; background: rgba(7, 8, 12, 0.65); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 2; pointer-events: none; backdrop-filter: blur(2px);">
+          <div class="loader-xs"></div>
+          <span class="vms-text-mono" style="font-size: 9px; color: #ff5e3a; letter-spacing: 0.6px; font-weight: 600;">ATUALIZANDO...</span>
+        </div>
         <span class="vms-badge vms-badge-orange" style="position: absolute; top: 6px; left: 6px; font-size: 8px;">{{ stream.codec }}</span>
-        <button style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 4px; background: rgba(14, 17, 23, 0.85); border: 1px solid rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Atualizar Snapshot" @click.stop="refreshSnapshot">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s ease' }">
+        <button style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 4px; background: rgba(14, 17, 23, 0.85); border: 1px solid rgba(255, 94, 58, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer;" :style="{ opacity: isRefreshing ? 0.7 : 1, pointerEvents: isRefreshing ? 'none' : 'auto' }" title="Atualizar Snapshot" @click.stop="refreshSnapshot">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5e3a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" :style="{ animation: isRefreshing ? 'vms-spin 0.8s linear infinite' : 'none' }">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
         </button>
@@ -64,6 +95,10 @@ const refreshSnapshot = async () => {
         <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">BITRATE ESTIMADO</span><span class="vms-text-mono vms-text-xs" style="color: var(--vms-text-regular);">{{ stream.bitrate }}</span></div>
         <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">MODO GRAVAÇÃO</span><span class="vms-badge vms-badge-orange" style="font-size: 9px;">{{ stream.recordMode.toUpperCase() }}</span></div>
         <div class="vms-flex-between"><span class="vms-text-dim vms-text-2xs">CONTROLE PTZ</span><span class="vms-text-mono vms-text-xs" :style="{ color: stream.has_ptz ? 'var(--vms-status-online)' : 'var(--vms-text-dim)' }">{{ stream.has_ptz ? 'HABILITADO' : 'DESATIVADO' }}</span></div>
+        <div class="vms-flex-between">
+          <span class="vms-text-dim vms-text-2xs">URL DO FLUXO</span>
+          <span class="vms-text-mono vms-text-xs" style="color: var(--vms-neu-accent-cyan); cursor: pointer; text-decoration: underline dotted;" :title="'Clique para copiar: ' + getStreamRelayRtspUrl(stream.id)" @click="copyRelay">{{ copiedRelay ? 'COPIADO! ✓' : getStreamRelayRtspUrl(stream.id) }}</span>
+        </div>
       </div>
 
       <!-- Actions -->

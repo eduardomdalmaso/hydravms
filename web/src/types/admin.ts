@@ -41,6 +41,7 @@ export interface RegisteredCamera {
   bitrate_kbps?: number
   sub_bitrate_kbps?: number
   folder_id?: string
+  timezone?: string
 }
 
 export interface AdminUser {

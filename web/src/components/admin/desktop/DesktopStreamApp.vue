@@ -15,6 +15,14 @@ const emit = defineEmits<{
 }>()
 
 const hasImgError = ref(false)
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.stream.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragstart', props.stream)
+}
 </script>
 
 <template>
@@ -22,7 +30,7 @@ const hasImgError = ref(false)
     class="vms-desktop-app-card"
     :class="{ active: isSelected }"
     draggable="true"
-    @dragstart="emit('dragstart', stream)"
+    @dragstart="onDragStart"
     @click="emit('select', stream)"
     @contextmenu.prevent.stop="emit('context', $event, stream)"
   >

@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import type { EnterpriseLayoutItem } from '../../../types/layoutTree'
 
-defineProps<{ layout: EnterpriseLayoutItem; isSelected: boolean }>()
+const props = defineProps<{ layout: EnterpriseLayoutItem; isSelected: boolean }>()
 const emit = defineEmits<{
   (e: 'select', layout: EnterpriseLayoutItem): void
   (e: 'dragstart', layout: EnterpriseLayoutItem): void
   (e: 'context', event: MouseEvent, layout: EnterpriseLayoutItem): void
 }>()
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.layout.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragstart', props.layout)
+}
 </script>
 
 <template>
@@ -15,7 +23,7 @@ const emit = defineEmits<{
     :class="{ active: isSelected }"
     draggable="true"
     style="position: relative;"
-    @dragstart="emit('dragstart', layout)"
+    @dragstart="onDragStart"
     @click="emit('select', layout)"
     @contextmenu.prevent.stop="emit('context', $event, layout)"
   >

@@ -15,23 +15,19 @@ export function useWorkspaceTabs(layoutMgr: ReturnType<typeof useLayoutManager>,
   }
 
   const addCameraWithAutoTab = (cam: CameraStreamInfo) => {
-    // 1. Se a câmera já existir na aba ativa, não duplica e não abre nova aba
-    if (activeTab.value && activeTab.value.slots.some(s => (s.data as any)?.id === cam.id)) {
+    // 1. Se a aba ativa for 1x1 e já tiver essa câmera, mantém sem duplicar
+    if (activeTab.value && activeTab.value.grid === '1x1' && activeTab.value.slots.length > 0 && (activeTab.value.slots[0].data as any)?.id === cam.id) {
       return
     }
 
     // 2. Se nenhuma aba estiver aberta, ou se a aba ativa for do sistema (Admin protegida)
-    if (!activeTab.value || activeTab.value.is_system || activeTab.value.is_saved) {
-      // Verifica se já existe uma aba temporária aberta para reutilizar
+    if (!activeTab.value || activeTab.value.is_system) {
       const existingTemp = openTabs.value.find(t => t.is_temporary && !t.is_saved)
       if (existingTemp) {
         activeTabId.value = existingTemp.id
-        if (!existingTemp.slots.some(s => (s.data as any)?.id === cam.id)) {
-          appendCameraToTab(existingTemp, cam)
-        }
+        appendCameraToTab(existingTemp, cam)
         return
       }
-      // Cria nova aba Layout N
       const count = openTabs.value.filter(t => t.is_temporary || !t.is_system).length + 1
       const newTab: WorkspaceTab = { id: `tab_temp_${Date.now()}`, name: `Layout ${count}`, grid: '1x1', is_system: false, is_temporary: true, is_saved: false, created_by: user, slots: [{ slot_index: 0, type: 'camera', data: cam }] }
       openTabs.value.push(newTab); activeTabId.value = newTab.id
@@ -44,14 +40,19 @@ export function useWorkspaceTabs(layoutMgr: ReturnType<typeof useLayoutManager>,
 
   const appendCameraToTab = (tab: WorkspaceTab, cam: CameraStreamInfo) => {
     const emptyIdx = tab.slots.findIndex(s => !s.data)
-    if (emptyIdx >= 0) tab.slots[emptyIdx] = { slot_index: emptyIdx, type: 'camera', data: cam }
-    else {
+    if (emptyIdx >= 0) {
+      tab.slots[emptyIdx] = { slot_index: emptyIdx, type: 'camera', data: cam }
+    } else {
       tab.slots.push({ slot_index: tab.slots.length, type: 'camera', data: cam })
-      const activeCount = tab.slots.filter(s => s.data).length
-      if (activeCount === 2 && tab.grid === '1x1') tab.grid = '1x2'
-      else if (activeCount > 2 && activeCount <= 4 && (tab.grid === '1x1' || tab.grid === '1x2')) tab.grid = '2x2'
-      else if (activeCount > 4 && activeCount <= 6 && tab.grid === '2x2') tab.grid = '1+5'
-      else if (activeCount > 6 && activeCount <= 9 && tab.grid === '1+5') tab.grid = '3x3'
+    }
+    const activeCount = tab.slots.filter(s => s.data).length
+    const isSpecialLayout = tab.grid.startsWith('1+') || tab.grid === '1x2'
+    if (!isSpecialLayout) {
+      if (activeCount <= 1) tab.grid = '1x1'
+      else if (activeCount <= 4 && tab.grid === '1x1') tab.grid = '2x2'
+      else if (activeCount > 4 && activeCount <= 9 && (tab.grid === '1x1' || tab.grid === '2x2')) tab.grid = '3x3'
+      else if (activeCount > 9 && activeCount <= 16 && (tab.grid === '1x1' || tab.grid === '2x2' || tab.grid === '3x3')) tab.grid = '4x4'
+      else if (activeCount > 16 && activeCount <= 25) tab.grid = '5x5'
     }
   }
 
@@ -82,5 +83,15 @@ export function useWorkspaceTabs(layoutMgr: ReturnType<typeof useLayoutManager>,
     openTabs.value.push(newTab); activeTabId.value = newTab.id
   }
 
-  return { openTabs, activeTabId, activeTab, openLayoutTab, addCameraWithAutoTab, setTabGrid, saveTab, closeTab, createBlankTab }
+  const purgeCameraFromTabs = (cameraId: string) => {
+    openTabs.value.forEach(tab => {
+      tab.slots.forEach(s => {
+        if (s.type === 'camera' && (s.data as any)?.id === cameraId) {
+          s.data = undefined
+        }
+      })
+    })
+  }
+
+  return { openTabs, activeTabId, activeTab, openLayoutTab, addCameraWithAutoTab, setTabGrid, saveTab, closeTab, createBlankTab, purgeCameraFromTabs }
 }

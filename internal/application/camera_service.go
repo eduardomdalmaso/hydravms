@@ -143,3 +143,12 @@ func (s *CameraService) GetCamera(ctx context.Context, tenantID uuid.UUID, camer
 func (s *CameraService) DeleteCamera(ctx context.Context, tenantID uuid.UUID, cameraID string) error {
 	return s.repo.Delete(ctx, tenantID, cameraID)
 }
+
+func (s *CameraService) UpdateCameraFolder(ctx context.Context, tenantID uuid.UUID, cameraID string, folderID *uuid.UUID) error {
+	cam, err := s.repo.GetByID(ctx, tenantID, cameraID)
+	if err != nil {
+		return err
+	}
+	cam.FolderID = folderID
+	return s.repo.Update(ctx, cam)
+}

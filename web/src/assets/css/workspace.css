@@ -68,17 +68,25 @@
 .vms-status-led.desarmado, .vms-status-led.disarmed, .vms-status-led.warning { background: #fcee0a !important; box-shadow: 0 0 8px rgba(252, 238, 10, 0.95), 0 0 2px #fcee0a !important; }
 .vms-status-led.recording, .vms-status-led.gravando { background: #00f0ff !important; box-shadow: 0 0 8px rgba(0, 240, 255, 0.95), 0 0 2px #00f0ff !important; animation: vms-pulse 1.5s infinite; }
 
-/* Ubuntu Style Circular Close Button */
-.vms-slot-close-btn, .vms-ubuntu-close-btn {
-  position: absolute; top: 0.4rem; right: 0.4rem; width: 22px; height: 22px; border-radius: 50%;
+/* Ubuntu Style Circular Action Buttons (Close & Expand) */
+.vms-slot-top-actions {
+  position: absolute; top: 0.4rem; right: 0.4rem; display: flex; align-items: center; gap: 0.35rem; z-index: 15;
+}
+.vms-slot-action-btn, .vms-slot-close-btn, .vms-ubuntu-close-btn {
+  width: 22px; height: 22px; border-radius: 50%;
   background: rgba(20, 23, 28, 0.9); border: 1px solid rgba(255, 94, 58, 0.45);
   color: var(--vms-neu-accent-orange); display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 15; opacity: 0; pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); padding: 0;
 }
+.vms-slot:hover .vms-slot-action-btn,
 .vms-slot:hover .vms-slot-close-btn { opacity: 1; pointer-events: auto; }
+.vms-slot-action-btn:hover,
 .vms-slot-close-btn:hover, .vms-ubuntu-close-btn:hover {
   background: var(--vms-neu-accent-orange); border-color: var(--vms-neu-accent-orange);
   color: #ffffff; transform: scale(1.12); box-shadow: 0 0 12px rgba(255, 94, 58, 0.65);
+}
+.vms-slot-action-btn:hover svg {
+  stroke: #ffffff !important;
 }

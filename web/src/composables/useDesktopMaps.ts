@@ -1,7 +1,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { MapFolderNode, EnterpriseMapItem } from '../types/mapTree'
 import { initialMapFolders, initialRootMaps } from '../data/mockMapFolders'
-import { fetchFolders } from '../services/api'
+import { fetchFolders, createRemoteFolder } from '../services/api'
 
 export function useDesktopMaps() {
   const searchQuery = ref(''), folders = ref<MapFolderNode[]>(initialMapFolders), rootMaps = ref<EnterpriseMapItem[]>(initialRootMaps)
@@ -37,8 +37,10 @@ export function useDesktopMaps() {
     draggedMap.value = null
   }
 
-  const handleCreateFolder = (name: string, clientType: 'company' | 'final_client') => {
-    folders.value.push({ id: `mf_${Date.now()}`, name, clientType, isExpanded: true, maps: [] })
+  const handleCreateFolder = async (name: string, clientType: 'company' | 'final_client') => {
+    const f = await createRemoteFolder('maps', name)
+    const id = f ? f.id : `mf_${Date.now()}`
+    folders.value.push({ id, name: f ? f.name : name, clientType, isExpanded: true, maps: [] })
     isFolderModalOpen.value = false; showNotification(`[PASTA] "${name}" criada com sucesso`)
   }
 

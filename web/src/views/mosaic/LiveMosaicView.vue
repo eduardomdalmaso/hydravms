@@ -36,6 +36,37 @@ const handleOpenPlayback = async (cam: CameraStreamInfo) => {
   selectedCameraForPlayback.value = cam
   isPlaybackOpen.value = true
 }
+
+const previousGridState = ref<{ grid: GridLayout; originalSlotIndex: number } | null>(null)
+
+const handleExpandCamera = (cam: CameraStreamInfo) => {
+  const tab = workspaceTabs.activeTab.value
+  if (!tab) return
+
+  if (tab.grid === '1x1' && previousGridState.value) {
+    const { grid, originalSlotIndex } = previousGridState.value
+    if (originalSlotIndex > 0 && tab.slots[0]?.data && (tab.slots[0].data as any).id === cam.id) {
+      const temp = tab.slots[0]
+      tab.slots[0] = tab.slots[originalSlotIndex] ? { ...tab.slots[originalSlotIndex], slot_index: 0 } : { slot_index: 0, type: 'camera' }
+      tab.slots[originalSlotIndex] = { ...temp, slot_index: originalSlotIndex }
+    }
+    workspaceTabs.setTabGrid(tab.id, grid)
+    previousGridState.value = null
+    return
+  }
+
+  const slotIdx = tab.slots.findIndex(s => s.type === 'camera' && (s.data as any)?.id === cam.id)
+  if (slotIdx < 0) return
+
+  previousGridState.value = { grid: tab.grid, originalSlotIndex: slotIdx }
+  if (slotIdx > 0) {
+    const temp = tab.slots[0] || { slot_index: 0, type: 'camera' }
+    tab.slots[0] = { ...tab.slots[slotIdx], slot_index: 0 }
+    tab.slots[slotIdx] = { ...temp, slot_index: slotIdx }
+  }
+  workspaceTabs.setTabGrid(tab.id, '1x1')
+}
+
 const handleSidebarSelectCamera = (cam: CameraStreamInfo) => {
   addCameraToNextFreeSlot(cam)
 }
@@ -124,7 +155,7 @@ onMounted(() => {
       <div style="flex: 1; min-height: 0; width: 100%; display: flex; overflow: hidden;">
         <DynamicMosaicGrid
           :layout="currentLayout" :slots="slots" :maxSlots="maxSlots" :selectedCameraId="selectedCameraForPlayback?.id"
-          @selectCamera="handleOpenPlayback" @clearSlot="clearSlot" @swapSlots="swapSlots"
+          @selectCamera="handleOpenPlayback" @expandCamera="handleExpandCamera" @clearSlot="clearSlot" @swapSlots="swapSlots"
         />
       </div>
       <WorkspaceModals

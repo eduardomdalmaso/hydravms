@@ -60,6 +60,7 @@ func initSchema(db *sql.DB) error {
 		fps REAL NOT NULL DEFAULT 30.0,
 		bitrate_kbps REAL NOT NULL DEFAULT 4000.0,
 		codec TEXT NOT NULL DEFAULT 'H.264',
+		timezone TEXT DEFAULT 'America/Sao_Paulo',
 		is_active BOOLEAN NOT NULL DEFAULT 1,
 		folder_id TEXT,
 		assigned_node_id TEXT,

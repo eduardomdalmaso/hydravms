@@ -47,21 +47,24 @@ func (r *SQLiteCameraRepository) Create(ctx context.Context, c *domain.Camera) e
 			onvif_ip, onvif_port, onvif_user, onvif_pass, rtmp_stream_key,
 			location, status, resolution, fps, bitrate_kbps, codec, is_active,
 			folder_id, assigned_node_id, created_at, updated_at,
-			brand, model, serial_number, firmware, mac_address, latitude, longitude
+			brand, model, serial_number, firmware, mac_address, latitude, longitude, timezone
 		) VALUES (
 			?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?,
 			?, ?, ?, ?, ?, ?, ?,
 			?, ?, ?, ?,
-			?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?, ?
 		)
 	`
+	if c.Timezone == "" {
+		c.Timezone = "America/Sao_Paulo"
+	}
 	_, err = r.db.ExecContext(ctx, query,
 		c.ID, c.TenantID.String(), c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
 		c.ONVIFIP, c.ONVIFPort, c.ONVIFUser, encPass, c.RTMPStreamKey,
 		c.Location, string(c.Status), c.Resolution, c.FPS, c.BitrateKbps, c.Codec, c.IsActive,
 		folderIDStr, nodeIDStr, c.CreatedAt, c.UpdatedAt,
-		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude,
+		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude, c.Timezone,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert camera: %w", err)
@@ -77,7 +80,7 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at,
 			COALESCE(brand, ''), COALESCE(model, ''), COALESCE(serial_number, ''), COALESCE(firmware, ''), COALESCE(mac_address, ''),
-			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0)
+			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0), COALESCE(timezone, 'America/Sao_Paulo')
 		FROM cameras
 		WHERE id = ? AND tenant_id = ?
 	`
@@ -91,7 +94,7 @@ func (r *SQLiteCameraRepository) GetByID(ctx context.Context, tenantID uuid.UUID
 		&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &rawPass, &c.RTMPStreamKey,
 		&c.Location, &statusStr, &c.Resolution, &c.FPS,
 		&c.BitrateKbps, &c.Codec, &c.IsActive, &folderIDStr, &nodeIDStr, &c.CreatedAt, &c.UpdatedAt,
-		&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude,
+		&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude, &c.Timezone,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -129,7 +132,7 @@ func (r *SQLiteCameraRepository) List(ctx context.Context, tenantID uuid.UUID, f
 			COALESCE(location, ''), status, COALESCE(resolution, '1920x1080'), COALESCE(fps, 30.0),
 			COALESCE(bitrate_kbps, 2048), COALESCE(codec, 'H.264'), is_active, folder_id, assigned_node_id, created_at, updated_at,
 			COALESCE(brand, ''), COALESCE(model, ''), COALESCE(serial_number, ''), COALESCE(firmware, ''), COALESCE(mac_address, ''),
-			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0)
+			COALESCE(latitude, 0.0), COALESCE(longitude, 0.0), COALESCE(timezone, 'America/Sao_Paulo')
 		FROM cameras
 	`
 
@@ -157,7 +160,7 @@ func (r *SQLiteCameraRepository) List(ctx context.Context, tenantID uuid.UUID, f
 			&c.ONVIFIP, &c.ONVIFPort, &c.ONVIFUser, &c.RTMPStreamKey,
 			&c.Location, &statusStr, &c.Resolution, &c.FPS,
 			&c.BitrateKbps, &c.Codec, &c.IsActive, &folderIDStr, &nodeIDStr, &c.CreatedAt, &c.UpdatedAt,
-			&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude,
+			&c.Brand, &c.Model, &c.SerialNumber, &c.Firmware, &c.MACAddress, &c.Latitude, &c.Longitude, &c.Timezone,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan camera row: %w", err)
 		}
@@ -192,6 +195,9 @@ func (r *SQLiteCameraRepository) Update(ctx context.Context, c *domain.Camera) e
 	if c.AssignedNodeID != nil {
 		nodeIDStr = sql.NullString{String: c.AssignedNodeID.String(), Valid: true}
 	}
+	if c.Timezone == "" {
+		c.Timezone = "America/Sao_Paulo"
+	}
 
 	query := `
 		UPDATE cameras
@@ -199,14 +205,14 @@ func (r *SQLiteCameraRepository) Update(ctx context.Context, c *domain.Camera) e
 			name = ?, protocol = ?, rtsp_url = ?, sub_stream_url = ?,
 			onvif_ip = ?, onvif_port = ?, location = ?, resolution = ?, fps = ?, bitrate_kbps = ?,
 			codec = ?, folder_id = ?, assigned_node_id = ?, status = ?, updated_at = ?,
-			brand = ?, model = ?, serial_number = ?, firmware = ?, mac_address = ?, latitude = ?, longitude = ?
+			brand = ?, model = ?, serial_number = ?, firmware = ?, mac_address = ?, latitude = ?, longitude = ?, timezone = ?
 		WHERE id = ? AND tenant_id = ?
 	`
 	res, err := r.db.ExecContext(ctx, query,
 		c.Name, string(c.Protocol), c.RTSPURL, c.SubStreamURL,
 		c.ONVIFIP, c.ONVIFPort, c.Location, c.Resolution, c.FPS, c.BitrateKbps,
 		c.Codec, folderIDStr, nodeIDStr, string(c.Status), c.UpdatedAt,
-		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude,
+		c.Brand, c.Model, c.SerialNumber, c.Firmware, c.MACAddress, c.Latitude, c.Longitude, c.Timezone,
 		c.ID, c.TenantID.String(),
 	)
 	if err != nil {

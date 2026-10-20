@@ -27,6 +27,14 @@ const handleContextMenu = (e: MouseEvent) => {
 
 const closeMenu = () => { showMenu.value = false }
 
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.instance.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragstart', props.instance)
+}
+
 onMounted(() => { window.addEventListener('click', closeMenu) })
 onUnmounted(() => { window.removeEventListener('click', closeMenu) })
 </script>
@@ -37,7 +45,7 @@ onUnmounted(() => { window.removeEventListener('click', closeMenu) })
     :class="{ selected: isSelected }"
     draggable="true"
     style="position: relative;"
-    @dragstart="emit('dragstart', instance)"
+    @dragstart="onDragStart"
     @click="emit('select', instance)"
     @contextmenu="handleContextMenu"
   >

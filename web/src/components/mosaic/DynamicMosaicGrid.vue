@@ -15,6 +15,7 @@ const emit = defineEmits<{
   (e: 'selectCamera', cam: CameraStreamInfo): void
   (e: 'clearSlot', index: number): void
   (e: 'swapSlots', fromIndex: number, toIndex: number): void
+  (e: 'expandCamera', cam: CameraStreamInfo): void
 }>()
 
 const { branding } = useBranding()
@@ -70,8 +71,10 @@ const onDrop = (targetIndex: number) => {
       :key="index"
       :slot="slots[index - 1] || { slot_index: index - 1, type: 'camera' }"
       :isActive="slots[index - 1]?.type === 'camera' && (slots[index - 1]?.data as any)?.id === selectedCameraId"
-      :isHero="(effectiveGridClass === 'vms-grid-1-5' || effectiveGridClass === 'vms-grid-1-8' || effectiveGridClass === 'vms-grid-1-7' || effectiveGridClass === 'vms-grid-1-12') && index === 1"
+      :isHero="(props.layout === '1x1' || effectiveGridClass === 'vms-grid-1-5' || effectiveGridClass === 'vms-grid-1-8' || effectiveGridClass === 'vms-grid-1-7' || effectiveGridClass === 'vms-grid-1-12') && index === 1"
+      :isExpanded="props.layout === '1x1'"
       @selectCamera="emit('selectCamera', $event)"
+      @expand="emit('expandCamera', $event)"
       @clear="emit('clearSlot', $event)"
       @dragstart="draggedSlotIndex = index - 1"
       @dragover.prevent

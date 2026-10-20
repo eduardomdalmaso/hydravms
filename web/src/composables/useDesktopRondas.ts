@@ -4,7 +4,7 @@ import { initialRondaFolders } from '../data/mockRondaFolders'
 import { initialRootRondas } from '../data/mockRondaRoot'
 import type { ContextMenuTarget } from '../types/contextMenu'
 import { useFolderModalState } from './useDesktopFolderOps'
-import { fetchFolders } from '../services/api'
+import { fetchFolders, createRemoteFolder, deleteRemoteFolder } from '../services/api'
 
 export function useDesktopRondas() {
   const searchQuery = ref(''), currentFolderId = ref<string | null>(null)
@@ -50,17 +50,21 @@ export function useDesktopRondas() {
   }
 
   const requestDeleteFolder = (id: string) => { const f = folders.value.find(fold => fold.id === id); if (f) openDeletePrompt(f.id, f.name, f.rondas.length) }
-  const confirmDeleteFolder = () => {
+  const confirmDeleteFolder = async () => {
     if (!folderToDelete.value) return
-    const f = folders.value.find(fold => fold.id === folderToDelete.value!.id)
+    const id = folderToDelete.value.id
+    await deleteRemoteFolder(id)
+    const f = folders.value.find(fold => fold.id === id)
     if (f) { f.rondas.forEach(r => { r.folderId = undefined; r.companyScope = 'GLOBAL' }); rootRondas.value.push(...f.rondas); folders.value = folders.value.filter(item => item.id !== f.id) }
-    if (currentFolderId.value === folderToDelete.value.id) currentFolderId.value = null
+    if (currentFolderId.value === id) currentFolderId.value = null
     showNotification(`Pasta removida. ${folderToDelete.value.itemCount} rondas movidas para a raiz.`)
     closeDeletePrompt()
   }
 
-  const handleSaveFolder = (name: string, clientType: 'company' | 'final_client') => {
-    folders.value.push({ id: `rf_${Date.now()}`, name, clientType, isExpanded: true, rondas: [] })
+  const handleSaveFolder = async (name: string, clientType: 'company' | 'final_client') => {
+    const f = await createRemoteFolder('tours', name)
+    const id = f ? f.id : `rf_${Date.now()}`
+    folders.value.push({ id, name: f ? f.name : name, clientType, isExpanded: true, rondas: [] })
     isFolderModalOpen.value = false; showNotification(`Pasta "${name}" criada com sucesso.`)
   }
 

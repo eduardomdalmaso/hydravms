@@ -53,6 +53,7 @@ type Camera struct {
 	MACAddress     string         `json:"mac_address,omitempty"`
 	Latitude       float64        `json:"latitude,omitempty"`
 	Longitude      float64        `json:"longitude,omitempty"`
+	Timezone       string         `json:"timezone,omitempty"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
 }

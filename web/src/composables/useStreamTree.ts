@@ -55,6 +55,10 @@ export function useStreamTree() {
       await deleteRemoteCamera(target.id)
       folders.value.forEach(f => { f.streams = f.streams.filter(s => s.id !== target.id) })
       showNotification(`Fluxo ${target.name} removido.`)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('vms:camera-deleted', { detail: { id: target.id } }))
+        window.dispatchEvent(new CustomEvent('vms:camera-updated'))
+      }
     }
   }
 
@@ -74,9 +78,12 @@ export function useStreamTree() {
     const newStream = createNewStreamItem(stream, totalStreams.value + 1)
     const saved = await createRemoteCamera({
       id: newStream.id, name: newStream.name, protocol: newStream.protocol?.toLowerCase() || 'rtsp',
-      rtsp_url: newStream.url, onvif_ip: newStream.ip, onvif_port: newStream.port, location: newStream.locationName || '',
+      rtsp_url: newStream.url, sub_stream_url: newStream.subUrl, onvif_ip: newStream.ip, onvif_port: newStream.port, location: newStream.locationName || '',
       status: 'online', resolution: newStream.resolution || '1920x1080', fps: newStream.fps || 30.0,
       bitrate_kbps: 4096, codec: newStream.codec || 'H.265', has_ptz: !!newStream.has_ptz,
+      brand: newStream.brand, model: newStream.model, serial_number: newStream.serialNumber,
+      firmware: newStream.firmware, mac_address: newStream.macAddress, latitude: newStream.latitude, longitude: newStream.longitude,
+      timezone: newStream.timezone || 'America/Sao_Paulo',
       folder_id: (folderId && folderId.includes('-')) ? folderId : undefined
     })
     if (saved) newStream.id = saved.id

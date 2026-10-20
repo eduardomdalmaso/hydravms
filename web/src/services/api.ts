@@ -115,6 +115,16 @@ export async function deleteRemoteCamera(id: string): Promise<boolean> {
   } catch { return false }
 }
 
+export async function updateRemoteCameraFolder(id: string, folderId: string | null): Promise<boolean> {
+  try {
+    const res = await authedFetch(`${API_BASE}/api/v1/cameras/${encodeURIComponent(id)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder_id: folderId || null }), signal: AbortSignal.timeout(3000)
+    })
+    return res.ok
+  } catch { return false }
+}
+
 export async function fetchPlugins(): Promise<{ plugins: any[]; gpu_detected: boolean; gpu_telemetry: any }> {
   try {
     const res = await authedFetch(`${API_BASE}/api/v1/plugins`, {

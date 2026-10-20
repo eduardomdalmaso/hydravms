@@ -264,6 +264,7 @@ Para monetização corporativa mantendo o sistema 100% autônomo e seguro em red
 | **`vms-recording`** | Perfis de gravação, MinIO S3 e Presigned URLs. |
 | **`vms-storage-guard`** | Autopreservação de disco, watermarks, circuit breaker e anti-crash. |
 | **`yolo-sahi`** | Fatiamento SAHI, batch inference na RTX 5090 e Non-Maximum Merging (NMM). |
+| **`vms-ecosystem-bootstrap`** | Orquestração multiplataforma (Windows e Linux) para subida completa do ecossistema via PM2 e scripts. |
 | **`validate-project`** | Executa auditoria de conformidade DDD, contagem de linhas web e testes unitários. |
 
 ---

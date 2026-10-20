@@ -12,6 +12,14 @@ const emit = defineEmits<{
 const totalDuration = computed(() =>
   props.ronda.streams.reduce((acc, s) => acc + (s.intervalSeconds || 0), 0)
 )
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.ronda.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragstart', props.ronda)
+}
 </script>
 
 <template>
@@ -20,7 +28,7 @@ const totalDuration = computed(() =>
     :class="{ active: isSelected }"
     draggable="true"
     style="position: relative;"
-    @dragstart="emit('dragstart', ronda)"
+    @dragstart="onDragStart"
     @click="emit('select', ronda)"
     @contextmenu.prevent.stop="emit('context', $event, ronda)"
   >

@@ -2,7 +2,7 @@
 import type { UserItem } from '../../../types/userTree'
 import { formatUserId } from '../../../utils/idFormatter'
 
-defineProps<{
+const props = defineProps<{
   user: UserItem
   isSelected: boolean
 }>()
@@ -12,6 +12,14 @@ const emit = defineEmits<{
   (e: 'dragstart', user: UserItem): void
   (e: 'context', event: MouseEvent, user: UserItem): void
 }>()
+
+const onDragStart = (e: DragEvent) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', props.user.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  emit('dragstart', props.user)
+}
 </script>
 
 <template>
@@ -19,7 +27,7 @@ const emit = defineEmits<{
     class="vms-desktop-app-card"
     :class="{ active: isSelected }"
     draggable="true"
-    @dragstart="emit('dragstart', user)"
+    @dragstart="onDragStart"
     @click="emit('select', user)"
     @contextmenu.prevent.stop="emit('context', $event, user)"
   >
