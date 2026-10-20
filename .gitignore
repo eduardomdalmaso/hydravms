@@ -54,3 +54,8 @@ recordings/
 
 scripts/worker_live_analytics.py
 yolo26m.pt
+
+# MCP and Local Agent Configs
+mcp_config.json
+.agents/mcp_config.json
+
